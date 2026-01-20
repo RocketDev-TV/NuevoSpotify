@@ -1,0 +1,58 @@
+/* Reset básico */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+/* Centrado total */
+body {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+ 
+}
+
+/* Botón play */
+.play-btn {
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  border: none;
+  background: #38bdf8;
+  color: #0f172a;
+  font-size: 22px;
+  cursor: pointer;
+}
+
+/* Barra de reproducción */
+.progress-bar {
+  width: 55vw;          /* se adapta al ancho de pantalla */
+  max-width: 360px;     /* desktop */
+  min-width: 160px;     /* móviles pequeños */
+  height: 6px;
+  appearance: none;
+  background: #334155;
+  border-radius: 999px;
+  outline: none;
+}
+
+/* Thumb */
+.progress-bar::-webkit-slider-thumb {
+  appearance: none;
+  width: 16px;
+  height: 16px;
+  background: #38bdf8;
+  border-radius: 50%;
+  cursor: pointer;
+}
+
+.progress-bar::-moz-range-thumb {
+  width: 16px;
+  height: 16px;
+  background: #38bdf8;
+  border-radius: 50%;
+  cursor: pointer;
+}
