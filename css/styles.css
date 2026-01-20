@@ -1,21 +1,18 @@
-/* Reset básico */
 * {
   margin: 0;
   padding: 0;
   box-sizing: border-box;
 }
 
-/* Centrado total */
 body {
   min-height: 100vh;
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 14px;
- 
+  background-color: #0f172a;
 }
 
-/* Botón play */
 .play-btn {
   width: 52px;
   height: 52px;
@@ -27,11 +24,10 @@ body {
   cursor: pointer;
 }
 
-/* Barra de reproducción */
 .progress-bar {
-  width: 55vw;          /* se adapta al ancho de pantalla */
-  max-width: 360px;     /* desktop */
-  min-width: 160px;     /* móviles pequeños */
+  width: 55vw;
+  max-width: 360px;
+  min-width: 160px;
   height: 6px;
   appearance: none;
   background: #334155;
@@ -39,7 +35,6 @@ body {
   outline: none;
 }
 
-/* Thumb */
 .progress-bar::-webkit-slider-thumb {
   appearance: none;
   width: 16px;
