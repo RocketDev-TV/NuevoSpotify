@@ -2,83 +2,114 @@ const audio = document.getElementById('audio');
 const playBtn = document.getElementById('playBtn');
 const progressBar = document.getElementById('progressBar');
 
-const songMetadata = {
-    title: 'Todavía te alcanzo a ver',
-    artist: 'Canseco',
-    album: 'Canseco Oficial',
-    artwork: [
-        { src: 'https://placehold.co/512x512/1db954/ffffff?text=C', sizes: '512x512', type: 'image/png' }
-    ]
-};
+// Bandera para saber si FUE EL USUARIO quien pausó
+let pausaIntencional = false;
 
-// Función maestra para reproducir (maneja errores si el navegador se durmió)
-async function playAudio() {
+// 1. Cargar el "Punto Guardado" al iniciar (Persistencia)
+// Esto cumple tu deseo de "volver al minuto/segundo donde se cortó"
+window.addEventListener('load', () => {
+    const tiempoGuardado = localStorage.getItem('ultimoTiempo');
+    
+    if (tiempoGuardado) {
+        audio.currentTime = parseFloat(tiempoGuardado);
+        progressBar.value = (audio.currentTime / audio.duration) * 100 || 0;
+        console.log("Tiempo restaurado al segundo:", tiempoGuardado);
+    }
+    // OJO: AQUÍ NO PONEMOS AUTO-PLAY.
+    // Si entras mañana ("fresh start"), se queda calladito esperando tu orden.
+});
+
+// 2. Guardar el tiempo cada segundo (Para que no se pierda si se muere el script)
+audio.addEventListener('timeupdate', () => {
+    if (audio.duration) {
+        const progress = (audio.currentTime / audio.duration) * 100;
+        progressBar.value = progress;
+        // Guardamos en la "memoria del teléfono"
+        localStorage.setItem('ultimoTiempo', audio.currentTime);
+    }
+});
+
+// 3. Control del Botón (La única forma de hacer "Pausa Intencional")
+playBtn.addEventListener('click', () => {
+    if (audio.paused) {
+        pausaIntencional = false; // El usuario quiere ruido
+        iniciarReproduccion();
+    } else {
+        pausaIntencional = true; // El usuario pidió silencio explícitamente
+        audio.pause();
+    }
+});
+
+// 4. Lógica de "Resurrección" (Auto-Play solo si fue accidente)
+document.addEventListener("visibilitychange", async () => {
+    // Si la app vuelve a ser visible (regresas de WhatsApp)
+    if (document.visibilityState === "visible") {
+        
+        // LA LÓGICA CLAVE:
+        // Si el audio está pausado... PERO el usuario NO le dio al botón de pausa...
+        // Significa que el sistema (WhatsApp/iOS) nos calló a la mala.
+        if (audio.paused && !pausaIntencional) {
+            console.log("Detecté interrupción del sistema. Intentando revivir...");
+            try {
+                await iniciarReproduccion();
+            } catch (err) {
+                console.log("El navegador no dejó hacer auto-play (necesita toque)", err);
+            }
+        }
+    }
+});
+
+// 5. Función auxiliar para iniciar todo el show
+async function iniciarReproduccion() {
     try {
         await audio.play();
         playBtn.textContent = '⏸';
+        pausaIntencional = false; // Confirmamos que estamos sonando
+        
+        // Actualizamos Media Session (Para pantalla de bloqueo)
         if ('mediaSession' in navigator) {
             navigator.mediaSession.playbackState = "playing";
+            configurarMediaSession();
         }
     } catch (err) {
-        console.error("El navegador se puso fresa y no dejó reproducir:", err);
-        // Si falla, a veces ayuda actualizar el estado para decirle "estoy listo"
-        if ('mediaSession' in navigator) {
-            navigator.mediaSession.playbackState = "paused";
-        }
+        console.error("Error al reproducir:", err);
     }
 }
 
-// Inicializar Media Session
-if ('mediaSession' in navigator) {
-    navigator.mediaSession.metadata = new MediaMetadata(songMetadata);
-
-    // AQUÍ ESTA LA MAGIA: 
-    // Cuando le das Play desde la notificación después de ver el video de Whats,
-    // forzamos la ejecución de la función playAudio.
-    navigator.mediaSession.setActionHandler('play', () => {
-        playAudio();
-    });
-
-    navigator.mediaSession.setActionHandler('pause', () => {
-        audio.pause();
-        playBtn.textContent = '▶';
-        navigator.mediaSession.playbackState = "paused";
-    });
-}
-
-// Botón de la interfaz
-playBtn.addEventListener('click', () => {
-    if (audio.paused) {
-        playAudio();
-    } else {
-        audio.pause();
-    }
-});
-
-// Eventos del Audio (Para sincronizar si el sistema lo pausa solo)
-audio.addEventListener('play', () => {
-    playBtn.textContent = '⏸';
-    if ('mediaSession' in navigator) {
-        navigator.mediaSession.playbackState = "playing";
-    }
-});
-
+// 6. Detectar pausas externas (Para cuando WhatsApp nos gana)
 audio.addEventListener('pause', () => {
     playBtn.textContent = '▶';
-    // Importante: Mantener el estado en 'paused' para que la notificación no desaparezca
+    
     if ('mediaSession' in navigator) {
         navigator.mediaSession.playbackState = "paused";
     }
+    
+    // Si el usuario NO fue el que pausó (pausaIntencional es false),
+    // entonces mantenemos la esperanza de revivir cuando regrese.
 });
 
-// Barra de progreso (Igual que antes)
-audio.addEventListener('timeupdate', () => {
-    if (audio.duration) {
-        progressBar.value = (audio.currentTime / audio.duration) * 100;
-    }
-});
-
+// --- Configuración extra (Barras y Metadata) ---
 progressBar.addEventListener('input', () => {
     const time = (progressBar.value / 100) * audio.duration;
     audio.currentTime = time;
 });
+
+function configurarMediaSession() {
+    navigator.mediaSession.metadata = new MediaMetadata({
+        title: 'Todavía te alcanzo a ver',
+        artist: 'Canseco',
+        album: 'Canseco Oficial',
+        artwork: [
+            { src: 'https://placehold.co/512x512/1db954/ffffff?text=C', sizes: '512x512', type: 'image/png' }
+        ]
+    });
+
+    navigator.mediaSession.setActionHandler('play', () => {
+        pausaIntencional = false;
+        iniciarReproduccion();
+    });
+    navigator.mediaSession.setActionHandler('pause', () => {
+        pausaIntencional = true;
+        audio.pause();
+    });
+}
