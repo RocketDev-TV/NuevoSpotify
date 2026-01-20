@@ -1,0 +1,151 @@
+/* Reset */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial;
+}
+
+/* Fondo */
+body {
+  min-height: 100vh;
+  background: linear-gradient(160deg, #020617, #0f172a);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+
+/* Contenedor */
+.login-container {
+  width: 100%;
+  max-width: 420px;
+  background: #020617;
+  border: 1px solid #1e293b;
+  border-radius: 18px;
+  padding: 32px 28px;
+  color: #e5e7eb;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.6);
+}
+
+/* Títulos */
+.title {
+  text-align: center;
+  font-size: 28px;
+  font-weight: 700;
+  margin-bottom: 6px;
+}
+
+.subtitle {
+  text-align: center;
+  font-size: 14px;
+  color: #94a3b8;
+  margin-bottom: 28px;
+}
+
+/* Formulario */
+.login-form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+label {
+  display: flex;
+  flex-direction: column;
+  font-size: 13px;
+  color: #cbd5f5;
+  gap: 6px;
+}
+
+input {
+  padding: 12px 14px;
+  border-radius: 10px;
+  border: 1px solid #1e293b;
+  background: #020617;
+  color: #e5e7eb;
+  outline: none;
+}
+
+input::placeholder {
+  color: #64748b;
+}
+
+input:focus {
+  border-color: #38bdf8;
+}
+
+/* Botones */
+.btn {
+  width: 100%;
+  padding: 13px;
+  border-radius: 12px;
+  border: none;
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 15px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+}
+
+.btn.primary {
+  background: #38bdf8;
+  color: #020617;
+  margin-top: 6px;
+}
+
+.btn.primary:hover {
+  filter: brightness(1.05);
+}
+
+/* Divider */
+.divider {
+  display: flex;
+  align-items: center;
+  margin: 22px 0;
+  color: #64748b;
+  font-size: 13px;
+}
+
+.divider::before,
+.divider::after {
+  content: "";
+  flex: 1;
+  height: 1px;
+  background: #1e293b;
+}
+
+.divider span {
+  margin: 0 12px;
+}
+
+/* Google button */
+.btn.google {
+  background: #ffffff;
+  color: #020617;
+  border: 1px solid #e5e7eb;
+}
+
+.btn.google img {
+  width: 18px;
+  height: 18px;
+}
+
+/* Footer */
+.footer-text {
+  margin-top: 24px;
+  text-align: center;
+  font-size: 13px;
+  color: #94a3b8;
+}
+
+.footer-text a {
+  color: #38bdf8;
+  text-decoration: none;
+}
+
+.footer-text a:hover {
+  text-decoration: underline;
+}
