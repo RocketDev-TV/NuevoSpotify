@@ -131,7 +131,7 @@ if(mainActionBtn){
                 if (error) throw error;
                 
                 console.log("Login exitoso:", data);
-                window.location.href = "reproductor.html";
+                window.location.href = "html/reproductor.html";
 
             } else {
                 // --- REGISTRO ---
