@@ -15,12 +15,15 @@
 
 <body class="app-body">
 
-  <!-- APP WRAPPER -->
   <main class="app">
 
-    <!-- TOP BAR -->
-    <header class="topbar">
-      <div class="brand">Nuevo Spotify</div>
+    <header class="topbar" style="display: flex; align-items: center; justify-content: space-between;">
+      
+      <div class="user-info" style="display: flex; align-items: center; gap: 8px;">
+        <img id="userAvatar" src="https://via.placeholder.com/35" alt="Avatar" 
+             style="width: 35px; height: 35px; border-radius: 50%; object-fit: cover; border: 2px solid #1db954;">
+        <span id="userName" style="font-size: 14px; font-weight: 600; color: #fff;">Cargando...</span>
+      </div>
 
       <nav class="tabs" aria-label="Navegación">
         <button class="tab">Buscar</button>
@@ -28,15 +31,13 @@
         <button class="tab">Favoritos</button>
       </nav>
 
-      <a class="profile" href="inicioSesion.html" aria-label="Perfil / Iniciar sesión">
-        <span class="profile-icon">👤</span>
-      </a>
+      <button id="btnLogout" style="background: transparent; border: 1px solid #e74c3c; color: #e74c3c; padding: 4px 12px; border-radius: 20px; font-size: 12px; cursor: pointer; transition: 0.3s;">
+        Salir
+      </button>
     </header>
 
-    <!-- CONTENT -->
     <section class="content">
 
-      <!-- ARTISTAS -->
       <section class="section">
         <h2 class="section-title">Artistas</h2>
 
@@ -55,7 +56,6 @@
         </div>
       </section>
 
-      <!-- GENEROS -->
       <section class="section">
         <h2 class="section-title">Generos</h2>
 
@@ -74,7 +74,6 @@
         </div>
       </section>
 
-      <!-- PLAYLIST -->
       <section class="section section-playlist">
         <div class="playlist-head">
           <h2 class="section-title">Play list</h2>
@@ -82,7 +81,6 @@
         </div>
 
         <div class="playlist">
-          <!-- Item 1 -->
           <button class="track" type="button">
             <img class="track-cover" src="https://placehold.co/96x96/ff4fd8/0b1220?text=🎧" alt="cover">
             <div class="track-meta">
@@ -91,7 +89,6 @@
             </div>
           </button>
 
-          <!-- Item 2 -->
           <button class="track" type="button">
             <img class="track-cover" src="https://placehold.co/96x96/2bd45d/0b1220?text=🍃" alt="cover">
             <div class="track-meta">
@@ -100,7 +97,6 @@
             </div>
           </button>
 
-          <!-- Item 3 -->
           <button class="track" type="button">
             <img class="track-cover" src="https://placehold.co/96x96/111827/ffffff?text=ZOE" alt="cover">
             <div class="track-meta">
@@ -109,7 +105,6 @@
             </div>
           </button>
 
-          <!-- Item 4 (extra para que se vea scroll) -->
           <button class="track" type="button">
             <img class="track-cover" src="https://placehold.co/96x96/0ea5e9/0b1220?text=🌊" alt="cover">
             <div class="track-meta">
@@ -130,7 +125,6 @@
 
     </section>
 
-    <!-- BOTTOM PLAYER (funcional con tu JS) -->
     <footer class="bottom-player" role="contentinfo">
       <button id="playBtn" class="play-btn bottom-play" aria-label="Play/Pause">▶</button>
 
@@ -148,12 +142,18 @@
 
   </main>
 
-  <!-- Audio (real) -->
   <audio id="audio" preload="metadata" playsinline
     src="audio/Canseco - Todavia te alcanzo a ver - CansecoOficial.mp3"></audio>
 
-  <!-- Tu JS (tal cual lo pasaste) -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  
+  <script src="../Js/config.js"></script>
+  <script src="../Js/utils.js"></script>
+
+  <script src="../Js/reproductor.js"></script>
+
   <script src="../Js/script.js"></script>
+
 </body>
 </html>
-
