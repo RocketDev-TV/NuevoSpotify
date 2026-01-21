@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Crear Cuenta - Nuevo Spotify</title>
+
+    <link rel="stylesheet" href="../css/styles.css">
+    <link rel="stylesheet" href="../css/styleRegistro.css">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" rel="stylesheet">
+</head>
+
+<body>
+
+    <div class="split-container">
+
+        <div class="brand-side">
+            <div class="brand-content">
+                <h1>Tu música,<br>tu mundo.</h1>
+                <p>Únete a la comunidad y descubre millones de canciones sin límites.</p>
+            </div>
+            <div class="brand-overlay"></div>
+        </div>
+
+        <div class="form-side">
+            <div class="register-card">
+
+                <div class="header-text">
+                    <h2>Crear cuenta</h2>
+                    <p>¿Ya eres parte del club? <a href="../">Inicia sesión</a></p>
+                </div>
+
+                <form class="register-form">
+
+                    <div class="input-group">
+                        <i class="bi bi-person input-icon-left"></i>
+                        <input type="text" id="usernameInput" placeholder="Nombre de usuario" required>
+                    </div>
+
+                    <div class="input-group">
+                        <i class="bi bi-envelope input-icon-left"></i>
+                        <input type="email" id="emailInput" placeholder="Correo electrónico" required>
+                    </div>
+
+                    <div class="input-group">
+                        <i class="bi bi-lock input-icon-left"></i>
+                        <input type="password" id="passwordInput" placeholder="Contraseña" required>
+                        <i class="bi bi-eye toggle-password" id="togglePass1"></i>
+                    </div>
+
+                    <div class="input-group">
+                        <i class="bi bi-shield-lock input-icon-left"></i>
+                        <input type="password" id="confirmPasswordInput" placeholder="Confirmar contraseña" required>
+                        <i class="bi bi-eye toggle-password" id="togglePass2"></i>
+                    </div>
+
+                    <div class="password-requirements">
+                        <p>La contraseña debe tener:</p>
+                        <ul>
+                            <li id="req-length" class="invalid"><i class="bi bi-dot"></i> Min. 8 caracteres</li>
+                            <li id="req-upper" class="invalid"><i class="bi bi-dot"></i> 1 Mayúscula</li>
+                            <li id="req-number" class="invalid"><i class="bi bi-dot"></i> 1 Número</li>
+                            <li id="req-symbol" class="invalid"><i class="bi bi-dot"></i> 1 Símbolo</li>
+                        </ul>
+                    </div>
+
+                    <button type="button" class="btn-register" id="btnRegistrar">Registrarme</button>
+                </form>
+
+                <div class="footer-terms">
+                    Al registrarte, aceptas nuestros <br>
+                    <a href="#">Términos de Servicio</a>.
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    
+    <script src="../Js/config.js"></script>
+    <script src="../Js/utils.js"></script>
+    <script src="../Js/registro.js"></script>
+</body>
+
+</html>

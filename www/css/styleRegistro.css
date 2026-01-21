@@ -1,0 +1,200 @@
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
+
+:root {
+  --rich-black: #000F01;       
+  --dark-green: #032221;       
+  --bangladesh-green: #03624C; 
+  --mountain-meadow: #2CC295;  
+  --anti-flash-white: #F1F7F6;
+  --error-red: #e74c3c;
+  --success-green: #27ae60;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Poppins', sans-serif; }
+
+body {
+  background-color: var(--rich-black);
+  min-height: 100vh;
+}
+
+/* --- CONTENEDOR DIVIDIDO (Split Screen) --- */
+.split-container {
+  display: flex;
+  min-height: 100vh;
+  width: 100%;
+}
+
+/* --- LADO IZQUIERDO (Branding) --- */
+.brand-side {
+  display: none; /* Oculto en móviles por defecto */
+  flex: 1; /* Toma el 50% del espacio en escritorio */
+  background-color: var(--rich-black);
+  background-image: radial-gradient(circle at center, #062b25 0%, #000F01 80%);
+  position: relative;
+  flex-direction: column;
+  justify-content: center;
+  padding: 60px;
+  overflow: hidden;
+}
+
+.brand-content {
+  position: relative;
+  z-index: 2;
+  color: #fff;
+}
+
+.brand-content h1 {
+  font-size: 48px;
+  font-weight: 700;
+  line-height: 1.1;
+  margin-bottom: 20px;
+  background: linear-gradient(to right, #fff, var(--mountain-meadow));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.brand-content p {
+  font-size: 16px;
+  color: #9aa8a5;
+  max-width: 400px;
+}
+
+/* Patrón de fondo sutil para el lado izquierdo */
+.brand-overlay {
+  position: absolute;
+  top: 0; left: 0; width: 100%; height: 100%;
+  background-image: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%232cc295' fill-opacity='0.05'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+  z-index: 1;
+}
+
+/* --- LADO DERECHO (Formulario) --- */
+.form-side {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 30px;
+  background-color: var(--rich-black); /* Fondo oscuro para contraste en móvil */
+}
+
+/* --- LA TARJETA BLANCA (Ajustada) --- */
+.register-card {
+  background-color: #FFFFFF;
+  width: 100%;
+  max-width: 420px;
+  padding: 40px;
+  border-radius: 30px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+}
+
+.header-text h2 {
+  font-size: 26px;
+  font-weight: 700;
+  color: var(--dark-green);
+  text-align: center;
+  margin-bottom: 5px;
+}
+
+.header-text p {
+  font-size: 13px;
+  color: #6c7c79;
+  text-align: center;
+  margin-bottom: 30px;
+}
+
+.header-text a {
+  color: var(--bangladesh-green);
+  text-decoration: none; font-weight: 600;
+}
+
+/* --- INPUTS CON ICONOS DOBLES (Izq y Der) --- */
+.input-group {
+  position: relative;
+  margin-bottom: 15px;
+}
+
+/* Icono izquierdo (estático) */
+.input-icon-left {
+  position: absolute;
+  left: 15px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #9aa8a5;
+  font-size: 18px;
+  z-index: 2;
+}
+
+/* Icono derecho (el ojito toggle) */
+.toggle-password {
+  position: absolute;
+  right: 15px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #9aa8a5;
+  cursor: pointer;
+  font-size: 18px;
+  z-index: 2;
+  transition: 0.3s;
+}
+.toggle-password:hover { color: var(--bangladesh-green); }
+
+.input-group input {
+  width: 100%;
+  background-color: var(--anti-flash-white);
+  border: 1px solid transparent;
+  /* Padding a ambos lados para que no se encime el texto a los iconos */
+  padding: 14px 45px 14px 45px; 
+  border-radius: 14px;
+  font-size: 14px;
+  color: var(--dark-green);
+  outline: none;
+  transition: all 0.3s ease;
+  font-weight: 500;
+}
+
+.input-group input:focus {
+  background-color: #fff;
+  border-color: var(--mountain-meadow);
+  box-shadow: 0 0 0 4px rgba(44, 194, 149, 0.15);
+}
+
+/* --- REQUISITOS --- */
+.password-requirements {
+  font-size: 11px; color: #6c7c79; margin-bottom: 20px; padding: 0 5px;
+}
+.password-requirements ul {
+  list-style: none; display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 8px;
+}
+.password-requirements li { display: flex; align-items: center; gap: 5px; transition: 0.3s;}
+.password-requirements li i { font-size: 18px; }
+
+/* Estados de validación */
+.invalid { color: #bdc3c7; }
+.invalid i::before { content: "\f309"; /* Icono de punto (bi-dot) */ }
+
+.valid { color: var(--success-green); font-weight: 600; }
+.valid i::before { content: "\f26a"; /* Icono de check (bi-check-circle-fill) */ }
+
+/* --- BOTÓN --- */
+.btn-register {
+  width: 100%; background-color: var(--dark-green); color: #fff; border: none;
+  padding: 14px; border-radius: 50px; font-size: 15px; font-weight: 600;
+  cursor: pointer; transition: all 0.3s ease;
+  box-shadow: 0 10px 20px rgba(3, 34, 33, 0.2);
+}
+.btn-register:hover { background-color: var(--bangladesh-green); transform: translateY(-2px); }
+
+.footer-terms { text-align: center; font-size: 10px; color: #9aa8a5; margin-top: 25px; }
+
+/* --- MEDIA QUERY (Para escritorio) --- */
+@media (min-width: 900px) {
+  .brand-side {
+    display: flex; /* Se muestra el lado izquierdo en pantallas grandes */
+  }
+  .form-side {
+    background-color: transparent; /* Se quita el fondo oscuro */
+  }
+  .register-card {
+    box-shadow: 0 30px 60px rgba(0,0,0,0.2); /* Sombra más suave en escritorio */
+  }
+}

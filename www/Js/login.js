@@ -1,10 +1,13 @@
-// --- 1. CONFIGURACIÓN DE SUPABASE ---
-const supabaseUrl = 'https://ufrnahnicbqizcfahdqi.supabase.co';
-const supabaseKey = 'sb_publishable_ZAjNBGZJF1H20qjUZL2MIw_CWjZcs2L';
+// --- 1. CONEXIÓN A SUPABASE ---
+// Como ya tenemos config.js, solo mandamos llamar a la función que creamos allá.
+// Esto nos devuelve el cliente "_supabase" listo para usar.
+const _supabase = conectarSupabase();
 
-const { createClient } = supabase;
-
-const _supabase = createClient(supabaseUrl, supabaseKey);
+// Verificamos por si las dudas (ayuda a depurar si falta el script en el HTML)
+if (!_supabase) {
+    console.error("❌ Error: No se pudo conectar a Supabase. Revisa que config.js esté cargado en el HTML.");
+    mostrarNotificacion("Error de sistema: No hay conexión con la base de datos.");
+}
 
 // --- 2. REFERENCIAS DEL DOM (Elementos de la pantalla) ---
 const formTitle = document.querySelector('.header-text h1');
@@ -16,7 +19,11 @@ const googleBtn = document.querySelector('.social-btn.google');
 const forgotLink = document.querySelector('.forgot-link');
 const showPassBtn = document.querySelector('.toggle-password');
 
-// Creamos un div para mensajes de error si no existe
+// Activar el ojito
+activarOjito('passwordLogin', 'toggleLogin');
+
+// --- MANEJO DE ERRORES VISUALES ---
+// Buscamos o creamos el div de error dinámicamente
 let errorDiv = document.querySelector('#error-message-box');
 if (!errorDiv) {
     errorDiv = document.createElement('div');
@@ -27,9 +34,9 @@ if (!errorDiv) {
     errorDiv.style.marginBottom = '15px';
     errorDiv.style.display = 'none';
     
-    // Insertamos el error antes del botón o del link de olvidado
+    // Insertamos el error antes del link de "olvidaste contraseña"
     const form = document.querySelector('.login-form');
-    form.insertBefore(errorDiv, forgotLink);
+    if(form) form.insertBefore(errorDiv, forgotLink);
 }
 
 // Estado: true = Login, false = Registro
@@ -44,28 +51,35 @@ function esContrasenaSegura(password) {
 }
 
 function mostrarError(mensaje) {
-    errorDiv.textContent = mensaje;
-    errorDiv.style.display = 'block';
-    mainActionBtn.classList.add('shake');
-    setTimeout(() => mainActionBtn.classList.remove('shake'), 500);
+    if(errorDiv) {
+        errorDiv.textContent = mensaje;
+        errorDiv.style.display = 'block';
+    } else {
+        mostrarNotificacion(mensaje); // Fallback por si no carga el DOM
+    }
+    
+    if(mainActionBtn) {
+        mainActionBtn.classList.add('shake');
+        setTimeout(() => mainActionBtn.classList.remove('shake'), 500);
+    }
 }
 
 // --- 4. LÓGICA DE INTERFAZ (Toggle Login/Registro) ---
 function toggleMode(e) {
     if(e) e.preventDefault();
     isLoginMode = !isLoginMode;
-    errorDiv.style.display = 'none';
+    if(errorDiv) errorDiv.style.display = 'none';
 
     if (isLoginMode) {
         formTitle.textContent = "Iniciar Sesión";
         toggleText.innerHTML = '¿Nuevo usuario? <a href="#" id="toggleBtn">Crear cuenta</a>';
         mainActionBtn.textContent = "Entrar";
-        forgotLink.style.display = 'block';
+        if(forgotLink) forgotLink.style.display = 'block';
     } else {
         formTitle.textContent = "Crear Cuenta";
         toggleText.innerHTML = '¿Ya tienes cuenta? <a href="#" id="toggleBtn">Inicia sesión</a>';
         mainActionBtn.textContent = "Registrarse";
-        forgotLink.style.display = 'none';
+        if(forgotLink) forgotLink.style.display = 'none';
     }
     
     const newToggleBtn = document.getElementById('toggleBtn');
@@ -73,14 +87,14 @@ function toggleMode(e) {
 }
 
 // Inicializar el link de toggle
-const linkToggle = toggleText.querySelector('a');
+const linkToggle = toggleText ? toggleText.querySelector('a') : null;
 if(linkToggle) {
     linkToggle.id = 'toggleBtn';
     linkToggle.addEventListener('click', toggleMode);
 }
 
 // Ver/Ocultar contraseña
-if(showPassBtn){
+if(showPassBtn && passwordInput){
     showPassBtn.addEventListener('click', () => {
         const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
         passwordInput.setAttribute('type', type);
@@ -95,7 +109,7 @@ if(mainActionBtn){
         const email = emailInput.value;
         const password = passwordInput.value;
         
-        errorDiv.style.display = 'none';
+        if(errorDiv) errorDiv.style.display = 'none';
 
         if (!email || !password) {
             mostrarError("Por favor llena todos los campos, carnal.");
@@ -108,7 +122,7 @@ if(mainActionBtn){
 
         try {
             if (isLoginMode) {
-                // --- LOGIN (Usamos _supabase) ---
+                // --- LOGIN ---
                 const { data, error } = await _supabase.auth.signInWithPassword({
                     email: email,
                     password: password,
@@ -120,7 +134,7 @@ if(mainActionBtn){
                 window.location.href = "reproductor.html";
 
             } else {
-                // --- REGISTRO (Usamos _supabase) ---
+                // --- REGISTRO ---
                 if (!esContrasenaSegura(password)) {
                     throw new Error("La contraseña es muy débil. Necesita 8 caracteres, 1 mayúscula, 1 número y 1 símbolo.");
                 }
@@ -132,7 +146,8 @@ if(mainActionBtn){
 
                 if (error) throw error;
 
-                alert("¡Cuenta creada! Te mandamos un correo para confirmar.");
+                mostrarNotificacion("¡Cuenta creada! Te mandamos un correo para confirmar.");
+                // Regresamos al login para que confirme
                 toggleMode(); 
             }
         } catch (error) {
@@ -151,11 +166,10 @@ if(googleBtn){
         console.log("👆 Botón Google presionado");
 
         try {
-            // Usamos _supabase aquí también
             const { data, error } = await _supabase.auth.signInWithOAuth({
                 provider: 'google',
                 options: {
-                    redirectTo: window.location.origin + '/reproductor.html',
+                    redirectTo: window.location.origin + '/html/reproductor.html',
                     queryParams: {
                         access_type: 'offline',
                         prompt: 'consent',
@@ -168,7 +182,7 @@ if(googleBtn){
             
         } catch (error) {
             console.error("❌ Error:", error);
-            alert("Error al conectar con Google: " + error.message);
+            mostrarError("Error al conectar con Google: " + error.message);
         }
     });
 }
