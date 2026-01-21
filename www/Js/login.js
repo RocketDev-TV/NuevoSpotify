@@ -1,29 +1,25 @@
 // --- 1. CONEXIÓN A SUPABASE ---
-// Como ya tenemos config.js, solo mandamos llamar a la función que creamos allá.
-// Esto nos devuelve el cliente "_supabase" listo para usar.
 const _supabase = conectarSupabase();
 
-// Verificamos por si las dudas (ayuda a depurar si falta el script en el HTML)
 if (!_supabase) {
-    console.error("❌ Error: No se pudo conectar a Supabase. Revisa que config.js esté cargado en el HTML.");
+    console.error("❌ Error: No se pudo conectar a Supabase.");
     mostrarNotificacion("Error de sistema: No hay conexión con la base de datos.");
 }
 
-// --- 2. REFERENCIAS DEL DOM (Elementos de la pantalla) ---
+// ✅ AQUÍ ACTIVAMOS EL OJITO (Y confiamos en que utils.js hará el trabajo)
+activarOjito('passwordLogin', 'toggleLogin');
+
+// --- 2. REFERENCIAS DEL DOM ---
 const formTitle = document.querySelector('.header-text h1');
 const toggleText = document.querySelector('.header-text p');
 const emailInput = document.querySelector('input[type="email"]');
-const passwordInput = document.querySelector('input[type="password"]');
+// Usamos el ID para ser más precisos
+const passwordInput = document.getElementById('passwordLogin'); 
 const mainActionBtn = document.querySelector('.btn-login');
 const googleBtn = document.querySelector('.social-btn.google');
 const forgotLink = document.querySelector('.forgot-link');
-const showPassBtn = document.querySelector('.toggle-password');
-
-// Activar el ojito
-activarOjito('passwordLogin', 'toggleLogin');
 
 // --- MANEJO DE ERRORES VISUALES ---
-// Buscamos o creamos el div de error dinámicamente
 let errorDiv = document.querySelector('#error-message-box');
 if (!errorDiv) {
     errorDiv = document.createElement('div');
@@ -34,18 +30,14 @@ if (!errorDiv) {
     errorDiv.style.marginBottom = '15px';
     errorDiv.style.display = 'none';
     
-    // Insertamos el error antes del link de "olvidaste contraseña"
     const form = document.querySelector('.login-form');
     if(form) form.insertBefore(errorDiv, forgotLink);
 }
 
-// Estado: true = Login, false = Registro
 let isLoginMode = true;
 
 // --- 3. FUNCIONES DE SEGURIDAD ---
-
 function esContrasenaSegura(password) {
-    // Regex: 8 chars, 1 Mayus, 1 Num, 1 Simbolo
     const regex = /^(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]).{8,}$/;
     return regex.test(password);
 }
@@ -55,7 +47,7 @@ function mostrarError(mensaje) {
         errorDiv.textContent = mensaje;
         errorDiv.style.display = 'block';
     } else {
-        mostrarNotificacion(mensaje); // Fallback por si no carga el DOM
+        mostrarNotificacion(mensaje);
     }
     
     if(mainActionBtn) {
@@ -86,22 +78,14 @@ function toggleMode(e) {
     if(newToggleBtn) newToggleBtn.addEventListener('click', toggleMode);
 }
 
-// Inicializar el link de toggle
 const linkToggle = toggleText ? toggleText.querySelector('a') : null;
 if(linkToggle) {
     linkToggle.id = 'toggleBtn';
     linkToggle.addEventListener('click', toggleMode);
 }
 
-// Ver/Ocultar contraseña
-if(showPassBtn && passwordInput){
-    showPassBtn.addEventListener('click', () => {
-        const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
-        passwordInput.setAttribute('type', type);
-        showPassBtn.classList.toggle('bi-eye');
-        showPassBtn.classList.toggle('bi-eye-slash');
-    });
-}
+// 🚫 BORRAMOS EL BLOQUE VIEJO DEL OJITO AQUÍ 🚫
+// (Ya no hace falta porque activarOjito está arriba)
 
 // --- 5. LÓGICA PRINCIPAL (LOGIN / SIGNUP) ---
 if(mainActionBtn){
@@ -146,8 +130,7 @@ if(mainActionBtn){
 
                 if (error) throw error;
 
-                mostrarNotificacion("¡Cuenta creada! Te mandamos un correo para confirmar.");
-                // Regresamos al login para que confirme
+                mostrarNotificacion("¡Cuenta creada! Te mandamos un correo para confirmar.", "success");
                 toggleMode(); 
             }
         } catch (error) {
@@ -159,7 +142,7 @@ if(mainActionBtn){
     });
 }
 
-// --- 6. GOOGLE LOGIN (BLINDADO) ---
+// --- 6. GOOGLE LOGIN ---
 if(googleBtn){
     googleBtn.addEventListener('click', async (e) => {
         e.preventDefault();
