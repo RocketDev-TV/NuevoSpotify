@@ -1,52 +1,55 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Iniciar sesión</title>
-  <link rel="stylesheet" href="css/styleInicioSesion.css" />
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Iniciar Sesión - Nuevo Spotify</title>
+  
+  <link rel="stylesheet" href="css/styles.css">
+  
+  <link rel="stylesheet" href="css/styleInicioSesion.css">
+  
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" rel="stylesheet">
 </head>
 <body>
-
-  <main class="login-container">
-
-    <h1 class="title">Nuevo Spotify</h1>
-    <p class="subtitle">Inicia sesión para continuar</p>
+  <div class="login-card">
+    <div class="header-text">
+      <h1>Iniciar Sesión</h1>
+      <p>¿Nuevo usuario? <a href="#">Crear cuenta</a></p>
+    </div>
 
     <form class="login-form">
-      <label>
-        Correo electrónico
-        <input type="email" placeholder="tu@email.com" required />
-      </label>
+      <div class="input-group">
+        <input type="email" placeholder="Correo electrónico" required>
+      </div>
 
-      <label>
-        Contraseña
-        <input type="password" placeholder="••••••••" required />
-      </label>
+      <div class="input-group">
+        <input type="password" placeholder="Contraseña" required>
+        <i class="bi bi-eye toggle-password"></i>
+      </div>
 
-      <button type="submit" class="btn primary">
-        Iniciar sesión
-      </button>
+      <div class="forgot-link">
+        <a href="#">¿Olvidaste tu contraseña?</a>
+      </div>
+
+      <button type="button" class="btn-login">Entrar</button>
     </form>
 
     <div class="divider">
-      <span>o</span>
+      <span>o continúa con</span>
     </div>
 
-    <button class="btn google">
-      <img src="https://www.svgrepo.com/show/475656/google-color.svg" alt="Google" />
-      Continuar con Google
-      <a href="reproductor.html" class="btn primary">
-  reproductor
-</a>
-    </button>
+    <div class="social-row">
+      <a href="reproductor.html" class="social-btn google">
+        <img src="https://www.svgrepo.com/show/475656/google-color.svg" alt="G" width="24" height="24">
+        <span>Google</span>
+      </a>
+    </div>
 
-    <p class="footer-text">
-      ¿No tienes cuenta? <a href="#">Regístrate</a>
-    </p>
-
-  </main>
-  
-
+    <div class="footer-terms">
+      Al iniciar sesión, aceptas nuestros <br>
+      <a href="#">Términos de Servicio</a> y <a href="#">Política de Privacidad</a>.
+    </div>
+  </div>
 </body>
 </html>

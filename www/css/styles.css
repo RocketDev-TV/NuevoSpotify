@@ -1,53 +1,73 @@
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
+
+/* --- PALETA GLOBAL (Axiforma Dark Mode) --- */
+:root {
+  --rich-black: #000F01;       /* Fondo General */
+  --dark-green: #032221;       /* Fondo Tarjetas */
+  --bangladesh-green: #03624C; /* Botones / Bordes */
+  --mountain-meadow: #2CC295;  /* Acentos / Hover Texto */
+  --caribbean-green: #00DF81;  /* Brillo extra */
+  --text-white: #FFFFFF;
+  --text-muted: #889995;
+  --input-bg: #052b29;         /* Un verde un poquito más claro para inputs */
+}
+
+/* --- RESET GLOBAL --- */
 * {
   margin: 0;
   padding: 0;
   box-sizing: border-box;
+  font-family: 'Poppins', sans-serif;
 }
 
 body {
+  background-color: var(--rich-black);
+  color: var(--text-white);
   min-height: 100vh;
+  /* Centrado por defecto (útil para login y player) */
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 14px;
-  background-color: #0f172a;
 }
 
+/* --- ESTILOS DEL REPRODUCTOR (Que ya tenías) --- */
+/* Los dejamos aquí para que no se rompa tu reproductor.html */
+
 .play-btn {
-  width: 52px;
-  height: 52px;
+  width: 60px;
+  height: 60px;
   border-radius: 50%;
   border: none;
-  background: #38bdf8;
-  color: #0f172a;
-  font-size: 22px;
+  background: var(--bangladesh-green); /* Usamos la variable nueva */
+  color: var(--text-white);
+  font-size: 24px;
   cursor: pointer;
+  transition: 0.3s;
+  box-shadow: 0 4px 15px rgba(3, 98, 76, 0.4);
+}
+
+.play-btn:hover {
+  background: var(--mountain-meadow);
+  transform: scale(1.05);
 }
 
 .progress-bar {
-  width: 55vw;
+  width: 80%;
   max-width: 360px;
-  min-width: 160px;
   height: 6px;
   appearance: none;
-  background: #334155;
-  border-radius: 999px;
+  background: #1e293b;
+  border-radius: 10px;
   outline: none;
+  margin-top: 20px;
 }
 
 .progress-bar::-webkit-slider-thumb {
   appearance: none;
   width: 16px;
   height: 16px;
-  background: #38bdf8;
+  background: var(--mountain-meadow);
   border-radius: 50%;
   cursor: pointer;
-}
-
-.progress-bar::-moz-range-thumb {
-  width: 16px;
-  height: 16px;
-  background: #38bdf8;
-  border-radius: 50%;
-  cursor: pointer;
+  box-shadow: 0 0 10px rgba(44, 194, 149, 0.5);
 }
