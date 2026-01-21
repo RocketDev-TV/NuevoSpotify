@@ -1,26 +1,161 @@
 <!DOCTYPE html>
 <html lang="es">
-
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Nuevo Spotify</title>
-  <link rel="stylesheet" href="css/styles.css">
+
+  <!-- CSS global -->
+  <link rel="stylesheet" href="css/styles.css" />
+  <!-- CSS SOLO de esta vista -->
+  <link rel="stylesheet" href="css/styleReproductor.css" />
 
   <link rel="manifest" href="manifest.json">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 </head>
 
-<body>
+<body class="app-body">
 
-  <button id="playBtn" class="play-btn">▶</button>
-  <input id="progressBar" type="range" class="progress-bar" min="0" max="100" value="0">
+  <!-- APP WRAPPER -->
+  <main class="app">
 
-  <audio id="audio" src="audio/Canseco - Todavia te alcanzo a ver - CansecoOficial.mp3"></audio>
+    <!-- TOP BAR -->
+    <header class="topbar">
+      <div class="brand">Nuevo Spotify</div>
+
+      <nav class="tabs" aria-label="Navegación">
+        <button class="tab">Buscar</button>
+        <button class="tab active">Home</button>
+        <button class="tab">Favoritos</button>
+      </nav>
+
+      <a class="profile" href="inicioSesion.html" aria-label="Perfil / Iniciar sesión">
+        <span class="profile-icon">👤</span>
+      </a>
+    </header>
+
+    <!-- CONTENT -->
+    <section class="content">
+
+      <!-- ARTISTAS -->
+      <section class="section">
+        <h2 class="section-title">Artistas</h2>
+
+        <div class="artist-row">
+          <button class="artist" aria-label="Los Bunkers">
+            <img class="artist-img" src="https://placehold.co/160x160/ffcc00/000000?text=LOS+BUNKERS" alt="Los Bunkers">
+          </button>
+
+          <button class="artist" aria-label="Foster The People">
+            <img class="artist-img" src="https://placehold.co/160x160/f5f5f5/111111?text=FOSTER" alt="Foster The People">
+          </button>
+
+          <button class="artist" aria-label="Red Hot Chili Peppers">
+            <img class="artist-img" src="https://placehold.co/160x160/000000/ffffff?text=RHCP" alt="Red Hot Chili Peppers">
+          </button>
+        </div>
+      </section>
+
+      <!-- GENEROS -->
+      <section class="section">
+        <h2 class="section-title">Generos</h2>
+
+        <div class="genre-row">
+          <button class="genre" aria-label="Rock">
+            <img class="genre-img" src="https://placehold.co/240x140/ffffff/111111?text=Rock" alt="Rock">
+          </button>
+
+          <button class="genre" aria-label="Ska">
+            <img class="genre-img" src="https://placehold.co/240x140/ffffff/111111?text=Ska" alt="Ska">
+          </button>
+
+          <button class="genre" aria-label="Reggae">
+            <img class="genre-img" src="https://placehold.co/240x140/12b981/0b1220?text=Reggae" alt="Reggae">
+          </button>
+        </div>
+      </section>
+
+      <!-- PLAYLIST -->
+      <section class="section section-playlist">
+        <div class="playlist-head">
+          <h2 class="section-title">Play list</h2>
+          <span class="pill">Recientes</span>
+        </div>
+
+        <div class="playlist">
+          <!-- Item 1 -->
+          <button class="track" type="button">
+            <img class="track-cover" src="https://placehold.co/96x96/ff4fd8/0b1220?text=🎧" alt="cover">
+            <div class="track-meta">
+              <div class="track-title">Loquera segura</div>
+              <div class="track-sub">BY. Aldo Alvarez</div>
+            </div>
+          </button>
+
+          <!-- Item 2 -->
+          <button class="track" type="button">
+            <img class="track-cover" src="https://placehold.co/96x96/2bd45d/0b1220?text=🍃" alt="cover">
+            <div class="track-meta">
+              <div class="track-title">Hi</div>
+              <div class="track-sub">BY. Aldo Alvarez</div>
+            </div>
+          </button>
+
+          <!-- Item 3 -->
+          <button class="track" type="button">
+            <img class="track-cover" src="https://placehold.co/96x96/111827/ffffff?text=ZOE" alt="cover">
+            <div class="track-meta">
+              <div class="track-title">Relax</div>
+              <div class="track-sub">BY. Aldo Alvarez</div>
+            </div>
+          </button>
+
+          <!-- Item 4 (extra para que se vea scroll) -->
+          <button class="track" type="button">
+            <img class="track-cover" src="https://placehold.co/96x96/0ea5e9/0b1220?text=🌊" alt="cover">
+            <div class="track-meta">
+              <div class="track-title">Via lactea</div>
+              <div class="track-sub">Artista - ZOE</div>
+            </div>
+          </button>
+
+          <button class="track" type="button">
+            <img class="track-cover" src="https://placehold.co/96x96/f97316/0b1220?text=🔥" alt="cover">
+            <div class="track-meta">
+              <div class="track-title">Otro tema</div>
+              <div class="track-sub">Artista - Demo</div>
+            </div>
+          </button>
+        </div>
+      </section>
+
+    </section>
+
+    <!-- BOTTOM PLAYER (funcional con tu JS) -->
+    <footer class="bottom-player" role="contentinfo">
+      <button id="playBtn" class="play-btn bottom-play" aria-label="Play/Pause">▶</button>
+
+      <div class="now">
+        <div class="now-top">
+          <div class="now-title">Via lactea</div>
+          <div class="now-sub">Artista - ZOE</div>
+        </div>
+
+        <input id="progressBar" type="range" class="progress-bar bottom-progress" min="0" max="100" value="0" />
+      </div>
+
+      <img class="now-cover" src="https://placehold.co/140x140/ff4fd8/0b1220?text=🎵" alt="Portada actual">
+    </footer>
+
+  </main>
+
+  <!-- Audio (real) -->
+  <audio id="audio" preload="metadata" playsinline
+    src="audio/Canseco - Todavia te alcanzo a ver - CansecoOficial.mp3"></audio>
+
+  <!-- Tu JS (tal cual lo pasaste) -->
   <script src="Js/script.js"></script>
-
-
 </body>
-
 </html>
+

@@ -1,0 +1,362 @@
+/* =========================================================
+   NUEVO SPOTIFY - VISTA HOME + PLAYER (Mobile first)
+   Archivo: css/stylrReproductor.css
+========================================================= */
+
+/* --- Fix: evitar el centrado global del body --- */
+body.app-body {
+  display: block;
+  align-items: unset;
+  justify-content: unset;
+  min-height: 100vh;
+  background: radial-gradient(120% 80% at 20% 0%, rgba(44, 194, 149, 0.20), transparent 50%),
+              radial-gradient(120% 80% at 90% 10%, rgba(0, 223, 129, 0.10), transparent 45%),
+              var(--rich-black);
+}
+
+/* Wrapper general */
+.app {
+  max-width: 980px;
+  margin: 0 auto;
+  padding: 18px 16px 96px; /* espacio para el bottom player */
+}
+
+/* TOPBAR */
+.topbar {
+  display: grid;
+  grid-template-columns: 1fr auto auto;
+  gap: 14px;
+  align-items: center;
+  padding: 6px 0 14px;
+}
+
+.brand {
+  font-weight: 600;
+  font-size: 14px;
+  color: var(--text-white);
+  opacity: 0.95;
+}
+
+/* Tabs estilo pill */
+.tabs {
+  display: flex;
+  gap: 10px;
+  background: rgba(3, 34, 33, 0.65);
+  border: 1px solid rgba(44, 194, 149, 0.18);
+  border-radius: 999px;
+  padding: 6px;
+}
+
+.tab {
+  border: none;
+  background: transparent;
+  color: var(--text-muted);
+  font-size: 12px;
+  padding: 8px 12px;
+  border-radius: 999px;
+  cursor: pointer;
+  transition: 0.25s;
+}
+
+.tab.active {
+  background: rgba(0, 223, 129, 0.12);
+  color: var(--text-white);
+  box-shadow: 0 0 0 1px rgba(0, 223, 129, 0.20) inset;
+}
+
+.profile {
+  width: 44px;
+  height: 44px;
+  border-radius: 999px;
+  background: rgba(0, 223, 129, 0.18);
+  border: 1px solid rgba(0, 223, 129, 0.26);
+  display: grid;
+  place-items: center;
+  text-decoration: none;
+  transition: 0.25s;
+}
+
+.profile:hover {
+  transform: scale(1.03);
+  background: rgba(0, 223, 129, 0.22);
+}
+
+.profile-icon {
+  font-size: 18px;
+}
+
+/* CONTENT */
+.content {
+  display: grid;
+  gap: 16px;
+}
+
+.section {
+  background: rgba(3, 34, 33, 0.55);
+  border: 1px solid rgba(44, 194, 149, 0.12);
+  border-radius: 18px;
+  padding: 14px 14px 12px;
+}
+
+.section-title {
+  font-size: 22px;
+  font-weight: 700;
+  margin-bottom: 10px;
+  letter-spacing: 0.2px;
+}
+
+/* ARTISTAS */
+.artist-row {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+}
+
+.artist {
+  border: none;
+  background: transparent;
+  padding: 0;
+  cursor: pointer;
+}
+
+.artist-img {
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  border-radius: 999px;
+  object-fit: cover;
+  border: 2px solid rgba(0, 223, 129, 0.18);
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.35);
+  transition: 0.25s;
+}
+
+.artist:active .artist-img,
+.artist:hover .artist-img {
+  transform: scale(1.02);
+  border-color: rgba(0, 223, 129, 0.35);
+}
+
+/* GENEROS */
+.genre-row {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+}
+
+.genre {
+  border: none;
+  background: transparent;
+  padding: 0;
+  cursor: pointer;
+}
+
+.genre-img {
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  border-radius: 14px;
+  object-fit: cover;
+  border: 1px solid rgba(0, 223, 129, 0.14);
+  box-shadow: 0 10px 18px rgba(0, 0, 0, 0.30);
+  transition: 0.25s;
+}
+
+.genre:active .genre-img,
+.genre:hover .genre-img {
+  transform: translateY(-2px);
+  border-color: rgba(0, 223, 129, 0.30);
+}
+
+/* PLAYLIST */
+.playlist-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.pill {
+  font-size: 11px;
+  color: var(--text-white);
+  padding: 6px 10px;
+  border-radius: 999px;
+  background: rgba(0, 223, 129, 0.12);
+  border: 1px solid rgba(0, 223, 129, 0.18);
+  opacity: 0.95;
+}
+
+.playlist {
+  margin-top: 8px;
+  display: grid;
+  gap: 10px;
+  max-height: 240px;       /* similar a la imagen (scroll) */
+  overflow: auto;
+  padding-right: 6px;
+}
+
+/* Scrollbar suave (Webkit) */
+.playlist::-webkit-scrollbar { width: 8px; }
+.playlist::-webkit-scrollbar-thumb {
+  background: rgba(0, 223, 129, 0.18);
+  border-radius: 999px;
+}
+.playlist::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.03);
+  border-radius: 999px;
+}
+
+.track {
+  display: grid;
+  grid-template-columns: 52px 1fr;
+  gap: 12px;
+  align-items: center;
+  width: 100%;
+  border: 1px solid rgba(44, 194, 149, 0.10);
+  background: rgba(2, 6, 23, 0.35);
+  border-radius: 14px;
+  padding: 10px 10px;
+  cursor: pointer;
+  text-align: left;
+  transition: 0.25s;
+}
+
+.track:hover {
+  border-color: rgba(0, 223, 129, 0.25);
+  background: rgba(2, 6, 23, 0.48);
+}
+
+.track-cover {
+  width: 52px;
+  height: 52px;
+  border-radius: 12px;
+  object-fit: cover;
+  border: 1px solid rgba(0, 223, 129, 0.14);
+}
+
+.track-meta {
+  display: grid;
+  gap: 2px;
+}
+
+.track-title {
+  font-weight: 600;
+  font-size: 14px;
+  color: var(--text-white);
+}
+
+.track-sub {
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
+/* BOTTOM PLAYER */
+.bottom-player {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  padding: 10px 12px calc(10px + env(safe-area-inset-bottom));
+  background: rgba(3, 34, 33, 0.92);
+  border-top: 1px solid rgba(0, 223, 129, 0.16);
+  backdrop-filter: blur(10px);
+  display: grid;
+  grid-template-columns: 60px 1fr 54px;
+  gap: 12px;
+  align-items: center;
+  z-index: 50;
+}
+
+/* Reusamos tu clase play-btn del global pero ajustamos tamaño/forma aquí */
+.bottom-play {
+  width: 56px;
+  height: 56px;
+  font-size: 22px;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.35);
+}
+
+.now {
+  display: grid;
+  gap: 8px;
+  min-width: 0;
+}
+
+.now-top {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.now-title {
+  font-weight: 700;
+  font-size: 14px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.now-sub {
+  font-size: 11px;
+  color: var(--text-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Progreso: usamos tu clase progress-bar del global, pero lo hacemos “player style” */
+.bottom-progress {
+  width: 100%;
+  max-width: none;
+  margin-top: 0;
+  height: 6px;
+  background: rgba(255, 255, 255, 0.10);
+}
+
+/* cover actual */
+.now-cover {
+  width: 54px;
+  height: 54px;
+  border-radius: 14px;
+  object-fit: cover;
+  border: 1px solid rgba(0, 223, 129, 0.18);
+  box-shadow: 0 10px 18px rgba(0, 0, 0, 0.35);
+}
+
+/* =========================================================
+   RESPONSIVE DESKTOP
+========================================================= */
+@media (min-width: 900px) {
+  .app {
+    padding: 22px 18px 110px;
+  }
+
+  .topbar {
+    grid-template-columns: 1fr auto 52px;
+  }
+
+  .content {
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    align-items: start;
+  }
+
+  .section-playlist {
+    grid-column: 1 / -1; /* playlist a lo ancho */
+  }
+
+  .section-title {
+    font-size: 24px;
+  }
+
+  .playlist {
+    max-height: 280px;
+  }
+
+  .bottom-player {
+    max-width: 980px;
+    margin: 0 auto;
+    left: 50%;
+    transform: translateX(-50%);
+    border-radius: 18px 18px 0 0;
+    padding-left: 18px;
+    padding-right: 18px;
+  }
+}
+
