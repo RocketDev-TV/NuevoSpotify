@@ -1,29 +1,52 @@
 <!DOCTYPE html>
 <html lang="es">
-
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Nuevo Spotify</title>
-  <link rel="stylesheet" href="css/styles.css">
-
-  <link rel="manifest" href="manifest.json">
-  <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Iniciar sesión</title>
+  <link rel="stylesheet" href="css/styleInicioSesion.css" />
 </head>
-
 <body>
 
-  <button id="playBtn" class="play-btn">▶</button>
-  <input id="progressBar" type="range" class="progress-bar" min="0" max="100" value="0">
+  <main class="login-container">
 
-  <audio id="audio" src="audio/Canseco - Todavia te alcanzo a ver - CansecoOficial.mp3"></audio>
-  <script src="Js/script.js"></script>
+    <h1 class="title">Bienvenido</h1>
+    <p class="subtitle">Inicia sesión para continuar</p>
 
-  <a href="inicioSesion.html" class="btn primary">
-  Iniciar sesión
+    <form class="login-form">
+      <label>
+        Correo electrónico
+        <input type="email" placeholder="tu@email.com" required />
+      </label>
+
+      <label>
+        Contraseña
+        <input type="password" placeholder="••••••••" required />
+      </label>
+
+      <button type="submit" class="btn primary">
+        Iniciar sesión
+      </button>
+    </form>
+
+    <div class="divider">
+      <span>o</span>
+    </div>
+
+    <button class="btn google">
+      <img src="https://www.svgrepo.com/show/475656/google-color.svg" alt="Google" />
+      Continuar con Google
+      <a href="inicioSesion.html" class="btn primary">
+  reproductor
 </a>
+    </button>
+
+    <p class="footer-text">
+      ¿No tienes cuenta? <a href="#">Regístrate</a>
+    </p>
+
+  </main>
+  
 
 </body>
-
 </html>
