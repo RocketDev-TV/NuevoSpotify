@@ -1,45 +1,40 @@
-// js/registro.js
 
-// 1. Conexión a Supabase (usando config.js)
+// 1. Conexión a Supabase
 const _supabase = conectarSupabase();
 
-// 2. Referencias del DOM
-const usernameInput = document.getElementById('usernameInput');
+// 2. Referencias del DOM (Actualizadas con los nuevos campos)
+const nombreInput = document.getElementById('nombreInput');
+const paternoInput = document.getElementById('paternoInput');
+const maternoInput = document.getElementById('maternoInput');
+const fechaInput = document.getElementById('fechaInput');
 const emailInput = document.getElementById('emailInput');
 const passwordInput = document.getElementById('passwordInput');
 const confirmInput = document.getElementById('confirmPasswordInput');
 const btnRegistrar = document.getElementById('btnRegistrar');
 
-// Referencias para la validación visual (Lista de requisitos)
+// Referencias de validación visual
 const reqLength = document.getElementById('req-length');
 const reqUpper = document.getElementById('req-upper');
 const reqNumber = document.getElementById('req-number');
 const reqSymbol = document.getElementById('req-symbol');
 const requirementsBox = document.querySelector('.password-requirements');
 
-// --- 3. ACTIVAR LOS OJITOS (La magia de utils.js) --- 👁️
+// --- 3. ACTIVAR LOS OJITOS ---
 activarOjito('passwordInput', 'togglePass1');
 activarOjito('confirmPasswordInput', 'togglePass2');
 
-// --- 4. VALIDACIÓN EN TIEMPO REAL (UX Pro) ---
+// --- 4. VALIDACIÓN EN TIEMPO REAL ---
 passwordInput.addEventListener('input', (e) => {
     const pass = e.target.value;
-    
-    // Mostrar la cajita de requisitos si escriben
     if(pass.length > 0) requirementsBox.style.display = 'block';
     else requirementsBox.style.display = 'none';
 
-    // Validar Longitud (8 chars)
     actualizarRequisito(reqLength, pass.length >= 8);
-    // Validar Mayúscula
     actualizarRequisito(reqUpper, /[A-Z]/.test(pass));
-    // Validar Número
     actualizarRequisito(reqNumber, /\d/.test(pass));
-    // Validar Símbolo
     actualizarRequisito(reqSymbol, /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(pass));
 });
 
-// Helper para pintar verde/gris los requisitos
 function actualizarRequisito(elemento, esValido) {
     if (esValido) {
         elemento.classList.add('valid');
@@ -50,58 +45,86 @@ function actualizarRequisito(elemento, esValido) {
     }
 }
 
-// --- 5. LÓGICA DE REGISTRO ---
+// --- 5. FUNCIÓN DE REGISTRO BLINDADA ---
 btnRegistrar.addEventListener('click', async () => {
-    const username = usernameInput.value;
-    const email = emailInput.value;
+    // Capturamos valores
+    const nombre = nombreInput.value.trim();
+    const paterno = paternoInput.value.trim();
+    const materno = maternoInput.value.trim();
+    const fecha = fechaInput.value;
+    const email = emailInput.value.trim();
     const password = passwordInput.value;
     const confirmPass = confirmInput.value;
 
-    // Validaciones básicas
-    if(!email || !password || !username) {
-        mostrarNotificacion("Por favor llena todos los campos, carnal.", "error");
+    // A. Validaciones básicas
+    if(!nombre || !paterno || !materno || !fecha || !email || !password) {
+        mostrarNotificacion("¡Faltan datos! Llena todo el formulario, carnal.", "error");
         return;
     }
 
     if(password !== confirmPass) {
         mostrarNotificacion("Las contraseñas no coinciden.", "error");
-        vibrarElemento('confirmPasswordInput'); // Usamos utils.js para vibrar
+        vibrarElemento('confirmPasswordInput');
         return;
     }
 
     if(!esContrasenaSegura(password)) {
-        mostrarNotificacion("La contraseña no cumple con los requisitos de seguridad.");
+        mostrarNotificacion("La contraseña no es segura. Revisa los requisitos abajo.");
         vibrarElemento('passwordInput');
         return;
     }
 
-    // Animación de carga
+    // B. Empezamos el proceso
     const textoOriginal = btnRegistrar.textContent;
-    btnRegistrar.textContent = "Creando cuenta...";
+    btnRegistrar.textContent = "Creando perfil...";
     btnRegistrar.disabled = true;
 
     try {
-        // Registro en Supabase
-        const { data, error } = await _supabase.auth.signUp({
+        // PASO 1: Crear usuario en Supabase Auth (Sistema de seguridad)
+        const { data: authData, error: authError } = await _supabase.auth.signUp({
             email: email,
-            password: password,
-            options: {
-                // Guardamos el nombre de usuario como metadata
-                data: {
-                    username: username,
-                    full_name: username // Opcional, por si Google lo pide así
-                }
-            }
+            password: password
         });
 
-        if (error) throw error;
+        if (authError) throw authError;
 
-        mostrarNotificacion("¡Bienvenido al club! Revisa tu correo para confirmar tu cuenta.");
-        window.location.href = "../index.html"; // Regresar al login
+        if (authData.user) {
+            console.log("✅ Usuario Auth creado ID:", authData.user.id);
+
+            // PASO 2: Insertar datos personales en tu tabla 'usuarios'
+            // OJO: Aquí usamos los nombres de columna EXACTOS de tu foto
+            const { error: dbError } = await _supabase
+                .from('usuarios')
+                .insert([
+                    {
+                        uid: authData.user.id, // Vinculamos con el ID de Auth
+                        nombre: nombre,
+                        apellido_paterno: paterno,
+                        apellido_materno: materno,
+                        correo: email,
+                        fecha_de_nacimiento: fecha,
+                        rol: 'usuario' // Asignamos rol por defecto
+                    }
+                ]);
+
+            if (dbError) {
+                // Si falla la base de datos, es un problema serio.
+                console.error("❌ Error guardando datos personales:", dbError);
+                throw new Error("Se creó la cuenta pero falló al guardar tus datos. Contacta soporte.");
+            }
+            
+            // Si llegamos aquí, TODO SALIÓ BIEN 🎉
+            mostrarNotificacion("¡Cuenta creada exitosamente! Revisa tu correo.", "success");
+            
+            // Esperamos 2 segunditos y mandamos al login
+            setTimeout(() => {
+                window.location.href = "../index.html"; 
+            }, 2000);
+        }
 
     } catch (error) {
         console.error(error);
-        mostrarNotificacion("Error: " + error.message);
+        mostrarNotificacion(error.message || "Ocurrió un error inesperado.", "error");
     } finally {
         btnRegistrar.textContent = textoOriginal;
         btnRegistrar.disabled = false;

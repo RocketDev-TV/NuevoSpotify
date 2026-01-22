@@ -35,7 +35,21 @@
 
                     <div class="input-group">
                         <i class="bi bi-person input-icon-left"></i>
-                        <input type="text" id="usernameInput" placeholder="Nombre de usuario" required>
+                        <input type="text" id="nombreInput" placeholder="Nombre(s)" required>
+                    </div>
+
+                    <div class="row-inputs">
+                        <div class="input-group">
+                            <input type="text" id="paternoInput" placeholder="Paterno" required>
+                        </div>
+                        <div class="input-group">
+                            <input type="text" id="maternoInput" placeholder="Materno" required>
+                        </div>
+                    </div>
+
+                    <div class="input-group">
+                        <i class="bi bi-calendar-event input-icon-left"></i>
+                        <input type="text" id="fechaInput" placeholder="Fecha de Nacimiento" onfocus="(this.type='date')" onblur="(this.type='text')" required>
                     </div>
 
                     <div class="input-group">

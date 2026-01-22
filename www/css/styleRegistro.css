@@ -198,3 +198,38 @@ body {
     box-shadow: 0 30px 60px rgba(0,0,0,0.2); /* Sombra más suave en escritorio */
   }
 }
+
+/* --- AJUSTE PARA CAMPOS EN FILA (Apellidos) --- */
+
+.row-inputs {
+    display: flex;
+    gap: 10px; /* Reduje un poco el gap para dar más espacio a los inputs */
+    width: 100%;
+    margin-bottom: 15px; /* Ajuste para que se pegue un poco más */
+}
+
+.row-inputs .input-group {
+    flex: 1;
+    margin-bottom: 0;
+    min-width: 0;
+}
+
+/* 🔥 ESTA ES LA CORRECCIÓN CLAVE 🔥 */
+.row-inputs .input-group input {
+    padding-left: 15px !important; /* Quitamos el hueco del icono fantasma */
+    padding-right: 15px !important; /* Simetría */
+    text-align: center; /* Se ve más pro centrado cuando son cortos */
+}
+
+/* En pantallas muy pequeñas (celulares angostos), los ponemos uno arriba del otro */
+@media (max-width: 380px) {
+    .row-inputs {
+        flex-direction: column;
+        gap: 15px;
+    }
+    
+    /* Si se ponen en columna, regresamos el estilo normal (opcional) */
+    .row-inputs .input-group input {
+        text-align: left;
+    }
+}
