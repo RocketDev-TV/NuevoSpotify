@@ -116,3 +116,68 @@ if(googleBtn){
         }
     });
 }
+
+// --- 6. RECUPERAR CONTRASEÑA (DISEÑO PRO) ---
+const btnOlvide = document.querySelector('.forgot-link a');
+
+if (btnOlvide) {
+    btnOlvide.addEventListener('click', async (e) => {
+        e.preventDefault();
+
+        // 1. Pedimos el correo con el NUEVO DISEÑO
+        const { value: email } = await Swal.fire({
+            // Usamos HTML para el título y texto para darles estilo propio
+            title: '<span class="swal-title-pro">¿Olvidaste tu contraseña?</span>',
+            html: '<p class="swal-text-pro">No hay falla carnal. Escribe el correo de tu cuenta y te mandamos un enlace mágico para entrar.</p>',
+            input: 'email',
+            inputPlaceholder: 'ejemplo@correo.com',
+            showCancelButton: true,
+            confirmButtonText: 'Enviar enlace',
+            cancelButtonText: 'Cancelar',
+            // Quitamos los colores default, usaremos clases CSS
+            buttonsStyling: false, 
+            background: '#ffffff',
+            // Animación de entrada (necesita animate.css, si no lo tienes se ve normal)
+            showClass: { popup: 'animate__animated animate__fadeInDown faster' },
+            hideClass: { popup: 'animate__animated animate__fadeOutUp faster' },
+            // CLASES PERSONALIZADAS (Aquí está la magia) 🎨
+            customClass: {
+                popup: 'swal-popup-pro',
+                input: 'swal-input-pro',
+                confirmButton: 'btn-pro btn-pro-confirm',
+                cancelButton: 'btn-pro btn-pro-cancel',
+                actions: 'swal-actions-gap'
+            }
+        });
+
+        // 2. Si el usuario dio "Enviar"
+        if (email) {
+            // Alerta de carga también estilizada
+            Swal.fire({
+                title: '<span class="swal-title-pro">Enviando...</span>',
+                html: '<p class="swal-text-pro">Estamos contactando al servidor.</p>',
+                allowOutsideClick: false,
+                buttonsStyling: false,
+                customClass: { popup: 'swal-popup-pro' },
+                didOpen: () => { Swal.showLoading(); }
+            });
+
+            try {
+                const { data, error } = await _supabase.auth.resetPasswordForEmail(email, {
+                    redirectTo: window.location.origin + '/html/reproductor.html',
+                });
+
+                if (error) throw error;
+
+                mostrarNotificacion(
+                    '¡Listo! Revisa tu bandeja de entrada (y spam). Te enviamos el enlace mágico.',
+                    'success'
+                );
+
+            } catch (error) {
+                console.error(error);
+                mostrarNotificacion(error.message || "Error al enviar el correo.", "error");
+            }
+        }
+    });
+}

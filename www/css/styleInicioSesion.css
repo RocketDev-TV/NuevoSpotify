@@ -251,3 +251,106 @@ body {
 .footer-terms a:hover {
   text-decoration: underline;
 }
+
+/* =========================================
+   SWEETALERT PRO DESIGN
+   ========================================= */
+
+/* La tarjeta principal del pop-up */
+.swal-popup-pro {
+    border-radius: 30px !important; /* Muy redondeado */
+    padding: 30px !important;
+    box-shadow: 0 30px 70px rgba(0, 15, 1, 0.5) !important; /* Sombra profunda */
+    font-family: 'Poppins', sans-serif !important; /* Tu fuente */
+    border: 1px solid rgba(255,255,255,0.1); /* Borde sutil */
+}
+
+/* Títulos y Texto */
+.swal-title-pro {
+    font-weight: 700;
+    color: var(--dark-green); /* Usa tus variables de color */
+    font-size: 24px;
+    display: block;
+    margin-bottom: 10px;
+}
+
+.swal-text-pro {
+    color: #6c7c79;
+    font-size: 14px;
+    line-height: 1.5;
+}
+
+/* El campo de input (estilo White Card) */
+.swal-input-pro {
+    height: 50px !important;
+    border-radius: 15px !important;
+    border: 2px solid #F1F7F6 !important;
+    background-color: #F1F7F6 !important;
+    color: var(--dark-green) !important;
+    font-weight: 500 !important;
+    padding: 0 20px !important;
+    font-size: 15px !important;
+    margin-top: 25px !important;
+    transition: all 0.3s ease !important;
+    box-shadow: none !important; /* Quita la sombra fea de SweetAlert */
+}
+
+/* Cuando le das click al input */
+.swal-input-pro:focus {
+    border-color: var(--mountain-meadow) !important; /* Verde brillante */
+    background-color: #fff !important;
+    box-shadow: 0 0 0 4px rgba(44, 194, 149, 0.15) !important;
+}
+
+/* --- BOTONES PRO --- */
+
+/* Estilo base para ambos botones */
+.btn-pro {
+    border-radius: 50px !important;
+    padding: 12px 35px !important;
+    font-weight: 600 !important;
+    font-size: 14px !important;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    border: none !important;
+    transition: all 0.3s ease !important;
+    outline: none !important;
+    min-width: 140px; /* Para que tengan buen tamaño */
+}
+
+/* 1. Botón "Enviar enlace" (Igual al botón Entrar) */
+.btn-pro-confirm {
+    background-color: var(--dark-green) !important; /* El color oscuro elegante */
+    color: white !important;
+    background-image: none !important; /* Adiós gradiente */
+    box-shadow: 0 10px 20px rgba(3, 34, 33, 0.3) !important;
+}
+
+.btn-pro-confirm:hover {
+    background-color: var(--rich-black) !important; /* Más oscuro al hover */
+    transform: translateY(-3px);
+    box-shadow: 0 15px 30px rgba(0, 0, 0, 0.4) !important;
+}
+
+/* 2. Botón "Cancelar" (Minimalista y limpio) */
+.btn-pro-cancel {
+    background: transparent !important;
+    color: #889995 !important; /* Gris suave para no distraer */
+    border: 2px solid #e1e5e4 !important; /* Borde muy sutil */
+    box-shadow: none !important;
+}
+
+.btn-pro-cancel:hover {
+    border-color: var(--dark-green) !important; /* Se ilumina al hover */
+    color: var(--dark-green) !important;
+    background: #fff !important;
+}
+
+/* Espacio entre botones */
+.swal-actions-gap {
+    gap: 15px !important;
+    margin-top: 30px !important;
+    display: flex !important;
+    justify-content: center !important;
+    width: 100% !important;
+}
