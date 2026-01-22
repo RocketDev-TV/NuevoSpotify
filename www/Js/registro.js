@@ -1,8 +1,9 @@
+// Js/registro.js
 
 // 1. Conexión a Supabase
 const _supabase = conectarSupabase();
 
-// 2. Referencias del DOM (Actualizadas con los nuevos campos)
+// 2. Referencias del DOM
 const nombreInput = document.getElementById('nombreInput');
 const paternoInput = document.getElementById('paternoInput');
 const maternoInput = document.getElementById('maternoInput');
@@ -47,7 +48,7 @@ function actualizarRequisito(elemento, esValido) {
 
 // --- 5. FUNCIÓN DE REGISTRO BLINDADA ---
 btnRegistrar.addEventListener('click', async () => {
-    // Capturamos valores
+    // A. Capturamos valores
     const nombre = nombreInput.value.trim();
     const paterno = paternoInput.value.trim();
     const materno = maternoInput.value.trim();
@@ -56,12 +57,21 @@ btnRegistrar.addEventListener('click', async () => {
     const password = passwordInput.value;
     const confirmPass = confirmInput.value;
 
-    // A. Validaciones básicas
+    // B. Validaciones básicas
     if(!nombre || !paterno || !materno || !fecha || !email || !password) {
         mostrarNotificacion("¡Faltan datos! Llena todo el formulario, carnal.", "error");
         return;
     }
 
+    // C. Validación de fecha
+    const fechaRegex = /^\d{4}-\d{2}-\d{2}$/;
+    if (!fechaRegex.test(fecha)) {
+        mostrarNotificacion("Por favor selecciona la fecha usando el calendario.", "error");
+        vibrarElemento('fechaInput');
+        return; 
+    }
+
+    // D. Validaciones de contraseña
     if(password !== confirmPass) {
         mostrarNotificacion("Las contraseñas no coinciden.", "error");
         vibrarElemento('confirmPasswordInput');
@@ -74,16 +84,22 @@ btnRegistrar.addEventListener('click', async () => {
         return;
     }
 
-    // B. Empezamos el proceso
+    // E. Empezamos el proceso
     const textoOriginal = btnRegistrar.textContent;
     btnRegistrar.textContent = "Creando perfil...";
     btnRegistrar.disabled = true;
 
     try {
-        // PASO 1: Crear usuario en Supabase Auth (Sistema de seguridad)
+        // PASO 1: Crear usuario en Supabase Auth CON METADATOS ✅
         const { data: authData, error: authError } = await _supabase.auth.signUp({
             email: email,
-            password: password
+            password: password,
+            options: {
+                data: {
+                    // Esto es lo que lee el Dashboard de Supabase
+                    full_name: `${nombre} ${paterno} ${materno}`, 
+                }
+            }
         });
 
         if (authError) throw authError;
@@ -91,32 +107,28 @@ btnRegistrar.addEventListener('click', async () => {
         if (authData.user) {
             console.log("✅ Usuario Auth creado ID:", authData.user.id);
 
-            // PASO 2: Insertar datos personales en tu tabla 'usuarios'
-            // OJO: Aquí usamos los nombres de columna EXACTOS de tu foto
+            // PASO 2: Insertar (o actualizar) en tu tabla 'usuarios'
             const { error: dbError } = await _supabase
                 .from('usuarios')
-                .insert([
+                .upsert([
                     {
-                        uid: authData.user.id, // Vinculamos con el ID de Auth
+                        uid: authData.user.id,
                         nombre: nombre,
                         apellido_paterno: paterno,
                         apellido_materno: materno,
                         correo: email,
                         fecha_de_nacimiento: fecha,
-                        rol: 'usuario' // Asignamos rol por defecto
+                        rol: 'usuario'
                     }
                 ]);
 
             if (dbError) {
-                // Si falla la base de datos, es un problema serio.
                 console.error("❌ Error guardando datos personales:", dbError);
-                throw new Error("Se creó la cuenta pero falló al guardar tus datos. Contacta soporte.");
+                throw new Error("Se creó la cuenta pero falló al guardar tus datos.");
             }
             
-            // Si llegamos aquí, TODO SALIÓ BIEN 🎉
             mostrarNotificacion("¡Cuenta creada exitosamente! Revisa tu correo.", "success");
             
-            // Esperamos 2 segunditos y mandamos al login
             setTimeout(() => {
                 window.location.href = "../index.html"; 
             }, 2000);
