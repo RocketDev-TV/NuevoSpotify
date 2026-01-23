@@ -144,18 +144,21 @@ async function exigirFechaNacimientoSiFalta(supa) {
     }
 
     // 4) Pedir fecha en popup
-    const { value: dob } = await Swal.fire({
-      title: "Completa tu perfil 🧾",
-      text: "Antes de continuar, ingresa tu fecha de nacimiento",
-      input: "date",
-      inputAttributes: { required: true },
-      allowOutsideClick: false,
-      allowEscapeKey: false,
-      confirmButtonText: "Guardar",
-      confirmButtonColor: "#199c47",
-      background: "#ffffff",
-      color: "#032221",
-      preConfirm: (value) => {
+        const { value: dob } = await Swal.fire({
+        title: "Completa tu perfil",
+        text: "Antes de continuar, ingresa tu fecha de nacimiento",
+        input: "date",
+        inputAttributes: { required: true },
+        allowOutsideClick: false,
+        allowEscapeKey: false,
+        confirmButtonText: "Guardar",
+        confirmButtonColor: "#199c47",
+        background: "#ffffff",
+        color: "#032221",
+        customClass: {
+            popup: "dob-popup"
+        },
+        preConfirm: (value) => {
         if (!value) {
           Swal.showValidationMessage("Ingresa tu fecha de nacimiento");
           return false;
