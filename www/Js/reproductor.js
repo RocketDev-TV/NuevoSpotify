@@ -23,6 +23,12 @@ async function verificarSesion() {
     // Reemplaza la URL actual por una limpia sin recargar la página
     window.history.replaceState({}, document.title, window.location.pathname);
 
+    //fORZAMOS EL INGRESO DE FECH DE NACIMIENTO
+    await exigirFechaNacimientoSiFalta(_supabase);
+
+
+
+
     // 4. Sacamos los datos del usuario
     const user = session.user;
     console.log("Usuario logueado:", user);

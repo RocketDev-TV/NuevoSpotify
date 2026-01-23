@@ -80,3 +80,122 @@ function mostrarNotificacion(mensaje, tipo = 'error') {
         }
     });
 }
+
+
+
+/**
+ * 5. FORZAR FECHA DE NACIMIENTO SI VIENE DE GOOGLE 🗓️
+ * @param {object} supa - cliente de Supabase (ej: _supabase)
+ */
+async function exigirFechaNacimientoSiFalta(supa) {
+  try {
+    if (!supa?.auth) {
+      console.error("exigirFechaNacimientoSiFalta: cliente Supabase inválido");
+      return;
+    }
+
+    // 1) Traer sesión desde el cliente correcto
+    const { data: sessionData, error: sessionErr } = await supa.auth.getSession();
+    if (sessionErr) throw sessionErr;
+
+    const user = sessionData?.session?.user;
+    if (!user) return;
+
+    // 2) Validar si viene de Google (robusto)
+    const provider =
+      user?.app_metadata?.provider ||
+      user?.identities?.[0]?.provider ||
+      user?.app_metadata?.providers?.[0];
+
+    console.log("[DOB] provider detectado:", provider);
+    console.log("[DOB] Swal existe?:", typeof Swal !== "undefined");
+
+    const esGoogle = provider === "google";
+    if (!esGoogle) return;
+
+    // 3) Consultar tabla usuarios (columna CORRECTA)
+    const { data: u, error: userErr } = await supa
+      .from("usuarios")
+      .select("uid, fecha_de_nacimiento")
+      .eq("uid", user.id)
+      .maybeSingle();
+
+    if (userErr) throw userErr;
+
+    // Si no existe registro, lo creamos (con columna correcta)
+    if (!u) {
+      const { error: insErr } = await supa.from("usuarios").insert({
+        uid: user.id,
+        fecha_de_nacimiento: null,
+        rol: "usuario",
+      });
+
+      if (insErr) throw insErr;
+    } else {
+      // Si ya tiene fecha, ya no pedimos nada
+      if (u.fecha_de_nacimiento) return;
+    }
+
+    // Si Swal no existe, no podemos mostrar popup
+    console.log("[DOB] fecha en BD es NULL -> debe abrir popup");
+    if (typeof Swal === "undefined") {
+      console.error("[DOB] SweetAlert2 (Swal) NO está cargado.");
+      return;
+    }
+
+    // 4) Pedir fecha en popup
+    const { value: dob } = await Swal.fire({
+      title: "Completa tu perfil 🧾",
+      text: "Antes de continuar, ingresa tu fecha de nacimiento",
+      input: "date",
+      inputAttributes: { required: true },
+      allowOutsideClick: false,
+      allowEscapeKey: false,
+      confirmButtonText: "Guardar",
+      confirmButtonColor: "#1db954",
+      background: "#ffffff",
+      color: "#032221",
+      preConfirm: (value) => {
+        if (!value) {
+          Swal.showValidationMessage("Ingresa tu fecha de nacimiento");
+          return false;
+        }
+
+        // Validación: no futura + mínimo 13 años (ajusta si quieres)
+        const d = new Date(value);
+        const hoy = new Date();
+        if (d > hoy) {
+          Swal.showValidationMessage("La fecha no puede ser futura");
+          return false;
+        }
+
+        const minEdad = 13;
+        const limite = new Date(hoy.getFullYear() - minEdad, hoy.getMonth(), hoy.getDate());
+        if (d > limite) {
+          Swal.showValidationMessage(`Debes tener al menos ${minEdad} años`);
+          return false;
+        }
+
+        return value;
+      },
+    });
+
+    if (!dob) return;
+
+    // 5) Guardar fecha (columna CORRECTA)
+    const { error: updErr } = await supa
+      .from("usuarios")
+      .update({ fecha_de_nacimiento: dob })
+      .eq("uid", user.id);
+
+    if (updErr) throw updErr;
+
+    mostrarNotificacion("Fecha de nacimiento guardada ✅", "success");
+  } catch (err) {
+    console.error("Error exigirFechaNacimientoSiFalta:", err);
+    mostrarNotificacion(
+      "No se pudo guardar la fecha de nacimiento. Revisa permisos (RLS) o intenta de nuevo.",
+      "error"
+    );
+  }
+}
