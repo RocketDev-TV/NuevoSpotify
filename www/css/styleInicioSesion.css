@@ -354,3 +354,105 @@ body {
     justify-content: center !important;
     width: 100% !important;
 }
+
+/* =========================================
+   VALIDACIÓN DE CONTRASEÑA (Estilo Registro)
+   ========================================= */
+
+.password-requirements {
+    font-size: 12px;
+    color: #6c7c79;
+    margin-top: 15px;
+    margin-bottom: 20px;
+    text-align: left; /* Alineamos a la izquierda para leer mejor */
+    padding-left: 5px;
+}
+
+.password-requirements p {
+    font-weight: 500;
+    margin-bottom: 8px;
+}
+
+.password-requirements ul {
+    list-style: none;
+    display: grid;
+    grid-template-columns: 1fr 1fr; /* Dos columnas */
+    gap: 8px;
+}
+
+.password-requirements li {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    transition: all 0.3s ease;
+}
+
+/* --- ESTADOS (Rojo/Gris vs Verde) --- */
+
+/* Estado Inválido (Gris/Pendiente) */
+.invalid {
+    color: #bdc3c7; 
+}
+.invalid i::before {
+    content: "\f309"; /* Icono de puntito (bi-dot) */
+}
+
+/* Estado Válido (Verde Éxito) */
+.valid {
+    color: #27ae60; /* Verde éxito */
+    font-weight: 600;
+}
+.valid i::before {
+    content: "\f26a"; /* Icono de check (bi-check-circle-fill) */
+}
+
+/* =========================================
+   VALIDACIÓN DE CONTRASEÑA (Estilo Registro)
+   ========================================= */
+
+.password-requirements {
+    font-size: 12px;
+    color: #6c7c79;
+    margin-top: 15px;
+    margin-bottom: 20px;
+    text-align: left; /* Alineamos a la izquierda para leer mejor */
+    padding-left: 5px;
+}
+
+.password-requirements p {
+    font-weight: 500;
+    margin-bottom: 8px;
+}
+
+.password-requirements ul {
+    list-style: none;
+    display: grid;
+    grid-template-columns: 1fr 1fr; /* Dos columnas */
+    gap: 8px;
+}
+
+.password-requirements li {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    transition: all 0.3s ease;
+}
+
+/* --- ESTADOS (Rojo/Gris vs Verde) --- */
+
+/* Estado Inválido (Gris/Pendiente) */
+.invalid {
+    color: #bdc3c7; 
+}
+.invalid i::before {
+    content: "\f309"; /* Icono de puntito (bi-dot) */
+}
+
+/* Estado Válido (Verde Éxito) */
+.valid {
+    color: #27ae60; /* Verde éxito */
+    font-weight: 600;
+}
+.valid i::before {
+    content: "\f26a"; /* Icono de check (bi-check-circle-fill) */
+}

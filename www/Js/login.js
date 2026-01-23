@@ -164,7 +164,8 @@ if (btnOlvide) {
 
             try {
                 const { data, error } = await _supabase.auth.resetPasswordForEmail(email, {
-                    redirectTo: window.location.origin + '/html/reproductor.html',
+                    // En lugar de ir al reproductor, vamos a la página de cambio de pass
+                    redirectTo: window.location.origin + '/html/cambiar-password.html',
                 });
 
                 if (error) throw error;
