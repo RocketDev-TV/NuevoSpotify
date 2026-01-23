@@ -414,3 +414,19 @@ button {
 }
 
 
+/*Diseño del panel para forzar la fecha*/
+  .dob-popup input[type="date"] {
+  width: 210px;        /* tamaño ideal visual */
+  text-align: center;
+  font-size: 18px;
+  padding: 12px 14px;
+  border-radius: 14px;
+  margin: 0 auto;
+  display: block;
+  }
+
+  .dob-popup input[type="date"]:focus {
+  border-color: #1db954;
+  box-shadow: 0 0 0 3px rgba(29,185,84,0.25);
+  outline: none;
+}

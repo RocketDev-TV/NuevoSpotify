@@ -8,7 +8,53 @@ const profileName = document.getElementById('userName');
 const profileImage = document.getElementById('userAvatar');
 const btnLogout = document.getElementById('btnLogout');
 
-// 3. Función Principal: Verificar quién entró
+
+
+// 3 cargar canciones
+async function cargarCancionDesdeSupabase() {
+  try {
+    const supa = _supabase;
+
+    const { data: song, error } = await supa
+      .from("canciones")
+      .select("id_cancion, titulo_cancion, audio_path")
+      .order("id_cancion", { ascending: true })
+      .limit(1)
+      .maybeSingle();
+
+    if (error) throw error;
+    if (!song) return console.warn("No hay canciones en BD");
+    if (!song.audio_path) return console.warn("La canción no tiene audio_path");
+
+    console.log("🎵 Canción BD:", song);
+
+    const { data: signed, error: signedErr } = await supa.storage
+      .from("audio")
+      .createSignedUrl(song.audio_path, 3600);
+
+    if (signedErr) throw signedErr;
+
+    console.log("🔐 Signed URL:", signed.signedUrl);
+
+    const audioEl = document.getElementById("audio");
+    if (!audioEl) return console.error("No existe #audio");
+
+    audioEl.pause();
+    audioEl.src = signed.signedUrl;
+    audioEl.load();
+
+    // intenta autoplay (puede bloquearse)
+    await audioEl.play().catch(() => {
+      console.warn("Autoplay bloqueado. Dale play manual.");
+    });
+
+  } catch (e) {
+    console.error("❌ Error en cargarCancionDesdeSupabase:", e);
+  }
+}
+
+
+// 4. Función Principal: Verificar quién entró
 async function verificarSesion() {
     // Supabase automáticamente detecta el #access_token en la URL y crea la sesión
     const { data: { session }, error } = await _supabase.auth.getSession();
@@ -29,7 +75,7 @@ async function verificarSesion() {
 
 
 
-    // 4. Sacamos los datos del usuario
+    // 5. Sacamos los datos del usuario
     const user = session.user;
     console.log("Usuario logueado:", user);
 
@@ -39,7 +85,7 @@ async function verificarSesion() {
     const avatar = user.user_metadata.avatar_url || user.user_metadata.picture; 
     // (Nota: Google a veces usa 'avatar_url' y a veces 'picture')
 
-    // 5. Pintamos en el HTML
+    // 6. Pintamos en el HTML
     if (profileName) profileName.textContent = `Hola, ${nombre}`;
     
     if (profileImage && avatar) {
@@ -48,9 +94,13 @@ async function verificarSesion() {
         // Si no tiene foto, ponemos una genérica
         profileImage.src = "https://ui-avatars.com/api/?name=" + nombre + "&background=random";
     }
+
+    //carga la cancion al iniciar sesion
+    await cargarCancionDesdeSupabase();
+
 }
 
-// 6. Botón de Cerrar Sesión
+// 7. Botón de Cerrar Sesión
 if (btnLogout) {
     btnLogout.addEventListener('click', async () => {
         const { error } = await _supabase.auth.signOut();
@@ -62,3 +112,6 @@ if (btnLogout) {
 
 // Ejecutamos al cargar
 verificarSesion();
+
+
+
