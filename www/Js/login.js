@@ -67,7 +67,7 @@ if(mainActionBtn){
         mainActionBtn.disabled = true;
 
         try {
-            // --- LOGIN ÚNICAMENTE ---
+            // --- LOGIN ---
             const { data, error } = await _supabase.auth.signInWithPassword({
                 email: email,
                 password: password,
@@ -76,13 +76,30 @@ if(mainActionBtn){
             if (error) throw error;
             
             console.log("Login exitoso:", data);
-            
-            // Redirección correcta a la carpeta html
             window.location.href = "html/reproductor.html";
 
         } catch (error) {
-            console.error(error);
-            mostrarError("Credenciales incorrectas o usuario no encontrado.");
+            console.error(error); // Para debug
+
+            // 🔍 DETECTIVIE DE ERRORES 🔍
+            
+            // Caso 1: Correo no confirmado (El más común)
+            if (error.message.includes("Email not confirmed")) {
+                mostrarError("¡Cuidado! Tu cuenta no está activada. Revisa tu correo y dale clic al enlace.");
+            }
+            // Caso 2: Credenciales malas (Contraseña o usuario mal)
+            else if (error.message.includes("Invalid login credentials")) {
+                mostrarError("Credenciales incorrectas. Checa tu correo o contraseña.");
+            }
+            // Caso 3: Demasiados intentos (Rate limit)
+            else if (error.status === 429) {
+                mostrarError("Tranquilo veloz. Intentaste muchas veces, espera un ratito.");
+            }
+            // Caso Default: Algo raro pasó
+            else {
+                mostrarError(error.message || "Ocurrió un error al iniciar sesión.");
+            }
+
         } finally {
             mainActionBtn.textContent = textoOriginal;
             mainActionBtn.disabled = false;
