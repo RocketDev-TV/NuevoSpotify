@@ -1,5 +1,3 @@
-// Js/registro.js
-
 // 1. Conexión a Supabase
 const _supabase = conectarSupabase();
 
@@ -27,7 +25,7 @@ activarOjito('confirmPasswordInput', 'togglePass2');
 // --- 4. VALIDACIÓN EN TIEMPO REAL ---
 passwordInput.addEventListener('input', (e) => {
     const pass = e.target.value;
-    if(pass.length > 0) requirementsBox.style.display = 'block';
+    if (pass.length > 0) requirementsBox.style.display = 'block';
     else requirementsBox.style.display = 'none';
 
     actualizarRequisito(reqLength, pass.length >= 8);
@@ -58,7 +56,7 @@ btnRegistrar.addEventListener('click', async () => {
     const confirmPass = confirmInput.value;
 
     // B. Validaciones básicas
-    if(!nombre || !paterno || !materno || !fecha || !email || !password) {
+    if (!nombre || !paterno || !materno || !fecha || !email || !password) {
         mostrarNotificacion("¡Faltan datos! Llena todo el formulario, carnal.", "error");
         return;
     }
@@ -68,17 +66,17 @@ btnRegistrar.addEventListener('click', async () => {
     if (!fechaRegex.test(fecha)) {
         mostrarNotificacion("Por favor selecciona la fecha usando el calendario.", "error");
         vibrarElemento('fechaInput');
-        return; 
+        return;
     }
 
     // D. Validaciones de contraseña
-    if(password !== confirmPass) {
+    if (password !== confirmPass) {
         mostrarNotificacion("Las contraseñas no coinciden.", "error");
         vibrarElemento('confirmPasswordInput');
         return;
     }
 
-    if(!esContrasenaSegura(password)) {
+    if (!esContrasenaSegura(password)) {
         mostrarNotificacion("La contraseña no es segura. Revisa los requisitos abajo.");
         vibrarElemento('passwordInput');
         return;
@@ -90,24 +88,24 @@ btnRegistrar.addEventListener('click', async () => {
     btnRegistrar.disabled = true;
 
     try {
-        // PASO 1: Crear usuario en Supabase Auth CON METADATOS ✅
+        // PASO 1: Crear usuario en Supabase Auth
         const { data: authData, error: authError } = await _supabase.auth.signUp({
             email: email,
             password: password,
             options: {
                 data: {
-                    // Esto es lo que lee el Dashboard de Supabase
-                    full_name: `${nombre} ${paterno} ${materno}`, 
+                    full_name: `${nombre} ${paterno} ${materno}`,
                 }
             }
         });
 
+        // Manejo específico si Auth falla (ej. si tienes confirmación desactivada y el usuario ya existe)
         if (authError) throw authError;
 
         if (authData.user) {
             console.log("✅ Usuario Auth creado ID:", authData.user.id);
 
-            // PASO 2: Insertar (o actualizar) en tu tabla 'usuarios'
+            // PASO 2: Insertar en la BD
             const { error: dbError } = await _supabase
                 .from('usuarios')
                 .upsert([
@@ -123,20 +121,56 @@ btnRegistrar.addEventListener('click', async () => {
                 ]);
 
             if (dbError) {
-                console.error("❌ Error guardando datos personales:", dbError);
-                throw new Error("Se creó la cuenta pero falló al guardar tus datos.");
+                console.error("❌ Error DB Detallado:", JSON.stringify(dbError)); // Para que veas todo el chisme en consola
+                
+                const mensajeError = (dbError.message || "").toLowerCase();
+                
+                if (
+                    dbError.code === '23505' || 
+                    mensajeError.includes("duplicate") || 
+                    mensajeError.includes("unique") ||
+                    mensajeError.includes("violates unique constraint")
+                ) {
+                    throw new Error("Este correo ya está registrado. ¿Por qué no inicias sesión?");
+                }
+                
+                // Si es otro error raro
+                throw new Error("Hubo un problema al guardar tu perfil. Código: " + (dbError.code || "Desconocido"));
             }
-            
-            mostrarNotificacion("¡Cuenta creada exitosamente! Revisa tu correo.", "success");
-            
+
+            // ÉXITO TOTAL 🎉
+            mostrarNotificacion("¡Bienvenido al club! Revisa tu correo para activar la cuenta.", "success");
+
             setTimeout(() => {
-                window.location.href = "../index.html"; 
-            }, 2000);
+                window.location.href = "../index.html";
+            }, 2500);
         }
 
     } catch (error) {
-        console.error(error);
-        mostrarNotificacion(error.message || "Ocurrió un error inesperado.", "error");
+        console.error("🔥 Error capturado:", error);
+
+        let mensaje = error.message;
+
+        // 1. Usuario ya existe en Auth (mensaje estándar de Supabase)
+        if (mensaje.includes("User already registered") || mensaje.includes("already registered")) {
+            mensaje = "Este correo ya tiene cuenta. ¡Córrele a iniciar sesión!";
+        }
+        // 2. Rate Limit (Demasiados intentos)
+        else if (mensaje.includes("rate limit") || error.status === 429) {
+            mensaje = "Tranquilo veloz, espera unos segundos antes de intentar de nuevo.";
+        }
+        // 3. Contraseña débil (por si se nos pasó validarla antes)
+        else if (mensaje.includes("Password should be")) {
+            mensaje = "La contraseña es muy débil, métele más galleta.";
+        }
+
+        mostrarNotificacion(mensaje, "error");
+
+        // Opcional: Si el error es de usuario duplicado, podríamos redirigirlo al login
+        if (mensaje.includes("ya tiene cuenta") || mensaje.includes("ya está registrado")) {
+            setTimeout(() => window.location.href = "../index.html", 3000);
+        }
+
     } finally {
         btnRegistrar.textContent = textoOriginal;
         btnRegistrar.disabled = false;

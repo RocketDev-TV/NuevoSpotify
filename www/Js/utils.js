@@ -52,16 +52,16 @@ function vibrarElemento(elementId) {
  * @param {string} mensaje - El texto a mostrar
  * @param {string} tipo - 'success' (verde), 'error' (rojo), 'warning' (amarillo)
  */
+
 function mostrarNotificacion(mensaje, tipo = 'error') {
-    // Definimos colores según el tipo
     let titulo = '';
-    let confirmBtnColor = '#03624C'; // Tu verde Bangladesh
+    let confirmBtnColor = '#03624C'; 
 
     if (tipo === 'success') {
         titulo = '¡Excelente!';
     } else if (tipo === 'error') {
         titulo = '¡Ups!';
-        confirmBtnColor = '#e74c3c'; // Rojo para errores
+        confirmBtnColor = '#e74c3c'; 
     } else {
         titulo = 'Atención';
     }
@@ -72,11 +72,11 @@ function mostrarNotificacion(mensaje, tipo = 'error') {
         icon: tipo,
         confirmButtonText: 'Entendido',
         confirmButtonColor: confirmBtnColor,
-        background: '#ffffff', // Fondo blanco como tus tarjetas
-        color: '#032221',      // Texto oscuro (Dark Green)
-        borderRadius: '20px',
+        background: '#ffffff',
+        color: '#032221',
+        // borderRadius: '20px',  <--- BORRA ESTA LÍNEA 🗑️
         customClass: {
-            popup: 'mis-alertas-pro' // Por si queremos meterle CSS extra luego
+            popup: 'mis-alertas-pro' 
         }
     });
 }
