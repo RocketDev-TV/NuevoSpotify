@@ -152,7 +152,7 @@ async function exigirFechaNacimientoSiFalta(supa) {
       allowOutsideClick: false,
       allowEscapeKey: false,
       confirmButtonText: "Guardar",
-      confirmButtonColor: "#1db954",
+      confirmButtonColor: "#199c47",
       background: "#ffffff",
       color: "#032221",
       preConfirm: (value) => {
@@ -194,7 +194,7 @@ async function exigirFechaNacimientoSiFalta(supa) {
   } catch (err) {
     console.error("Error exigirFechaNacimientoSiFalta:", err);
     mostrarNotificacion(
-      "No se pudo guardar la fecha de nacimiento. Revisa permisos (RLS) o intenta de nuevo.",
+      "No se pudo guardar la fecha de nacimiento.",
       "error"
     );
   }
