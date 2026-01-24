@@ -52,6 +52,7 @@ function mostrarError(mensaje) {
 // --- 4. LÓGICA PRINCIPAL (SOLO LOGIN) ---
 if(mainActionBtn){
     mainActionBtn.addEventListener('click', async () => {
+        // LEEMOS LOS INPUTS AQUÍ (Esto es lo que faltaba en el otro lado)
         const email = emailInput.value;
         const password = passwordInput.value;
         
@@ -67,7 +68,7 @@ if(mainActionBtn){
         mainActionBtn.disabled = true;
 
         try {
-            // --- LOGIN ---
+            // A. LOGIN EN AUTH
             const { data, error } = await _supabase.auth.signInWithPassword({
                 email: email,
                 password: password,
@@ -75,31 +76,37 @@ if(mainActionBtn){
 
             if (error) throw error;
             
-            console.log("Login exitoso:", data);
-            window.location.href = "html/reproductor.html";
+            console.log("Login Auth exitoso, revisando rol...");
+
+            // B. VERIFICAR ROL EN BASE DE DATOS 🕵️‍♂️ (¡ESTO ES LO NUEVO!)
+            const { data: userData, error: userError } = await _supabase
+                .from('usuarios')
+                .select('rol')
+                .eq('uid', data.user.id)
+                .single();
+
+            if (userError) throw userError;
+
+            // C. EL SEMÁFORO 🚦
+            if (userData.rol === 'admin') {
+                mostrarNotificacion("Bienvenido, Jefe.", "success");
+                setTimeout(() => {
+                    window.location.href = "html/admin-dashboard.html"; // -> Al Admin
+                }, 1000);
+            } else {
+                window.location.href = "html/reproductor.html"; // -> A la música
+            }
 
         } catch (error) {
-            console.error(error); // Para debug
-
-            // 🔍 DETECTIVIE DE ERRORES 🔍
-            
-            // Caso 1: Correo no confirmado (El más común)
+            console.error(error); 
+            // Manejo de errores (igual que antes)
             if (error.message.includes("Email not confirmed")) {
-                mostrarError("¡Cuidado! Tu cuenta no está activada. Revisa tu correo y dale clic al enlace.");
+                mostrarError("¡Aguanta! Tu cuenta no está activada. Revisa tu correo.");
+            } else if (error.message.includes("Invalid login credentials")) {
+                mostrarError("Credenciales incorrectas.");
+            } else {
+                mostrarError(error.message || "Error al iniciar sesión.");
             }
-            // Caso 2: Credenciales malas (Contraseña o usuario mal)
-            else if (error.message.includes("Invalid login credentials")) {
-                mostrarError("Credenciales incorrectas. Checa tu correo o contraseña.");
-            }
-            // Caso 3: Demasiados intentos (Rate limit)
-            else if (error.status === 429) {
-                mostrarError("Tranquilo veloz. Intentaste muchas veces, espera un ratito.");
-            }
-            // Caso Default: Algo raro pasó
-            else {
-                mostrarError(error.message || "Ocurrió un error al iniciar sesión.");
-            }
-
         } finally {
             mainActionBtn.textContent = textoOriginal;
             mainActionBtn.disabled = false;
@@ -116,20 +123,17 @@ if(googleBtn){
             const { data, error } = await _supabase.auth.signInWithOAuth({
                 provider: 'google',
                 options: {
-                    // Redirección correcta
-                    redirectTo: window.location.origin + '/html/reproductor.html',
+                    redirectTo: window.location.origin, 
                     queryParams: {
                         access_type: 'offline',
                         prompt: 'consent',
                     },
                 },
             });
-
             if (error) throw error;
-            
         } catch (error) {
-            console.error("❌ Error:", error);
-            mostrarNotificacion("Error al conectar con Google: " + error.message, "error");
+            console.error("❌ Error Google:", error);
+            mostrarNotificacion("Error al conectar con Google.", "error");
         }
     });
 }
@@ -199,3 +203,41 @@ if (btnOlvide) {
         }
     });
 }
+
+// --- 7. AUTO-REDIRECCIÓN INTELIGENTE ---
+// Esta función corre sola cuando carga la página. Sirve para 2 cosas:
+// 1. Si vienes regresando de Google.
+// 2. Si ya habías iniciado sesión antes y abres la app.
+
+async function verificarSesionAlCargar() {
+    // A. Preguntamos si hay sesión activa
+    const { data: { session } } = await _supabase.auth.getSession();
+
+    if (session) {
+        console.log("Sesión detectada (Google o Cache), verificando rol...");
+
+        // B. Consultamos el rol en la BD
+        const { data: userData, error } = await _supabase
+            .from('usuarios')
+            .select('rol')
+            .eq('uid', session.user.id)
+            .single();
+
+        if (error) {
+            console.error("Error al verificar rol:", error);
+            return;
+        }
+
+        // C. ¡Redirección Maestra! 🚦
+        if (userData?.rol === 'admin') {
+            console.log("Es patrón, vámonos al Admin Panel");
+            window.location.href = "html/admin-dashboard.html";
+        } else {
+            console.log("Es mortal, vámonos a la música");
+            window.location.href = "html/reproductor.html";
+        }
+    }
+}
+
+// Ejecutamos esto apenas cargue el script
+document.addEventListener('DOMContentLoaded', verificarSesionAlCargar);

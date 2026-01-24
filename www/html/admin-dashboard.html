@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Panel de Administración - NuevoSpotify</title>
+
+    <link rel="stylesheet" href="../css/styles.css">
+    <link rel="stylesheet" href="../css/admin/dashboard.css">
+
+    <link rel="stylesheet" href="../css/admin/analytics.css">
+    <link rel="stylesheet" href="../css/admin/music-manager.css">
+
+</head>
+<script src="https://unpkg.com/@phosphor-icons/web"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+
+<body class="admin-body">
+
+    <div class="admin-container">
+        <aside class="sidebar">
+            <div class="logo-area">
+                <h2>AdminPanel</h2>
+            </div>
+            <nav class="menu">
+                <button class="menu-btn active" onclick="cambiarVista('analytics')">
+                    <i class="ph ph-chart-line-up"></i> Analíticas
+                </button>
+                <button class="menu-btn" onclick="cambiarVista('music')">
+                    <i class="ph ph-music-notes-plus"></i> Music manager
+                </button>
+                <button class="menu-btn" onclick="cambiarVista('users')">
+                    <i class="ph ph-users"></i> Usuarios
+                </button>
+            </nav>
+            <div class="logout-area">
+                <button id="btnLogout" class="menu-btn logout">
+                    <i class="ph ph-sign-out"></i> Salir
+                </button>
+            </div>
+        </aside>
+
+        <main class="main-content">
+
+            <header class="top-bar">
+                <div class="welcome-text">
+                    <h1>Hola, <span id="adminName">Admin</span> 👋</h1>
+                    <p id="fullDateDisplay">Cargando fecha...</p>
+                </div>
+                <div class="clock-card">
+                    <i class="ph ph-clock"></i>
+                    <span id="clockTime">00:00</span>
+                </div>
+            </header>
+
+            <section id="view-analytics" class="view-section active">
+                <div class="kpi-grid">
+                    <div class="kpi-card">
+                        <div class="icon-box"><i class="ph ph-users-three"></i></div>
+                        <div class="kpi-info">
+                            <div class="kpi-header">
+                                <h3>Usuarios Totales</h3>
+                                <span class="badge green"><i class="ph ph-arrow-up-right"></i> Global</span>
+                            </div>
+                            <p class="kpi-number" id="totalUsers">0</p>
+                        </div>
+                    </div>
+
+                    <div class="kpi-card">
+                        <div class="icon-box new"><i class="ph ph-user-plus"></i></div>
+                        <div class="kpi-info">
+                            <div class="kpi-header">
+                                <h3>Nuevos (Hoy)</h3>
+                                <span class="badge green"><i class="ph ph-lightning"></i> Actividad</span>
+                            </div>
+                            <p class="kpi-number" id="newUsers">0</p>
+                        </div>
+                    </div>
+
+                    <div class="kpi-card">
+                        <div class="icon-box active"><i class="ph ph-activity"></i></div>
+                        <div class="kpi-info">
+                            <div class="kpi-header">
+                                <h3>Activos Ahora</h3>
+                                <span class="badge purple"><i class="ph ph-pulse"></i> Retención</span>
+                            </div>
+                            <p class="kpi-number" id="activeUsers">0</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="chart-container">
+                    <h3>Crecimiento de Usuarios</h3>
+                    <div class="chart-wrapper">
+                        <canvas id="growthChart"></canvas>
+                    </div>
+                </div>
+            </section>
+
+            <section id="view-music" class="view-section" style="display: none;">
+                <div class="manager-header">
+                    <h2>Gestor de Música</h2>
+                    <div class="tabs">
+                        <button class="tab-btn active" onclick="cambiarTabMusic('importar')">Importar (Spotify)</button>
+                        <button class="tab-btn" onclick="cambiarTabMusic('manual')">Subida Manual</button>
+                    </div>
+                </div>
+
+                <div id="tab-importar" class="music-tab active">
+                    <div class="glass-panel">
+                        <h3><i class="ph ph-spotify-logo"></i> Clonador de Playlists</h3>
+                        <p>Pega el link de una playlist o canción de Spotify y deja que la magia suceda.</p>
+                        <div class="input-group-row">
+                            <input type="text" placeholder="https://open.spotify.com/playlist/..." id="spotifyLink">
+                            <button class="btn-primary" id="btnClonar">
+                                <i class="ph ph-download-simple"></i> Clonar
+                            </button>
+                        </div>
+                        <div id="cloner-status" class="status-area">
+                        </div>
+                    </div>
+                </div>
+
+                <div id="tab-manual" class="music-tab" style="display: none;">
+                    <div class="grid-2-cols">
+                        <div class="glass-panel">
+                            <h3>1. Definir Contexto</h3>
+                            <p class="instruction-text">Selecciona o crea el artista y álbum donde se guardarán las
+                                canciones.</p>
+
+                            <form id="formMetadata">
+
+                                <label>Género Musical</label>
+                                <div class="input-group-row compact">
+                                    <select id="selectGenero">
+                                        <option value="">Cargando géneros...</option>
+                                    </select>
+                                    <button type="button" class="btn-icon" onclick="abrirModal('genero')">
+                                        <i class="ph ph-plus"></i>
+                                    </button>
+                                </div>
+
+                                <label>Artista</label>
+                                <div class="input-group-row compact">
+                                    <select id="selectArtista" disabled>
+                                        <option value="">Selecciona un género primero</option>
+                                    </select>
+                                    <button type="button" class="btn-icon" onclick="abrirModal('artista')">
+                                        <i class="ph ph-plus"></i>
+                                    </button>
+                                </div>
+
+                                <label>Álbum / EP</label>
+                                <div class="input-group-row compact">
+                                    <select id="selectAlbum" disabled>
+                                        <option value="">Selecciona un artista primero</option>
+                                    </select>
+                                    <button type="button" class="btn-icon" onclick="abrirModal('album')">
+                                        <i class="ph ph-plus"></i>
+                                    </button>
+                                </div>
+
+                                <div id="coverArea" style="display:none; margin-top:15px;">
+                                    <img id="currentCover" src="" class="cover-preview-large">
+                                </div>
+
+                                <button type="button" class="btn-secondary" id="btnLockContext"
+                                    onclick="bloquearContexto()">
+                                    <i class="ph ph-lock-key"></i> Confirmar para Subir
+                                </button>
+                            </form>
+                        </div>
+
+                        <div class="glass-panel">
+                            <h3>2. Carga Masiva (EPs / Álbums)</h3>
+                            <form id="formCancion">
+                                <p class="instruction-text">Asegúrate de haber guardado el Artista/Álbum a la izquierda
+                                    primero.</p>
+
+                                <div class="file-upload-wrapper">
+                                    <input type="file" id="inputFileAudio" accept="audio/*" multiple hidden>
+                                    <label for="inputFileAudio" class="custom-file-upload">
+                                        <i class="ph ph-cloud-arrow-up"></i>
+                                        <span id="fileLabelText">Click para elegir canciones o arrastra aquí</span>
+                                        <span class="file-count" id="fileCountBadge" style="display:none;">0
+                                            archivos</span>
+                                    </label>
+                                </div>
+
+                                <div id="fileListPreview" class="file-list-area"></div>
+
+                                <button type="submit" class="btn-primary full-width">
+                                    <i class="ph ph-upload-simple"></i> Procesar Todo el Álbum
+                                </button>
+                            </form>
+                        </div>
+
+                    </div>
+                </div>
+
+            </section>
+
+        </main>
+    </div>
+
+    <div id="modal-genero" class="modal-overlay">
+        <div class="modal-content">
+            <h3>Nuevo Género</h3>
+            <input type="text" id="newGenreName" placeholder="Ej. Indie Rock">
+            <div class="modal-actions">
+                <button onclick="cerrarModal('genero')" class="btn-cancel">Cancelar</button>
+                <button onclick="crearGenero()" class="btn-confirm">Guardar</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="modal-artista" class="modal-overlay">
+        <div class="modal-content">
+            <h3>Nuevo Artista</h3>
+            <input type="text" id="newArtistName" placeholder="Ej. Zoé">
+            <textarea id="newArtistDesc" placeholder="Descripción breve..."></textarea>
+            <div class="modal-actions">
+                <button onclick="cerrarModal('artista')" class="btn-cancel">Cancelar</button>
+                <button onclick="crearArtista()" class="btn-confirm">Guardar</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="modal-album" class="modal-overlay">
+        <div class="modal-content">
+            <h3>Nuevo Álbum/EP</h3>
+            <input type="text" id="newAlbumTitle" placeholder="Ej. Reptilectric">
+
+            <label>Portada</label>
+            <input type="file" id="newAlbumCover" accept="image/*">
+
+            <div class="row-dates">
+                <input type="date" id="newAlbumDate">
+                <input type="number" id="newAlbumSongs" placeholder="Num. Canciones">
+            </div>
+
+            <div class="modal-actions">
+                <button onclick="cerrarModal('album')" class="btn-cancel">Cancelar</button>
+                <button onclick="crearAlbum()" class="btn-confirm">Guardar</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="../Js/config.js"></script>
+    <script src="../Js/admin-dashboard.js"></script>
+    <script src="../Js/admin/analytics.js"></script>
+    <script src="../Js/admin/music-manager.js"></script>
+</body>
+
+</html>

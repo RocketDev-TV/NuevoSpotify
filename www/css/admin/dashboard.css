@@ -1,0 +1,120 @@
+/* css/admin/dashboard.css */
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
+
+:root {
+    --bg-dark: #000000;         
+    --bg-sidebar: #050505;      
+    --bg-card: #121212;         
+    --accent: #2CC295;          
+    --text-main: #FFFFFF;
+    --text-muted: #B3B3B3;
+    --glass-border: rgba(255, 255, 255, 0.1);
+}
+
+/* --- LAYOUT GENERAL --- */
+.admin-body {
+    background-color: var(--bg-dark);
+    color: var(--text-main);
+    margin: 0;
+    overflow: hidden; 
+    font-family: 'Poppins', sans-serif;
+}
+
+.admin-container {
+    display: flex;
+    height: 100vh;
+    width: 100%;
+}
+
+/* --- SIDEBAR --- */
+.sidebar {
+    width: 260px;
+    background: var(--bg-sidebar);
+    border-right: 1px solid var(--glass-border);
+    display: flex;
+    flex-direction: column;
+    padding: 25px;
+    flex-shrink: 0;
+}
+
+.logo-area h2 {
+    color: var(--accent);
+    margin-bottom: 40px;
+    font-size: 22px;
+    letter-spacing: -0.5px;
+    margin-top: 0;
+}
+
+.menu {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    flex: 1;
+}
+
+.menu-btn {
+    background: transparent;
+    border: none;
+    color: var(--text-muted);
+    padding: 12px 15px;
+    text-align: left;
+    cursor: pointer;
+    border-radius: 8px;
+    font-size: 15px;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    transition: all 0.3s ease;
+}
+
+.menu-btn i { font-size: 20px; }
+
+.menu-btn:hover {
+    color: #fff;
+    background: rgba(255,255,255,0.05);
+}
+
+.menu-btn.active {
+    background: rgba(44, 194, 149, 0.15);
+    color: var(--accent);
+}
+
+.logout-area {
+    border-top: 1px solid var(--glass-border);
+    padding-top: 20px;
+}
+
+.logout:hover { color: #e74c3c; background: rgba(231, 76, 60, 0.1); }
+
+/* --- CONTENIDO PRINCIPAL --- */
+.main-content {
+    flex: 1;
+    padding: 30px 40px;
+    overflow-y: auto;
+    background: radial-gradient(circle at top right, rgba(44,194,149,0.08), transparent 40%);
+}
+
+/* Header Superior */
+.top-bar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 40px;
+}
+
+.welcome-text h1 { font-size: 28px; margin: 0; }
+.welcome-text span { color: var(--accent); }
+.welcome-text p { margin: 5px 0 0 0; color: var(--text-muted); font-size: 14px; }
+
+.clock-card {
+    background: rgba(255,255,255,0.05);
+    padding: 8px 16px;
+    border-radius: 20px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-family: monospace;
+    border: 1px solid var(--glass-border);
+    color: var(--accent);
+}
