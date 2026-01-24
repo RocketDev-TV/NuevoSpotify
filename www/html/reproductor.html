@@ -17,7 +17,6 @@
   <main class="app">
 
     <header class="topbar" style="display: flex; align-items: center; justify-content: space-between;">
-      
       <div class="user-info" style="display: flex; align-items: center; gap: 8px;">
         <img id="userAvatar" src="https://via.placeholder.com/35" alt="Avatar" 
              style="width: 35px; height: 35px; border-radius: 50%; object-fit: cover; border: 2px solid #1db954;">
@@ -37,40 +36,16 @@
 
     <section class="content">
 
+      <!-- ARTISTAS: JS crea botones con imagen -->
       <section class="section">
         <h2 class="section-title">Artistas</h2>
-
-        <div class="artist-row">
-          <button class="artist" aria-label="Los Bunkers">
-            <img class="artist-img" src="https://placehold.co/160x160/ffcc00/000000?text=LOS+BUNKERS" alt="Los Bunkers">
-          </button>
-
-          <button class="artist" aria-label="Foster The People">
-            <img class="artist-img" src="https://placehold.co/160x160/f5f5f5/111111?text=FOSTER" alt="Foster The People">
-          </button>
-
-          <button class="artist" aria-label="Red Hot Chili Peppers">
-            <img class="artist-img" src="https://placehold.co/160x160/000000/ffffff?text=RHCP" alt="Red Hot Chili Peppers">
-          </button>
-        </div>
+        <div id="artistRow" class="artist-row"></div>
       </section>
 
+      <!-- GENEROS: JS crea botones sin imagen -->
       <section class="section">
         <h2 class="section-title">Generos</h2>
-
-        <div class="genre-row">
-          <button class="genre" aria-label="Rock">
-            <img class="genre-img" src="https://placehold.co/240x140/ffffff/111111?text=Rock" alt="Rock">
-          </button>
-
-          <button class="genre" aria-label="Ska">
-            <img class="genre-img" src="https://placehold.co/240x140/ffffff/111111?text=Ska" alt="Ska">
-          </button>
-
-          <button class="genre" aria-label="Reggae">
-            <img class="genre-img" src="https://placehold.co/240x140/12b981/0b1220?text=Reggae" alt="Reggae">
-          </button>
-        </div>
+        <div id="genreRow" class="genre-row"></div>
       </section>
 
       <section class="section section-playlist">
@@ -141,18 +116,16 @@
 
   </main>
 
- <audio id="audio" preload="metadata" playsinline></audio>
-
+  <audio id="audio" preload="metadata" playsinline></audio>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-  
+
   <script src="../Js/config.js"></script>
   <script src="../Js/utils.js"></script>
-
+    <!-- ✅ Nuevo archivo para consultas y render -->
+  <script src="../Js/Reproducor/consultasReproductor.js"></script>
   <script src="../Js/reproductor.js"></script>
-
   <script src="../Js/script.js"></script>
-
 </body>
 </html>

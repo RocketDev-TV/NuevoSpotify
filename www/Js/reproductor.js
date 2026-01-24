@@ -95,8 +95,12 @@ async function verificarSesion() {
         profileImage.src = "https://ui-avatars.com/api/?name=" + nombre + "&background=random";
     }
 
-    //carga la cancion al iniciar sesion
-    await cargarCancionDesdeSupabase();
+        //correr en paralelo 
+        await Promise.all([
+          cargarCancionDesdeSupabase(),
+          renderArtistas(),
+          renderGeneros()
+        ]);
 
 }
 
