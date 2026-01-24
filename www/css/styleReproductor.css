@@ -1,489 +1,453 @@
 /* =========================================================
-   NUEVO SPOTIFY - CSS DESDE 0 (RESPONSIVE + SCROLLS)
+   styleReproductor.css (OVERRIDES para convivir con styles.css)
+   - NO tocamos styles.css
+   - Arregla el bug: styles.css centra todo el body con flex
+   - Aplica SOLO a esta vista: body.app-body
    ========================================================= */
 
-/* -------- Reset base -------- */
-*,
-*::before,
-*::after{
-  box-sizing: border-box;
+/* 1) FIX CRÍTICO: desactivar centrado global del body SOLO en reproductor */
+body.app-body{
+  display: block !important;
+  align-items: initial !important;
+  justify-content: initial !important;
+  min-height: 100vh;
 }
 
-html, body{
-  height: 100%;
-}
-
-body{
+/* Opcional: si el body te deja márgenes raros */
+body.app-body{
   margin: 0;
-  font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
-  background: radial-gradient(1200px 600px at 30% 0%, rgba(31, 187, 112, 0.12), transparent 55%),
-              radial-gradient(1000px 600px at 80% 10%, rgba(14, 165, 233, 0.10), transparent 60%),
-              #061a14;
-  color: #eaf7f1;
 }
 
-/* -------- Variables -------- */
-:root{
-  --bg: #061a14;
-  --panel: rgba(10, 33, 26, 0.72);
-  --panel-2: rgba(12, 45, 35, 0.72);
-  --stroke: rgba(255, 255, 255, 0.08);
-  --text: #eaf7f1;
-  --muted: rgba(234, 247, 241, 0.70);
-  --muted-2: rgba(234, 247, 241, 0.55);
-  --brand: #1db954;
-  --danger: #e74c3c;
-  --shadow: 0 12px 28px rgba(0,0,0,0.45);
-  --radius-xl: 22px;
-  --radius-lg: 18px;
-  --radius-md: 14px;
-}
-
-/* -------- Layout principal -------- */
-.app-body{
-  min-height: 100vh;
-}
-
-.app{
-  width: min(1220px, 100%);
+/* 2) Layout principal */
+body.app-body .app{
+  width: min(1240px, 100%);
   margin: 0 auto;
-  padding: 18px 18px 0;
+  padding: 14px 14px 0;
   min-height: 100vh;
-  display: flex;
-  flex-direction: column;
 }
 
-/* -------- Topbar -------- */
-.topbar{
-  background: rgba(0,0,0,0.18);
-  border: 1px solid var(--stroke);
-  box-shadow: var(--shadow);
+/* =========================================================
+   TOPBAR (scrollea con la página)
+   ========================================================= */
+body.app-body .topbar{
+  position: relative;
+  z-index: 2;
+
+  width: 100%;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap: 14px;
+
+  padding: 12px 14px;
   border-radius: 999px;
-  padding: 10px 14px;
-  gap: 12px;
-  position: sticky;
-  top: 12px;
-  z-index: 50;
-  backdrop-filter: blur(10px);
+
+  /* 👇 OJO con alpha: debe ser 0.24, no 24 */
+  background: rgba(0,0,0,0.24);
+  border: 1px solid rgba(255,255,255,0.10);
+  box-shadow: 0 18px 45px rgba(0,0,0,0.50);
+  backdrop-filter: blur(14px);
+
+  margin-top: 12px;
 }
 
-/* user */
-.user-info{
-  min-width: 220px;
-}
-#userName{
-  display: inline-block;
-  max-width: 220px;
+body.app-body #userName{
+  color: #fff !important;
+  font-weight: 700;
+  font-size: 14px;
+  max-width: 260px;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 
 /* tabs */
-.tabs{
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-
-.tab{
-  border: 1px solid var(--stroke);
-  background: rgba(255,255,255,0.05);
-  color: var(--text);
+body.app-body .tabs{ display:flex; gap:10px; }
+body.app-body .tab{
+  border: 1px solid rgba(255,255,255,0.12);
+  background: rgba(255,255,255,0.06);
+  color: #fff !important;
   padding: 8px 16px;
   border-radius: 999px;
-  cursor: pointer;
-  transition: 0.2s ease;
-  font-weight: 600;
+  font-weight: 700;
   font-size: 13px;
+  cursor: pointer;
+  transition: transform .18s ease, background .18s ease, border-color .18s ease;
 }
-
-.tab:hover{
+body.app-body .tab:hover{
   transform: translateY(-1px);
-  background: rgba(255,255,255,0.08);
+  background: rgba(255,255,255,0.10);
+  border-color: rgba(255,255,255,0.18);
+}
+body.app-body .tab.active{
+  background: rgba(44,194,149,0.18);
+  border-color: rgba(44,194,149,0.42);
 }
 
-.tab.active{
-  border-color: rgba(29, 185, 84, 0.45);
-  background: rgba(29, 185, 84, 0.18);
-}
-
-/* logout */
-#btnLogout{
-  border-radius: 999px;
-}
-#btnLogout:hover{
-  background: rgba(231, 76, 60, 0.12);
-  transform: translateY(-1px);
-}
-
-/* -------- Contenido -------- */
-.content{
-  padding: 18px 0 120px; /* espacio para el player fijo */
+/* =========================================================
+   CONTENT
+   ========================================================= */
+body.app-body .content{
+  padding-top: 18px; /* ✅ normal */
+  padding-bottom: 160px; /* espacio para el player fijo */
   display: grid;
   gap: 18px;
 }
 
-/* En desktop: Artistas + Géneros lado a lado, luego playlist */
-@media (min-width: 900px){
-  .content{
-    grid-template-columns: 1.2fr 1fr;
+/* Desktop: 2 columnas */
+@media (min-width: 980px){
+  body.app-body .content{
+    grid-template-columns: 1.25fr .95fr;
     align-items: start;
   }
-  .section-playlist{
-    grid-column: 1 / -1;
-  }
+  body.app-body .section-playlist{ grid-column: 1 / -1; }
 }
 
-/* -------- Secciones / Cards -------- */
-.section{
-  background: var(--panel);
-  border: 1px solid var(--stroke);
-  box-shadow: var(--shadow);
-  border-radius: var(--radius-xl);
-  padding: 16px;
-  backdrop-filter: blur(10px);
-  min-height: 0; /* importante para scroll interno */
+/* =========================================================
+   SECTIONS
+   ========================================================= */
+body.app-body .section{
+  min-height: 0;
+  border-radius: 26px;
+  border: 1px solid rgba(255,255,255,0.10);
+  background: linear-gradient(180deg, rgba(10,40,30,0.68), rgba(6,22,16,0.58));
+  box-shadow: 0 12px 26px rgba(0,0,0,0.40);
+  backdrop-filter: blur(12px);
+  padding: 18px;
+  position: relative;
+  overflow: hidden;
 }
-
-.section-title{
-  margin: 0 0 10px;
-  font-size: 34px;
-  letter-spacing: 0.2px;
+body.app-body .section::before{
+  content:"";
+  position:absolute;
+  inset:-2px;
+  background:
+    radial-gradient(620px 190px at 12% 0%, rgba(44,194,149,0.18), transparent 60%),
+    radial-gradient(620px 190px at 78% 0%, rgba(0,223,129,0.10), transparent 65%);
+  pointer-events:none;
+  opacity: .9;
 }
+body.app-body .section > *{ position: relative; }
 
+body.app-body .section-title{
+  margin: 0 0 12px;
+  font-size: 36px;
+  font-weight: 800;
+  color: #fff !important;
+  text-shadow: 0 10px 30px rgba(0,0,0,0.40);
+}
 @media (max-width: 768px){
-  .section-title{
-    font-size: 28px;
-  }
+  body.app-body .section-title{ font-size: 30px; }
 }
 
-/* -------- HORIZONTAL SCROLL (Artistas / Géneros) -------- */
-.artist-row,
-.genre-row{
-  display: flex;
-  gap: 16px;
+/* =========================================================
+   CAROUSELS: Artistas / Géneros
+   - PC: scrollbar visible
+   - Móvil: swipe
+   ========================================================= */
+body.app-body .artist-row,
+body.app-body .genre-row{
+  display:flex;
+  gap: 14px;
   overflow-x: auto;
   overflow-y: hidden;
-  padding: 12px 6px 6px;
+
+  padding: 10px 6px 10px;
   scroll-snap-type: x mandatory;
-  -webkit-overflow-scrolling: touch;
   scroll-padding-left: 6px;
-
-  /* scrollbar invisible */
-  scrollbar-width: none;
-}
-.artist-row::-webkit-scrollbar,
-.genre-row::-webkit-scrollbar{
-  height: 0px;
+  -webkit-overflow-scrolling: touch;
 }
 
-/* Los elementos dentro deben encajar al hacer swipe */
-.artist-row > *,
-.genre-row > *{
+/* snap */
+body.app-body .artist-row > *,
+body.app-body .genre-row > *{
   flex: 0 0 auto;
   scroll-snap-align: start;
 }
 
-/* -------- Tarjetas genéricas (por si tu JS no pone clases) -------- */
-/* Si tu JS crea botones o divs dentro de #artistRow y #genreRow,
-   esto les dará un look consistente sin importar el tag */
-#artistRow > *{
-  width: clamp(130px, 28vw, 240px);
+/* ✅ PC: scrollbar visible */
+body.app-body .artist-row::-webkit-scrollbar,
+body.app-body .genre-row::-webkit-scrollbar{ height: 10px; }
+body.app-body .artist-row::-webkit-scrollbar-thumb,
+body.app-body .genre-row::-webkit-scrollbar-thumb{
+  background: rgba(255,255,255,0.22);
+  border-radius: 999px;
 }
-#genreRow > *{
-  width: clamp(150px, 38vw, 300px);
+body.app-body .artist-row::-webkit-scrollbar-track,
+body.app-body .genre-row::-webkit-scrollbar-track{
+  background: rgba(255,255,255,0.06);
+  border-radius: 999px;
 }
 
-/* Estilo visual para los items dentro de los rows */
-#artistRow > *,
-#genreRow > *{
-  border: 1px solid var(--stroke);
-  background: var(--panel-2);
-  border-radius: var(--radius-xl);
+/* Móvil: ocultar scrollbar para verse clean */
+@media (max-width: 768px){
+  body.app-body .artist-row::-webkit-scrollbar,
+  body.app-body .genre-row::-webkit-scrollbar{ height: 0px; }
+  body.app-body .artist-row,
+  body.app-body .genre-row{ scrollbar-width: none; }
+}
+
+/* tamaños */
+body.app-body #artistRow > *{ width: clamp(160px, 20vw, 240px); }
+body.app-body #genreRow  > *{ width: clamp(200px, 26vw, 340px); }
+
+/* =========================================================
+   ARTIST CARD
+   ========================================================= */
+body.app-body #artistRow > *{
+  border-radius: 22px;
+  border: 1px solid rgba(255,255,255,0.12);
+  background:
+    radial-gradient(260px 160px at 50% 10%, rgba(44,194,149,0.16), transparent 65%),
+    rgba(0,0,0,0.18);
+  box-shadow: 0 14px 28px rgba(0,0,0,0.40);
   padding: 16px;
-  box-shadow: 0 10px 22px rgba(0,0,0,0.35);
-  transition: 0.2s ease;
-  cursor: pointer;
-  position: relative;
-  overflow: hidden;
+  text-align:center;
+  cursor:pointer;
+  transition: transform .18s ease, border-color .18s ease, background .18s ease;
+  overflow:hidden;
+}
+body.app-body #artistRow > *:hover{
+  transform: translateY(-2px) scale(1.01);
+  border-color: rgba(44,194,149,0.34);
+  background:
+    radial-gradient(260px 160px at 50% 10%, rgba(44,194,149,0.22), transparent 70%),
+    rgba(255,255,255,0.06);
 }
 
-/* hover */
-#artistRow > *:hover,
-#genreRow > *:hover{
-  transform: translateY(-2px);
-  background: rgba(14, 60, 44, 0.72);
-  border-color: rgba(255,255,255,0.12);
-}
-
-/* Si dentro tu JS mete un img, lo hacemos circular como artista */
-#artistRow img{
-  width: 110px;
-  height: 110px;
+/* imagen circular si existe */
+body.app-body #artistRow img{
+  width: 112px;
+  height: 112px;
   border-radius: 50%;
   object-fit: cover;
-  display: block;
-  margin: 6px auto 10px;
-  border: 2px solid rgba(29,185,84,0.35);
-  box-shadow: 0 8px 18px rgba(0,0,0,0.35);
+  display:block;
+  margin: 6px auto 12px;
+  border: 2px solid rgba(44,194,149,0.42);
+  box-shadow: 0 14px 22px rgba(0,0,0,0.44);
 }
 
-/* Textos dentro de tarjetas (fallback) */
-#artistRow .title,
-#genreRow .title{
-  font-weight: 800;
-  font-size: 16px;
-  line-height: 1.1;
-}
+/* fuerza texto blanco en artistas */
+body.app-body #artistRow *{ color:#fff !important; }
 
-#artistRow .sub,
-#genreRow .sub{
-  margin-top: 6px;
-  color: var(--muted);
-  font-size: 13px;
+/* =========================================================
+   GENRE CARD (FONDO BLANCO)
+   ========================================================= */
+body.app-body #genreRow > *{
+  border-radius: 22px;
+  border: 1px solid rgba(0,0,0,0.08);
+  background: #ffffff;
+  color: #0b1b15 !important;
+  box-shadow: 0 14px 28px rgba(0,0,0,0.36);
+  padding: 18px;
+  cursor:pointer;
+  transition: transform .18s ease, filter .18s ease;
+  overflow:hidden;
 }
+body.app-body #genreRow > *:hover{
+  transform: translateY(-2px);
+  filter: brightness(0.98);
+}
+body.app-body #genreRow > * *{ color:#0b1b15 !important; }
 
-/* Si tu JS solo pone texto plano, lo estilizamos igual */
-#artistRow > *{
-  text-align: center;
-  font-weight: 800;
-  font-size: 18px;
-}
-#genreRow > *{
-  text-align: left;
-  font-weight: 900;
-  font-size: 22px;
-}
-
-/* -------- Playlist -------- */
-.section-playlist{
-  display: flex;
-  flex-direction: column;
+/* =========================================================
+   PLAYLIST (scroll vertical)
+   ========================================================= */
+body.app-body .section-playlist{
+  display:flex;
+  flex-direction:column;
   gap: 12px;
-  min-height: 0;
+  min-height:0;
 }
 
-.playlist-head{
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
+body.app-body .playlist-head{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
   gap: 12px;
 }
 
-.pill{
-  border: 1px solid var(--stroke);
-  background: rgba(255,255,255,0.06);
+body.app-body .pill{
+  border: 1px solid rgba(255,255,255,0.14);
+  background: rgba(255,255,255,0.08);
   padding: 8px 12px;
   border-radius: 999px;
+  color: #fff !important;
+  font-weight: 700;
   font-size: 13px;
-  color: var(--muted);
 }
 
-/* Scroll vertical aquí */
-.playlist{
-  display: flex;
-  flex-direction: column;
+body.app-body .playlist{
+  display:flex;
+  flex-direction:column;
   gap: 12px;
+  max-height: clamp(260px, 46vh, 540px);
   overflow-y: auto;
   overflow-x: hidden;
   -webkit-overflow-scrolling: touch;
-
-  max-height: clamp(240px, 45vh, 520px);
   padding-right: 6px;
 }
 
-/* scrollbar bonita */
-.playlist::-webkit-scrollbar{
-  width: 8px;
-}
-.playlist::-webkit-scrollbar-thumb{
-  background: rgba(255,255,255,0.18);
+body.app-body .playlist::-webkit-scrollbar{ width: 8px; }
+body.app-body .playlist::-webkit-scrollbar-thumb{
+  background: rgba(255,255,255,0.22);
   border-radius: 999px;
 }
-.playlist::-webkit-scrollbar-track{
-  background: transparent;
-}
+body.app-body .playlist::-webkit-scrollbar-track{ background: rgba(255,255,255,0.06); }
 
-/* Track button */
-.track{
-  width: 100%;
-  display: grid;
-  grid-template-columns: 66px 1fr;
-  gap: 12px;
-  align-items: center;
+body.app-body .track{
+  width:100%;
+  display:grid;
+  grid-template-columns: 64px 1fr;
+  gap: 14px;
+  align-items:center;
 
-  border: 1px solid var(--stroke);
-  background: rgba(0,0,0,0.14);
+  border-radius: 18px;
+  border: 1px solid rgba(255,255,255,0.12);
+  background: rgba(0,0,0,0.18);
   padding: 12px;
-  border-radius: var(--radius-lg);
-  cursor: pointer;
-  transition: 0.2s ease;
-  text-align: left;
-}
 
-.track:hover{
+  cursor:pointer;
+  transition: transform .18s ease, background .18s ease, border-color .18s ease;
+  text-align:left;
+}
+body.app-body .track:hover{
   transform: translateY(-1px);
   background: rgba(255,255,255,0.06);
-  border-color: rgba(255,255,255,0.14);
+  border-color: rgba(255,255,255,0.18);
 }
 
-.track-cover{
+body.app-body .track-cover{
   width: 56px;
   height: 56px;
-  border-radius: 14px;
+  border-radius: 16px;
   object-fit: cover;
-  box-shadow: 0 10px 16px rgba(0,0,0,0.35);
+  box-shadow: 0 12px 18px rgba(0,0,0,0.40);
 }
+body.app-body .track-title{ color:#fff !important; font-weight:800; }
+body.app-body .track-sub{ color: rgba(255,255,255,0.78) !important; font-weight:600; }
 
-.track-title{
-  font-weight: 900;
-  font-size: 16px;
-}
-
-.track-sub{
-  margin-top: 4px;
-  font-size: 13px;
-  color: var(--muted);
-}
-
-/* -------- Bottom Player fijo -------- */
-.bottom-player{
+/* =========================================================
+   BOTTOM PLAYER (fijo)
+   ========================================================= */
+body.app-body .bottom-player{
   position: fixed;
   left: 50%;
   transform: translateX(-50%);
   bottom: 14px;
+  z-index: 5;
 
-  width: min(1220px, calc(100% - 24px));
-  background: rgba(0,0,0,0.22);
-  border: 1px solid var(--stroke);
-  box-shadow: var(--shadow);
-  border-radius: var(--radius-xl);
+  width: min(1240px, calc(100% - 24px));
+  border-radius: 26px;
+
+  border: 1px solid rgba(255,255,255,0.12);
+  background: rgba(0,0,0,0.26);
+  box-shadow: 0 18px 45px rgba(0,0,0,0.50);
+  backdrop-filter: blur(14px);
+
   padding: 12px 14px;
-
   display: grid;
-  grid-template-columns: 56px 1fr 76px;
+  grid-template-columns: 58px 1fr 82px;
   gap: 12px;
-  align-items: center;
-  backdrop-filter: blur(12px);
-  z-index: 60;
+  align-items:center;
 }
 
-.play-btn{
-  width: 50px;
-  height: 50px;
-  border-radius: 999px;
-  border: 1px solid rgba(29,185,84,0.35);
-  background: rgba(29,185,84,0.16);
-  color: var(--text);
-  font-weight: 900;
-  cursor: pointer;
-  transition: 0.2s ease;
+/* 🔥 IMPORTANT: anulamos el play-btn global para que se vea igual aquí */
+body.app-body .play-btn{
+  width: 52px !important;
+  height: 52px !important;
+  border-radius: 999px !important;
+  border: 1px solid rgba(44,194,149,0.44) !important;
+  background: rgba(44,194,149,0.18) !important;
+  color: #fff !important;
+  font-size: 20px !important;
+  cursor:pointer;
+  transition: transform .18s ease, background .18s ease;
+  box-shadow: none !important;
 }
-
-.play-btn:hover{
+body.app-body .play-btn:hover{
   transform: translateY(-1px);
-  background: rgba(29,185,84,0.22);
+  background: rgba(44,194,149,0.26) !important;
 }
 
-.now{
-  min-width: 0;
-}
-
-.now-top{
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-  margin-bottom: 8px;
-}
-
-.now-title{
-  font-weight: 900;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.now-sub{
-  font-size: 13px;
-  color: var(--muted);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-/* Barra progreso */
-.progress-bar{
-  width: 100%;
-  accent-color: var(--brand);
-}
-
-/* portada actual */
-.now-cover{
-  width: 64px;
-  height: 64px;
-  border-radius: 16px;
+body.app-body .now *{ color:#fff !important; }
+body.app-body .now{ min-width:0; }
+body.app-body .now-cover{
+  width: 68px;
+  height: 68px;
+  border-radius: 18px;
   object-fit: cover;
-  border: 1px solid rgba(255,255,255,0.10);
-  box-shadow: 0 10px 18px rgba(0,0,0,0.35);
+  border: 1px solid rgba(255,255,255,0.14);
+  box-shadow: 0 12px 20px rgba(0,0,0,0.44);
 }
 
-/* -------- Mobile tweaks -------- */
-@media (max-width: 768px){
-  .app{
+/* sobrescribe progress-bar global para que se adapte al player */
+body.app-body .progress-bar{
+  width: 100% !important;
+  max-width: none !important;
+  margin-top: 0 !important;
+  accent-color: rgb(44,194,149);
+}
+
+/* =========================================================
+   MOBILE
+   ========================================================= */
+@media (max-width: 860px){
+  body.app-body .app{ padding: 12px 12px 0; }
+
+  body.app-body .topbar{
+    border-radius: 24px;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 10px;
     padding: 12px;
   }
 
-  .topbar{
-    border-radius: 22px;
-    padding: 10px;
-    flex-wrap: wrap;
-    justify-content: center !important;
-  }
-
-  .user-info{
+  body.app-body .user-info{
+    width: 100%;
+    justify-content: center;
     min-width: unset;
+  }
+
+  body.app-body .tabs{
     width: 100%;
     justify-content: center;
   }
-
-  .tabs{
-    width: 100%;
-    justify-content: center;
-  }
-
-  .tab{
+  body.app-body .tab{
     flex: 1;
     max-width: 140px;
     padding: 10px 12px;
   }
 
-  #btnLogout{
+  body.app-body #btnLogout{
     width: 100%;
-    padding: 10px 14px;
   }
 
-  .content{
-    padding-bottom: 140px; /* más espacio porque en móvil crece el player */
+  body.app-body .content{
+    grid-template-columns: 1fr;
+    padding-bottom: 190px;
   }
 
-  .bottom-player{
+  /* ✅ tamaños phone-friendly */
+  body.app-body #artistRow > *{ width: clamp(160px, 72vw, 260px); }
+  body.app-body #genreRow  > *{ width: clamp(220px, 82vw, 360px); }
+
+  body.app-body .section{ padding: 14px; }
+  body.app-body .section-title{ font-size: 28px; }
+
+  body.app-body .bottom-player{
     grid-template-columns: 54px 1fr 60px;
-    gap: 10px;
     padding: 10px 12px;
   }
 
-  .now-cover{
-    width: 54px;
-    height: 54px;
-    border-radius: 14px;
+  body.app-body .now-cover{
+    width: 56px;
+    height: 56px;
+    border-radius: 16px;
   }
 }
 
-/* -------- Accesibilidad: reduce motion -------- */
+/* Reduce motion */
 @media (prefers-reduced-motion: reduce){
-  *{
-    transition: none !important;
-    scroll-behavior: auto !important;
-  }
+  *{ transition: none !important; }
 }

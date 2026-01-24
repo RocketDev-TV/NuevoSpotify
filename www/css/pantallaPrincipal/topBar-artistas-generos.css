@@ -1,0 +1,217 @@
+/* =========================================================
+   topbar.css
+   TOPBAR + GRID + ARTISTAS + GENEROS (FULL FIX)
+   ========================================================= */
+
+/* ✅ Anula el body flex del styles.css SOLO en esta vista */
+body.app-body{
+  display:block !important;
+  align-items:initial !important;
+  justify-content:initial !important;
+  min-height:100vh;
+  margin:0;
+}
+
+/* ✅ Forzar color blanco en toda la vista (excepto cards blancas) */
+body.app-body,
+body.app-body *{
+  color: #fff;
+}
+
+/* wrapper */
+body.app-body .app{
+  width:min(1240px, 100%);
+  margin:0 auto;
+  padding:14px 14px 0;
+  min-height:100vh;
+}
+
+/* TOPBAR */
+body.app-body .topbar{
+  position:relative;
+  z-index:10;
+
+  width:100%;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:14px;
+
+  padding:12px 14px;
+  border-radius:999px;
+  margin-top:12px;
+
+  background:rgba(0,0,0,0.24);
+  border:1px solid rgba(255,255,255,0.10);
+  box-shadow:0 18px 45px rgba(0,0,0,0.50);
+  backdrop-filter:blur(14px);
+}
+
+body.app-body #userName{
+  color:#fff !important;
+  font-weight:700;
+  font-size:14px;
+  max-width:260px;
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+}
+
+/* tabs */
+body.app-body .tabs{ display:flex; gap:10px; }
+body.app-body .tab{
+  border:1px solid rgba(255,255,255,0.12);
+  background:rgba(255,255,255,0.06);
+  color:#fff !important;
+  padding:8px 16px;
+  border-radius:999px;
+  font-weight:700;
+  font-size:13px;
+  cursor:pointer;
+}
+body.app-body .tab.active{
+  background:rgba(44,194,149,0.18);
+  border-color:rgba(44,194,149,0.42);
+}
+
+/* CONTENT GRID */
+body.app-body .content{
+  padding-top:18px;
+  padding-bottom:190px; /* espacio player */
+  display:grid;
+  gap:18px;
+}
+
+/* Desktop: 2 cols */
+@media (min-width:980px){
+  body.app-body .content{
+    grid-template-columns: 1.25fr .95fr;
+    align-items:start;
+  }
+}
+
+/* SECTION base */
+body.app-body .section{
+  border-radius:26px;
+  border:1px solid rgba(255,255,255,0.10);
+  background:linear-gradient(180deg, rgba(10,40,30,0.68), rgba(6,22,16,0.58));
+  box-shadow:0 12px 26px rgba(0,0,0,0.40);
+  padding:18px;
+  overflow:hidden;
+}
+
+body.app-body .section-title{
+  margin:0 0 12px;
+  font-size:36px;
+  font-weight:800;
+  color:#fff !important;
+}
+
+/* CAROUSELS */
+body.app-body .artist-row,
+body.app-body .genre-row{
+  display:flex;
+  gap:14px;
+  overflow-x:auto;
+  overflow-y:hidden;
+  padding:10px 6px 10px;
+  scroll-snap-type:x mandatory;
+  -webkit-overflow-scrolling: touch;
+}
+
+body.app-body .artist-row > *,
+body.app-body .genre-row > *{
+  flex:0 0 auto;
+  scroll-snap-align:start;
+}
+
+/* scrollbar (PC) */
+body.app-body .artist-row::-webkit-scrollbar,
+body.app-body .genre-row::-webkit-scrollbar{ height:10px; }
+body.app-body .artist-row::-webkit-scrollbar-thumb,
+body.app-body .genre-row::-webkit-scrollbar-thumb{
+  background:rgba(255,255,255,0.22);
+  border-radius:999px;
+}
+body.app-body .artist-row::-webkit-scrollbar-track,
+body.app-body .genre-row::-webkit-scrollbar-track{
+  background:rgba(255,255,255,0.06);
+  border-radius:999px;
+}
+
+/* tamaños */
+body.app-body #artistRow > *{ width: clamp(160px, 20vw, 240px); }
+body.app-body #genreRow  > *{ width: clamp(220px, 26vw, 520px); }
+
+/* ARTIST CARD (con texto visible) */
+body.app-body #artistRow > *{
+  border-radius:22px;
+  border:1px solid rgba(255,255,255,0.12);
+  background:rgba(0,0,0,0.18);
+  padding:16px;
+  text-align:center;
+}
+
+body.app-body #artistRow img{
+  width:112px;
+  height:112px;
+  border-radius:50%;
+  object-fit:cover;
+  display:block;
+  margin: 6px auto 12px;
+}
+
+/* ✅ fuerza texto en artistas (por tu screenshot estaba negro) */
+body.app-body #artistRow *{
+  color:#fff !important;
+}
+
+/* GENRE CARD (blanco) */
+body.app-body #genreRow > *{
+  border-radius:22px;
+  background:#fff;
+  padding:18px;
+}
+
+/* ✅ dentro de blanco: texto oscuro */
+body.app-body #genreRow > *,
+body.app-body #genreRow > * *{
+  color:#0b1b15 !important;
+}
+
+/* ---------- MOBILE ---------- */
+@media (max-width:860px){
+  body.app-body .topbar{
+    flex-wrap:wrap;
+    justify-content:center;
+    gap:10px;
+    padding:12px;
+    border-radius:24px;
+  }
+
+  body.app-body .user-info{ width:100%; justify-content:center; }
+  body.app-body .tabs{ width:100%; justify-content:center; }
+
+  body.app-body .tab{
+    flex:1;
+    max-width:140px;
+    padding:10px 12px;
+  }
+
+  body.app-body .content{
+    grid-template-columns:1fr;
+    padding-bottom:210px;
+  }
+
+  body.app-body .section{ padding:14px; }
+  body.app-body .section-title{ font-size:28px; }
+
+  body.app-body #artistRow > *{ width: clamp(170px, 72vw, 270px); }
+  body.app-body #genreRow  > *{ width: clamp(240px, 84vw, 380px); }
+
+  /* oculta scrollbar en móvil */
+  body.app-body .artist-row::-webkit-scrollbar,
+  body.app-body .genre-row::-webkit-scrollbar{ height:0px; }
+  body.app-body .artist-row,
+  body.app-body .genre-row{ scrollbar-width:none; }
+}

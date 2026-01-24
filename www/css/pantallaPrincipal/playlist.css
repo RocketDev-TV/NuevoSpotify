@@ -1,0 +1,104 @@
+/* =========================================================
+   playlist.css
+   PLAYLIST (FULL FIX)
+   ========================================================= */
+
+/* Que la playlist ocupe el ancho completo en desktop */
+@media (min-width:980px){
+  body.app-body .section-playlist{ grid-column: 1 / -1; }
+}
+
+body.app-body .section-playlist{
+  display:flex;
+  flex-direction:column;
+  gap:12px;
+  min-height:0;
+}
+
+body.app-body .playlist-head{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+}
+
+body.app-body .playlist{
+  display:flex;
+  flex-direction:column;
+  gap:12px;
+
+  max-height: clamp(260px, 46vh, 540px);
+  overflow-y:auto;
+  overflow-x:hidden;
+  -webkit-overflow-scrolling: touch;
+  padding-right: 6px;
+}
+
+/* scrollbar */
+body.app-body .playlist::-webkit-scrollbar{ width:8px; }
+body.app-body .playlist::-webkit-scrollbar-thumb{
+  background:rgba(255,255,255,0.22);
+  border-radius:999px;
+}
+body.app-body .playlist::-webkit-scrollbar-track{
+  background:rgba(255,255,255,0.06);
+}
+
+/* Track: vuelve al layout correcto */
+body.app-body .track{
+  width:100%;
+  display:flex;                 /* ✅ más estable que grid con tus contenidos */
+  align-items:center;
+  gap:14px;
+
+  border-radius:18px;
+  border:1px solid rgba(255,255,255,0.12);
+  background:rgba(0,0,0,0.18);
+  padding:12px;
+
+  cursor:pointer;
+}
+
+body.app-body .track-cover{
+  width:56px;
+  height:56px;
+  border-radius:16px;
+  object-fit:cover;
+  flex: 0 0 auto;
+}
+
+body.app-body .track-meta{
+  min-width:0; /* para ellipsis */
+}
+
+body.app-body .track-title{
+  color:#fff !important;
+  font-weight:700;
+  font-size:16px;
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+}
+
+body.app-body .track-sub{
+  color:rgba(255,255,255,0.78) !important;
+  font-weight:600;
+  font-size:13px;
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+}
+
+/* móvil */
+@media (max-width:860px){
+  body.app-body .playlist{
+    max-height: clamp(240px, 42vh, 460px);
+  }
+  body.app-body .track{
+    padding:10px;
+  }
+  body.app-body .track-cover{
+    width:52px;
+    height:52px;
+  }
+}
