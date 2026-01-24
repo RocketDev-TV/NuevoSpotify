@@ -180,14 +180,20 @@
                                     primero.</p>
 
                                 <div class="file-upload-wrapper">
-                                    <input type="file" id="inputFileAudio" accept="audio/*" multiple hidden>
-                                    <label for="inputFileAudio" class="custom-file-upload">
-                                        <i class="ph ph-cloud-arrow-up"></i>
-                                        <span id="fileLabelText">Click para elegir canciones o arrastra aquí</span>
-                                        <span class="file-count" id="fileCountBadge" style="display:none;">0
-                                            archivos</span>
-                                    </label>
-                                </div>
+    <input type="file" id="inputFileAudio" accept="audio/*" multiple hidden>
+    
+    <label for="inputFileAudio" class="custom-file-upload">
+        
+        <div id="dropZone" class="upload-area">
+            <i class="ph ph-cloud-arrow-up"></i>
+            <p id="fileLabelText">Click para elegir canciones o arrastra aquí</p>
+        </div>
+
+        <span class="file-count" id="fileCountBadge" style="display:none;">
+            0 archivos
+        </span>
+    </label>
+</div>
 
                                 <div id="fileListPreview" class="file-list-area"></div>
 
@@ -235,6 +241,15 @@
 
             <label>Portada</label>
             <input type="file" id="newAlbumCover" accept="image/*">
+
+            <div class="form-group">
+                <label>Tipo de Lanzamiento</label>
+                <select id="newAlbumType" class="form-control">
+                    <option value="ALBUM">Álbum (LP)</option>
+                    <option value="EP">EP (Extended Play)</option>
+                    <option value="SINGLE">Sencillo</option>
+                </select>
+            </div>
 
             <div class="row-dates">
                 <input type="date" id="newAlbumDate">

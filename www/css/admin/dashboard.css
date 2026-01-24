@@ -118,3 +118,37 @@
     border: 1px solid var(--glass-border);
     color: var(--accent);
 }
+
+/* --- Arreglo del Modal de Álbum --- */
+
+/* 1. Para que la fecha y el num. de canciones queden lado a lado (50% y 50%) */
+.row-dates {
+    display: flex;
+    gap: 15px;       /* Espacio entre los dos inputs */
+    margin-top: 15px; /* Separación con el input de arriba */
+    width: 100%;
+}
+
+.row-dates input {
+    flex: 1;         /* Esto obliga a que ambos ocupen el mismo ancho */
+    width: 100%;     /* Evita desbordamientos */
+    min-width: 0;    /* Truco para que Flexbox no se rompa en pantallas chicas */
+}
+
+/* 2. Estilo para el selector de Tipo de Lanzamiento para que combine */
+#newAlbumType {
+    width: 100%;
+    padding: 12px;
+    background-color: #1e1e1e; /* O el color oscuro que uses de fondo */
+    color: #ffffff;
+    border: 1px solid #333;
+    border-radius: 8px; /* Bordes redondeados modernos */
+    appearance: none;   /* Quita el estilo feo por defecto del navegador */
+    margin-bottom: 5px;
+}
+
+/* 3. Ajuste general del formulario del modal */
+.modal-content input, 
+.modal-content select {
+    margin-bottom: 15px; /* Aire entre cada fila */
+}
