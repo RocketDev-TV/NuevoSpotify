@@ -43,6 +43,12 @@ document.addEventListener('DOMContentLoaded', async () => {
         });
     });
 
+    const btnLock = document.getElementById('btnLockContext');
+    if (btnLock) {
+        // Ahora delegamos la lógica a Events.js
+        btnLock.addEventListener('click', Events.toggleContextLock);
+    }
+    
     // 5. Drag & Drop (Zona de Arrastre)
     setupDragAndDrop();
 });

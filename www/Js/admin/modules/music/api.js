@@ -34,8 +34,8 @@ export async function getCancionesPorAlbum(albumId) {
     return await getDB().from('canciones').select('duracion_cancion').eq('album_id', albumId);
 }
 
-export async function createGenero(nombre) {
-    return await getDB().from('genero').insert([{ nombre_genero: nombre }]).select().single();
+export async function createGenero(data) {
+    return await getDB().from('genero').insert([data]).select().single();
 }
 
 export async function createArtista(data) {

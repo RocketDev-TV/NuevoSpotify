@@ -7,7 +7,8 @@ import * as Utils from './utils.js';
 export const state = {
     genreId: null,
     artistId: null,
-    albumId: null
+    albumId: null,
+    isContextLocked: false // Bandera de seguridad
 };
 
 // --- LOGICA DE CARGA DE COMBOS ---
@@ -43,22 +44,33 @@ export function handleAlbumChange(e) {
     }
 }
 
-// --- FUNCIONES PARA CREAR (LAS QUE LLAMA EL HTML) ---
+// --- FUNCIONES PARA CREAR ---
 
 export async function crearGenero() {
     const nombre = document.getElementById('newGenreName').value;
-    if (!nombre) return Swal.fire('Ojo', 'Escribe un nombre', 'warning');
+    const decadaSeleccionada = document.getElementById('newGenreDecade').value;
 
-    const { data, error } = await API.createGenero(nombre);
+    if (!nombre) return Swal.fire('Ojo', 'Escribe un nombre', 'warning');
+    if (!decadaSeleccionada) return Swal.fire('Ojo', 'Selecciona una década', 'warning');
+
+    const { data, error } = await API.createGenero({
+        nombre_genero: nombre,
+        decada: decadaSeleccionada // Enviamos la fecha correcta
+    });
 
     if (error) {
-        Swal.fire('Error', error.message, 'error');
+        console.error("Error BD:", error);
+        // Si sale error de constraint, mostramos mensaje amigable
+        if (error.code === '23514') {
+            Swal.fire('Error', 'La fecha de década no es válida para esta base de datos.', 'error');
+        } else {
+            Swal.fire('Error', error.message, 'error');
+        }
     } else {
         UI.cerrarModal('genero');
         const { data: generos } = await API.getGeneros();
         UI.llenarSelect(document.getElementById('selectGenero'), generos, 'id_gener', 'nombre_genero', 'Selecciona Género');
         
-        // Seleccionar el nuevo
         document.getElementById('selectGenero').value = data.id_gener;
         document.getElementById('selectGenero').dispatchEvent(new Event('change'));
         Swal.fire('Listo', 'Género creado', 'success');
@@ -160,11 +172,45 @@ export async function crearAlbum() {
     }
 }
 
+// --- LÓGICA DE BLOQUEO DE CONTEXTO ---
+export function toggleContextLock() {
+    // 1. Validar que haya datos
+    if (!state.albumId || !state.artistId) {
+        return Swal.fire('Espera', 'Selecciona Artista y Álbum antes de confirmar.', 'warning');
+    }
+
+    // 2. Cambiar estado
+    state.isContextLocked = !state.isContextLocked; // Invierte (true/false)
+
+    // 3. Actualizar UI
+    UI.bloquearContextoUI(state.isContextLocked);
+
+    if (state.isContextLocked) {
+        Swal.fire({
+            title: 'Contexto Fijado',
+            text: 'Ahora sí, arrastra tus canciones.',
+            icon: 'success',
+            timer: 1500,
+            showConfirmButton: false,
+            background: '#1e1e1e', color: '#fff'
+        });
+    }
+}
 
 // --- LOGICA DE SUBIDA DE CANCIONES ---
 export async function handleSongUpload(e) {
     e.preventDefault();
     
+    // Si no está bloqueado, no pasa nadie.
+    if (!state.isContextLocked) {
+        return Swal.fire({
+            title: '¡Alto ahí!', 
+            text: 'Debes presionar el botón "Confirmar para Subir" (el candado) antes de procesar las canciones.',
+            icon: 'warning',
+            background: '#1e1e1e', color: '#fff'
+        });
+    }
+
     if (!state.artistId || !state.albumId) return Swal.fire('Error', 'Bloquea el contexto primero.', 'error');
 
     const files = document.getElementById('inputFileAudio').files;
@@ -252,6 +298,7 @@ function confirmarFlujoContinuo(count) {
 }
 
 export function resetearTodoElSistema() {
+    state.isContextLocked = false;
     UI.resetFileUploadUI();
     UI.bloquearContextoUI(false);
     UI.resetSelect('selectGenero', 'Selecciona Género'); 

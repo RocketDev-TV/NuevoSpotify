@@ -75,9 +75,18 @@ export function bloquearContextoUI(isLocked) {
 }
 
 // Helpers para Modales
-export function cerrarModal(id) {
-    document.getElementById(id).classList.remove('active');
-    document.querySelectorAll(`#${id} input`).forEach(i => i.value = '');
+export function cerrarModal(suffix) {
+    // El HTML manda 'genero', pero el ID real es 'modal-genero'
+    const id = `modal-${suffix}`;
+    
+    const el = document.getElementById(id);
+    if (el) {
+        el.classList.remove('active');
+        // Limpiamos los inputs dentro de ese modal
+        el.querySelectorAll('input, textarea, select').forEach(i => i.value = '');
+    } else {
+        console.error(`No se encontró el modal con ID: ${id}`);
+    }
 }
 
 export function cambiarTabMusic(tab) {
