@@ -1,91 +1,66 @@
-// js/admin-dashboard.js
+// Js/admin-dashboard.js
 
-// Referencias globales
-const btnLogout = document.getElementById('btnLogout');
-const adminNameSpan = document.getElementById('adminName');
-const fullDateDisplay = document.getElementById('fullDateDisplay');
-const clockTimeDisplay = document.getElementById('clockTime');
-
-// Conexión
-const _supabase = conectarSupabase();
-
-// --- PUNTO DE ENTRADA PRINCIPAL ---
-document.addEventListener('DOMContentLoaded', async () => {
-    // 1. Seguridad (Esperamos a que verifique)
-    await verificarAdmin();
+// 1. INICIALIZACIÓN GENERAL
+document.addEventListener('DOMContentLoaded', () => {
+    console.log("👋 Admin Dashboard cargado");
     
-    // 2. Una vez verificado, arrancamos los módulos hijos
-    // El "?" es por seguridad, por si el archivo no cargó
-    if(typeof iniciarAnalytics === 'function') {
-        iniciarAnalytics(); 
-    } else {
-        console.error("Falta analytics.js");
-    }
-
-    if(typeof iniciarMusicManager === 'function') {
-        iniciarMusicManager();
-    }
-    
-    // 3. Reloj Global
+    // Iniciar el reloj y la fecha del header
     actualizarReloj();
-    setInterval(actualizarReloj, 1000);
+    setInterval(actualizarReloj, 60000); 
+
+    // Si existe la función de Analytics, la iniciamos
+    if (typeof iniciarAnalytics === 'function') {
+        iniciarAnalytics();
+    }
 });
 
-// --- A. SEGURIDAD: ¿Eres Admin? 🕵️‍♂️ ---
-async function verificarAdmin() {
-    // 1. Checar sesión
-    const { data: { session } } = await _supabase.auth.getSession();
-
-    if (!session) {
-        window.location.href = "../index.html"; 
-        return;
-    }
-
-    // 2. Checar ROL y NOMBRE
-    const { data: userData, error } = await _supabase
-        .from('usuarios')
-        .select('rol, nombre, apellido_paterno') 
-        .eq('uid', session.user.id)
-        .single();
-
-    if (error || userData.rol !== 'admin') {
-        console.warn("Acceso denegado: Usuario no es admin.");
-        window.location.href = "reproductor.html"; 
-        return;
-    }
-
-    // 3. Mostrar Nombre
-    if (userData.nombre) {
-        const nombreCompleto = `${userData.nombre} ${userData.apellido_paterno || ''}`; 
-        adminNameSpan.textContent = nombreCompleto;
-    } else {
-        const email = session.user.email;
-        adminNameSpan.textContent = email.split('@')[0];
-    }
-    
-    // ❌ AQUÍ ESTABA EL ERROR: cargarDatosDashboard();
-    // Ya no la llamamos aquí. Se llama sola dentro de iniciarAnalytics().
-}
-
-// --- B. RELOJ ---
+// 2. LÓGICA DEL RELOJ Y FECHA
 function actualizarReloj() {
-    const ahora = new Date();
-    const horas = String(ahora.getHours()).padStart(2, '0');
-    const minutos = String(ahora.getMinutes()).padStart(2, '0');
+    const now = new Date();
+    const timeString = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
     
-    if(clockTimeDisplay) clockTimeDisplay.innerText = `${horas}:${minutos}`;
+    const clockEl = document.getElementById('clockTime');
+    if(clockEl) clockEl.textContent = timeString;
 
-    const opciones = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
-    const fechaTexto = ahora.toLocaleDateString('es-ES', opciones);
+    const dateOptions = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+    const dateString = now.toLocaleDateString('es-ES', dateOptions);
     
-    if(fullDateDisplay) fullDateDisplay.innerText = fechaTexto.charAt(0).toUpperCase() + fechaTexto.slice(1);
+    const dateEl = document.getElementById('fullDateDisplay');
+    if(dateEl) {
+        dateEl.textContent = dateString.charAt(0).toUpperCase() + dateString.slice(1);
+    }
 }
 
-// --- E. LOGOUT ---
+// 3. SISTEMA DE NAVEGACIÓN (SIN la palabra 'export') 🚫
+function cambiarVista(vista) {
+    // Ocultar todas las secciones
+    const secciones = document.querySelectorAll('.view-section');
+    secciones.forEach(sec => sec.style.display = 'none');
+
+    // Quitar active de los botones
+    const botones = document.querySelectorAll('.menu-btn');
+    botones.forEach(btn => btn.classList.remove('active'));
+
+    // Mostrar sección actual
+    const seccionActiva = document.getElementById(`view-${vista}`);
+    if (seccionActiva) seccionActiva.style.display = 'block';
+
+    // Activar botón
+    // Nota: Busca el botón que tenga el onclick correspondiente
+    const botonActivo = document.querySelector(`button[onclick="cambiarVista('${vista}')"]`);
+    if (botonActivo) botonActivo.classList.add('active');
+}
+
+// 4. LOGOUT
+const btnLogout = document.getElementById('btnLogout');
 if(btnLogout) {
-    btnLogout.addEventListener('click', async (e) => {
-        e.preventDefault();
-        await _supabase.auth.signOut();
-        window.location.href = "../index.html";
+    btnLogout.addEventListener('click', () => {
+        if(window._supabase) {
+            window._supabase.auth.signOut().then(() => {
+                window.location.href = '../index.html'; 
+            });
+        } else {
+            window.location.href = '../index.html';
+        }
     });
 }

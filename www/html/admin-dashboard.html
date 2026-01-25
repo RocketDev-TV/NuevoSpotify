@@ -12,6 +12,8 @@
     <link rel="stylesheet" href="../css/admin/analytics.css">
     <link rel="stylesheet" href="../css/admin/music-manager.css">
 
+    <link rel="icon" type="image/png" href="../img/panelAdmin-icono.png">
+
 </head>
 <script src="https://unpkg.com/@phosphor-icons/web"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -180,20 +182,20 @@
                                     primero.</p>
 
                                 <div class="file-upload-wrapper">
-    <input type="file" id="inputFileAudio" accept="audio/*" multiple hidden>
-    
-    <label for="inputFileAudio" class="custom-file-upload">
-        
-        <div id="dropZone" class="upload-area">
-            <i class="ph ph-cloud-arrow-up"></i>
-            <p id="fileLabelText">Click para elegir canciones o arrastra aquí</p>
-        </div>
+                                    <input type="file" id="inputFileAudio" accept="audio/*" multiple hidden>
 
-        <span class="file-count" id="fileCountBadge" style="display:none;">
-            0 archivos
-        </span>
-    </label>
-</div>
+                                    <label for="inputFileAudio" class="custom-file-upload">
+
+                                        <div id="dropZone" class="upload-area">
+                                            <i class="ph ph-cloud-arrow-up"></i>
+                                            <p id="fileLabelText">Click para elegir canciones o arrastra aquí</p>
+                                        </div>
+
+                                        <span class="file-count" id="fileCountBadge" style="display:none;">
+                                            0 archivos
+                                        </span>
+                                    </label>
+                                </div>
 
                                 <div id="fileListPreview" class="file-list-area"></div>
 
@@ -268,7 +270,7 @@
     <script src="../Js/config.js"></script>
     <script src="../Js/admin-dashboard.js"></script>
     <script src="../Js/admin/analytics.js"></script>
-    <script src="../Js/admin/music-manager.js"></script>
+    <script type="module" src="../Js/admin/modules/music/main.js"></script>
 </body>
 
 </html>

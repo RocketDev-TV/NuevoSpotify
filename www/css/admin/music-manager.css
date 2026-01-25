@@ -284,3 +284,47 @@ select:disabled {
     background-color: rgba(29, 185, 84, 0.1);
     transform: scale(1.02); /* Un pequeño zoom */
 }
+
+/* --- RESPONSIVE: MUSIC MANAGER --- */
+@media (max-width: 768px) {
+    /* 1. Header con Pestañas */
+    .manager-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 15px;
+    }
+    .tabs {
+        width: 100%;
+        justify-content: center;
+    }
+    .tab-btn {
+        flex: 1; /* Botones ocupan mitad y mitad */
+        text-align: center;
+        padding: 10px 5px;
+    }
+
+    /* 2. Grid de 2 Columnas -> 1 Columna */
+    .grid-2-cols {
+        grid-template-columns: 1fr;
+    }
+
+    /* 3. Inputs y Botones del formulario */
+    .input-group-row, 
+    .input-group-row.compact {
+        flex-direction: column; /* Inputs uno abajo del otro */
+        gap: 10px;
+    }
+
+    .btn-icon {
+        width: 100%; /* Botón de "+" ancho completo para que sea fácil picarle */
+        height: 40px;
+    }
+
+    /* 4. Panel de Spotify */
+    #tab-importar .input-group-row {
+        flex-direction: column;
+    }
+    #tab-importar .btn-primary {
+        width: 100%;
+    }
+}

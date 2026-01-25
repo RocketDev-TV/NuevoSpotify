@@ -152,3 +152,104 @@
 .modal-content select {
     margin-bottom: 15px; /* Aire entre cada fila */
 }
+
+/* --- RESPONSIVE: MÓVIL (Menú Inferior Estilo App) --- */
+@media (max-width: 768px) {
+    .admin-container {
+        flex-direction: column;
+    }
+
+    /* 1. Sidebar se convierte en Barra Inferior */
+    .sidebar {
+        width: 100%;
+        height: auto;
+        min-height: auto;
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        z-index: 1000;
+        flex-direction: row;
+        padding: 10px;
+        border-right: none;
+        border-top: 1px solid var(--glass-border);
+        justify-content: space-between;
+        align-items: center;
+        background: rgba(5, 5, 5, 0.95); /* Fondo sólido para que no se trasluzca feo */
+        backdrop-filter: blur(10px);
+    }
+
+    /* 2. Ocultar Logo en móvil para ahorrar espacio */
+    .logo-area {
+        display: none;
+    }
+
+    /* 3. Ajustar el menú para que sea horizontal */
+    .menu {
+        flex-direction: row;
+        justify-content: space-around;
+        width: 100%;
+        gap: 0;
+    }
+
+    .menu-btn {
+        flex-direction: column; /* Ícono arriba, texto abajo */
+        gap: 4px;
+        font-size: 10px;
+        padding: 5px;
+        text-align: center;
+        justify-content: center;
+        border-radius: 0;
+        background: transparent !important; /* Quitar fondo gris */
+    }
+
+    .menu-btn i {
+        font-size: 22px;
+        margin: 0;
+    }
+    
+    .menu-btn.active {
+        color: var(--accent); /* Solo pintar el ícono/texto */
+    }
+
+    /* 4. Botón de Salir (Lo hacemos chiquito a la derecha o lo ocultamos si prefieres) */
+    .logout-area {
+        padding: 0;
+        border: none;
+        margin-left: 5px;
+    }
+    .logout-area .menu-btn {
+        padding: 5px;
+        color: #e74c3c;
+    }
+
+    /* 5. Ajustar el contenido principal para que no lo tape la barra */
+    .main-content {
+        padding: 20px;
+        padding-bottom: 90px; /* ESPACIO EXTRA PARA LA BARRA INFERIOR */
+        width: 100%;
+    }
+
+    /* 6. Header Superior (Hola Admin) */
+    .top-bar {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 15px;
+        margin-bottom: 25px;
+    }
+    .clock-card {
+        align-self: flex-end; /* Reloj a la derecha */
+        font-size: 12px;
+    }
+    
+    /* Ajustes Modal en Móvil */
+    .modal-content {
+        width: 90%;
+        margin: 0 5%;
+        padding: 20px;
+        max-height: 85vh; /* Que no sea más alto que la pantalla */
+        overflow-y: auto; /* Scroll si es muy largo */
+    }
+    .row-dates {
+        grid-template-columns: 1fr; /* Fechas una abajo de otra */
+    }
+}

@@ -71,3 +71,27 @@
 }
 .chart-container h3 { margin-top: 0; margin-bottom: 20px; font-size: 18px; }
 .chart-wrapper { position: relative; height: 300px; width: 100%; }
+
+/* --- RESPONSIVE: ANALYTICS --- */
+@media (max-width: 768px) {
+    .kpi-grid {
+        grid-template-columns: 1fr; /* Una tarjeta por fila */
+        gap: 15px;
+    }
+
+    .kpi-card {
+        padding: 20px; /* Un poco menos de padding */
+    }
+
+    .kpi-number {
+        font-size: 30px;
+    }
+    
+    /* Ajuste de gráfica */
+    .chart-container {
+        padding: 15px;
+    }
+    .chart-wrapper {
+        height: 250px; /* Un poco más chaparra en móvil */
+    }
+}
