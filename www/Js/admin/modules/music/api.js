@@ -1,9 +1,7 @@
 // JS/admin/modules/music/api.js
 
-// 1. CONFIGURACIÓN DEL SERVIDOR PROPIO 🏠
-// Como estás en la misma compu, usamos localhost.
-// Si estuvieras probando desde tu cel, pondrías tu IP local (ej. http://192.168.100.X:3000)
-const SERVER_URL = 'http://localhost:3000'; 
+// 1. CONFIGURACIÓN DEL SERVIDOR (por VPN)
+const SERVER_URL = 'http://100.115.34.116:3000';
 
 // --- EL GUARDIÁN DE LA BD 🛡️ ---
 function getDB() {
