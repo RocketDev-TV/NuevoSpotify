@@ -1,10 +1,20 @@
 // js/admin/analytics.js
 
-function iniciarAnalytics() {
+// 1. IMPORTAMOS AL CLIENTE (Se llama 'client')
+import { client } from '../config.js';
+
+// Si admin-dashboard.js llama a esta función, necesitamos exponerla
+// O si se ejecuta sola al importar, asegúrate de llamarla.
+// Por los logs, parece que ya se está llamando bien, así que solo corregimos la variable.
+
+export function iniciarAnalytics() {
     console.log("📈 Iniciando Analytics...");
     cargarDatosDashboard();
     inicializarGrafica();
 }
+
+// Para que el HTML o admin-dashboard.js la encuentren si la buscan globalmente
+window.iniciarAnalytics = iniciarAnalytics;
 
 // Elementos del DOM (KPIs)
 const totalUsersEl = document.getElementById('totalUsers');
@@ -14,30 +24,27 @@ const activeUsersEl = document.getElementById('activeUsers');
 // --- C. CARGAR DATOS (KPIs) ---
 async function cargarDatosDashboard() {
     try {
+
         // 1. Usuarios Totales
-        const { count: total, error: errTotal } = await _supabase
+        const { count: total, error: errTotal } = await client
             .from('usuarios')
             .select('*', { count: 'exact', head: true });
         
         if (!errTotal) animarNumero(totalUsersEl, 0, total || 0, 2000);
 
         // 2. Usuarios Nuevos (Hoy)
-        // Calculamos la fecha de hoy a las 00:00
         const hoy = new Date();
         hoy.setHours(0,0,0,0);
         const hoyISO = hoy.toISOString();
 
-        const { count: nuevos, error: errNuevos } = await _supabase
+        const { count: nuevos, error: errNuevos } = await client
             .from('usuarios')
             .select('*', { count: 'exact', head: true })
-            .gte('created_at', hoyISO); // Mayor o igual a hoy
+            .gte('created_at', hoyISO); 
             
         if (!errNuevos) animarNumero(newUsersEl, 0, nuevos || 0, 2000);
 
-        // 3. Usuarios Activos (Ejemplo: Logueados recientemente o dummy por ahora)
-        // Como no tenemos log de "última conexión", usaremos un % del total o un valor fijo por mientras
-        // O si quieres ser estricto, cuenta los que tengan sesión activa (complicado en Supabase cliente).
-        // Por ahora simularemos "activos" como el 80% de los totales para que se vea movimiento.
+        // 3. Usuarios Activos (Simulación)
         const activos = Math.floor((total || 0) * 0.8);
         animarNumero(activeUsersEl, 0, activos, 2000);
 
@@ -46,7 +53,7 @@ async function cargarDatosDashboard() {
     }
 }
 
-// Función helper para animar numeritos (Efecto Casino 🎰)
+// Función helper para animar numeritos
 function animarNumero(elemento, inicio, fin, duracion) {
     if (!elemento) return;
     let startTimestamp = null;
@@ -64,16 +71,15 @@ function animarNumero(elemento, inicio, fin, duracion) {
 // --- D. GRÁFICA REAL CON PYTHON ---
 async function inicializarGrafica() {
     const ctx = document.getElementById('growthChart');
-    if (!ctx) return; // Protección por si cambiamos de vista
+    if (!ctx) return; 
 
-    // 1. Pedimos los datos a Python
     let chartData = { labels: [], values: [] };
     
     try {
-        // Asumimos que Python está corriendo en el puerto 5000
-        // Usamos un timeout para que no se quede colgado si Python está apagado
+        // Nota: Esto fallará en Cancún si no corres el Python localmente, 
+        // pero entrará al CATCH y mostrará datos dummy. ¡Es normal!
         const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 2000); // 2 segundos max
+        const timeoutId = setTimeout(() => controller.abort(), 2000); 
 
         const response = await fetch('http://127.0.0.1:5000/api/growth', { signal: controller.signal });
         clearTimeout(timeoutId);
@@ -85,19 +91,24 @@ async function inicializarGrafica() {
             chartData.values = data.data;
         }
     } catch (error) {
-        console.warn("Python API no disponible (usando datos dummy para diseño):", error);
-        // Datos Dummy para que no se vea feo mientras prendes Python
+        console.warn("Python API no disponible (usando datos dummy):");
+        // Datos Dummy
         chartData.labels = ['Lun', 'Mar', 'Mie', 'Jue', 'Vie', 'Sab', 'Dom'];
         chartData.values = [12, 19, 3, 5, 2, 3, 10];
     }
 
-    // 2. Pintamos la gráfica
+    // Pintamos la gráfica (Chart.js)
+    if(typeof Chart === 'undefined') return; // Protección por si no cargó Chart.js
+
     const context = ctx.getContext('2d');
     const gradient = context.createLinearGradient(0, 0, 0, 400);
     gradient.addColorStop(0, 'rgba(44, 194, 149, 0.5)'); 
     gradient.addColorStop(1, 'rgba(44, 194, 149, 0.0)'); 
 
-    new Chart(context, {
+    // Destruir gráfica previa si existe para evitar bugs visuales
+    if (window.myGrowthChart) window.myGrowthChart.destroy();
+
+    window.myGrowthChart = new Chart(context, {
         type: 'line',
         data: {
             labels: chartData.labels,
@@ -109,8 +120,6 @@ async function inicializarGrafica() {
                 borderWidth: 2,
                 pointBackgroundColor: '#ffffff',
                 pointBorderColor: '#2CC295',
-                pointRadius: 4,
-                pointHoverRadius: 6,
                 fill: true,
                 tension: 0.4
             }]
@@ -118,27 +127,10 @@ async function inicializarGrafica() {
         options: {
             responsive: true,
             maintainAspectRatio: false,
-            plugins: {
-                legend: { display: false },
-                tooltip: {
-                    backgroundColor: 'rgba(0,0,0,0.8)',
-                    titleColor: '#2CC295',
-                    bodyColor: '#fff',
-                    padding: 10,
-                    cornerRadius: 8,
-                    displayColors: false
-                }
-            },
+            plugins: { legend: { display: false } },
             scales: {
-                x: {
-                    grid: { color: 'rgba(255,255,255,0.05)' },
-                    ticks: { color: '#9aa8a5' }
-                },
-                y: {
-                    grid: { color: 'rgba(255,255,255,0.05)' },
-                    ticks: { color: '#9aa8a5', stepSize: 1 },
-                    beginAtZero: true
-                }
+                x: { grid: { color: 'rgba(255,255,255,0.05)' } },
+                y: { grid: { color: 'rgba(255,255,255,0.05)' }, beginAtZero: true }
             }
         }
     });

@@ -2,6 +2,7 @@
 import * as API from './api.js';
 import * as UI from './ui.js';
 import * as Events from './events.js';
+import { bloquearContextoUI } from './ui.js';
 
 console.log("🎵 Music Manager (Modular) Cargado");
 
@@ -90,5 +91,27 @@ function setupDragAndDrop() {
     });
 }
 
+let contextoBloqueado = false;
+
+// 2. Función Lógica (Cerebro)
+function bloquearContexto() {
+    // Validar que haya datos antes de bloquear (Opcional pero recomendado)
+    const genero = document.getElementById('selectGenero').value;
+    if (!genero && !contextoBloqueado) {
+        alert("Selecciona al menos un género antes de bloquear.");
+        return;
+    }
+
+    // Cambiar estado (Switch)
+    contextoBloqueado = !contextoBloqueado;
+
+    // Llamar a la UI para que se pinte (Cara)
+    bloquearContextoUI(contextoBloqueado);
+
+    console.log("🔒 Contexto Bloqueado:", contextoBloqueado);
+}
+
 ///Exportar funciones globales si las necesitas en el HTML (onclicks viejos)
 window.crearAlbum = Events.crearAlbum; // Si usas onclick="crearAlbum()" en el HTML
+
+window.bloquearContexto = bloquearContexto;

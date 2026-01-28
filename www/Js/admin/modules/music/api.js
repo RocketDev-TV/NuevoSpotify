@@ -1,16 +1,17 @@
 // JS/admin/modules/music/api.js
 
-// 1. CONFIGURACIÓN DEL SERVIDOR (por VPN)
+import { client } from '../../../config.js'; 
+
+// 2. CONFIGURACIÓN DEL SERVIDOR (por VPN)
 const SERVER_URL = 'http://100.115.34.116:3000';
 
-// --- EL GUARDIÁN DE LA BD 🛡️ ---
+// 3. Función auxiliar para obtener la BD
 function getDB() {
-    if (!window._supabase) {
-        console.error("⛔ DETENIDO: Supabase no está listo.");
-        if(typeof Swal !== 'undefined') Swal.fire('Error', 'No hay conexión a BD.', 'error');
+    if (!client) {
+        console.error("⛔ DETENIDO: Supabase no está inicializado en api.js");
         throw new Error("Supabase no inicializado");
     }
-    return window._supabase;
+    return client;
 }
 
 // --- FUNCIONES DE BASE DE DATOS (Supabase) ---

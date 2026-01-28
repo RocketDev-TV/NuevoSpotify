@@ -64,3 +64,5 @@ if(btnLogout) {
         }
     });
 }
+
+window.cambiarVista = cambiarVista;
