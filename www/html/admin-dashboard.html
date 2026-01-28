@@ -8,15 +8,13 @@
 
     <link rel="stylesheet" href="../css/styles.css">
     <link rel="stylesheet" href="../css/admin/dashboard.css">
-
     <link rel="stylesheet" href="../css/admin/analytics.css">
     <link rel="stylesheet" href="../css/admin/music-manager.css">
 
     <link rel="icon" type="image/png" href="../img/panelAdmin-icono.png">
 
-</head>
-<script src="https://unpkg.com/@phosphor-icons/web"></script>
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 
 <body class="admin-body">
@@ -126,14 +124,14 @@
                 </div>
 
                 <div id="tab-manual" class="music-tab" style="display: none;">
+    
                     <div class="grid-2-cols">
+                        
                         <div class="glass-panel">
-                            <h3>1. Definir Contexto</h3>
-                            <p class="instruction-text">Selecciona o crea el artista y álbum donde se guardarán las
-                                canciones.</p>
-
+                            <h3>1. Definir contexto</h3>
+                            <p class="instruction-text">Selecciona o crea el artista y álbum donde se guardarán las canciones.</p>
+                
                             <form id="formMetadata">
-
                                 <label>Género Musical</label>
                                 <div class="input-group-row compact">
                                     <select id="selectGenero">
@@ -143,7 +141,7 @@
                                         <i class="ph ph-plus"></i>
                                     </button>
                                 </div>
-
+                
                                 <label>Artista</label>
                                 <div class="input-group-row compact">
                                     <select id="selectArtista" disabled>
@@ -153,7 +151,7 @@
                                         <i class="ph ph-plus"></i>
                                     </button>
                                 </div>
-
+                
                                 <label>Álbum / EP</label>
                                 <div class="input-group-row compact">
                                     <select id="selectAlbum" disabled>
@@ -163,62 +161,91 @@
                                         <i class="ph ph-plus"></i>
                                     </button>
                                 </div>
-
-                                <div id="coverArea" style="display:none; margin-top:15px;">
-                                    <img id="currentCover" src="" class="cover-preview-large">
+                
+                                <div id="coverArea" style="display:none; margin-top:15px; text-align: center;">
+                                    <img id="currentCover" src="" class="cover-preview-large" style="max-width: 150px; border-radius: 8px; box-shadow: 0 4px 15px rgba(0,0,0,0.5);">
                                 </div>
-
-                                <button type="button" class="btn-secondary" id="btnLockContext"
-                                    onclick="bloquearContexto()">
-                                    <i class="ph ph-lock-key"></i> Confirmar para Subir
+                
+                                <button type="button" class="btn-secondary mt-3" id="btnLockContext" onclick="bloquearContexto()">
+                                    <i class="ph ph-lock-key"></i> Confirmar para subir
                                 </button>
                             </form>
-                        </div>
-
+                
+                            <div id="albumInventoryContainer" style="display: none; margin-top: 2rem; border-top: 1px solid rgba(255, 255, 255, 0.1); padding-top: 1.5rem;">
+                                
+                                <div class="d-flex justify-content-between align-items-end mb-3">
+                                    <div>
+                                        <h6 class="text-success text-uppercase mb-1" style="font-size: 0.75rem; letter-spacing: 1px;">En este álbum:</h6>
+                                        <div class="d-flex align-items-baseline gap-2">
+                                            <h4 id="inventoryTitle" class="text-white mb-0" style="font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 200px;">Título</h4>
+                                            <span id="inventoryYear" class="text-secondary" style="font-size: 0.9rem;">(----)</span>
+                                        </div>
+                                    </div>
+                                    <span id="albumTotalSongs" class="badge bg-dark text-secondary border border-secondary rounded-pill">0 tracks</span>
+                                </div>
+                
+                                <div style="margin-top: 2rem; margin-left: -1.5rem; margin-right: -1.5rem; margin-bottom: -1.5rem; overflow-x: hidden;">
+                                    
+                                    <table class="table table-dark table-sm table-hover mb-0 align-middle" style="width: 100%; table-layout: fixed; background: transparent;">
+                                        <thead>
+                                            <tr style="border-bottom: 1px solid rgba(255,255,255,0.1); color: #888; font-size: 0.85rem;">
+                                                <th class="text-center ps-4" style="width: 50px;">#</th>
+                                                <th>Título</th>
+                                                <th class="text-center" style="width: 80px;"><i class="ph ph-clock"></i></th>
+                                                <th class="text-end pe-4" style="width: 60px;"></th> 
+                                            </tr>
+                                        </thead>
+                                        <tbody id="albumSongsTableBody" style="font-size: 0.95rem;">
+                                            </tbody>
+                                    </table>
+                
+                                </div>
+                            </div>
+                            <style>
+                                #albumSongsTableBody td:nth-child(2) {
+                                    white-space: nowrap;
+                                    overflow: hidden;
+                                    text-overflow: ellipsis;
+                                }
+                            </style>
+                            </div>
+                
                         <div class="glass-panel">
-                            <h3>2. Carga Masiva (EPs / Álbums)</h3>
+                            <h3>2. Carga masiva (EPs / Álbums)</h3>
                             <form id="formCancion">
-                                <p class="instruction-text">Asegúrate de haber guardado el Artista/Álbum a la izquierda
-                                    primero.</p>
-
+                                <p class="instruction-text">Asegúrate de haber guardado el Artista/Álbum a la izquierda primero.</p>
+                
                                 <div class="file-upload-wrapper">
                                     <input type="file" id="inputFileAudio" accept="audio/*" multiple hidden>
-
+                
                                     <label for="inputFileAudio" class="custom-file-upload">
-
                                         <div id="dropZone" class="upload-area">
                                             <i class="ph ph-cloud-arrow-up"></i>
                                             <p id="fileLabelText">Click para elegir canciones o arrastra aquí</p>
                                         </div>
-
                                         <span class="file-count" id="fileCountBadge" style="display:none;">
                                             0 archivos
                                         </span>
                                     </label>
                                 </div>
-
+                
                                 <div id="fileListPreview" class="file-list-area"></div>
-
+                
                                 <button type="submit" class="btn-primary full-width">
-                                    <i class="ph ph-upload-simple"></i> Procesar Todo el Álbum
+                                    <i class="ph ph-upload-simple"></i> Procesar todo el álbum
                                 </button>
                             </form>
                         </div>
-
-                    </div>
+                    </div> 
                 </div>
-
             </section>
-
         </main>
     </div>
 
     <div id="modal-genero" class="modal-overlay">
         <div class="modal-content">
             <h3>Nuevo Género</h3>
-
             <input type="text" id="newGenreName" placeholder="Ej. Indie Rock">
-
             <label style="color: #bbb; font-size: 12px; margin-bottom: 5px; display:block;">Década Principal</label>
             <select id="newGenreDecade">
                 <option value="2020-01-01">2020s (Actualidad)</option>
@@ -229,7 +256,6 @@
                 <option value="1970-01-01">70s</option>
                 <option value="1960-01-01">60s</option>
             </select>
-
             <div class="modal-actions">
                 <button onclick="cerrarModal('genero')" class="btn-cancel">Cancelar</button>
                 <button onclick="crearGenero()" class="btn-confirm">Guardar</button>
@@ -253,10 +279,8 @@
         <div class="modal-content">
             <h3>Nuevo Álbum/EP</h3>
             <input type="text" id="newAlbumTitle" placeholder="Ej. Reptilectric">
-
             <label>Portada</label>
             <input type="file" id="newAlbumCover" accept="image/*">
-
             <div class="form-group">
                 <label>Tipo de Lanzamiento</label>
                 <select id="newAlbumType" class="form-control">
@@ -265,12 +289,10 @@
                     <option value="SINGLE">Sencillo</option>
                 </select>
             </div>
-
             <div class="row-dates">
                 <input type="date" id="newAlbumDate">
                 <input type="number" id="newAlbumSongs" placeholder="Num. Canciones">
             </div>
-
             <div class="modal-actions">
                 <button onclick="cerrarModal('album')" class="btn-cancel">Cancelar</button>
                 <button onclick="crearAlbum()" class="btn-confirm">Guardar</button>

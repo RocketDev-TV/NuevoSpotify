@@ -1,14 +1,24 @@
 // JS/admin/modules/music/ui.js
 
-export function llenarSelect(selectElement, dataArray, valueKey, textKey, placeholder, imageKey = null) {
-    selectElement.innerHTML = `<option value="" data-cover="">${placeholder}</option>`;
+export function llenarSelect(selectElement, dataArray, valueKey, textKey, placeholder, imageKey = null, yearKey = null) {
+    selectElement.innerHTML = `<option value="" data-cover="" data-year="">${placeholder}</option>`;
+    
     dataArray.forEach(item => {
         const option = document.createElement('option');
         option.value = item[valueKey];
         option.textContent = item[textKey];
+        
+        // Guardar Portada
         if (imageKey) {
             option.dataset.cover = item[imageKey] || "https://placehold.co/400x400?text=Sin+Portada";
         }
+
+        // Guardar Año (NUEVO) 📅
+        if (yearKey && item[yearKey]) {
+            // La fecha viene como "2008-11-20", cortamos solo el año
+            option.dataset.year = item[yearKey].substring(0, 4); 
+        }
+        
         selectElement.appendChild(option);
     });
     selectElement.disabled = false;
@@ -103,4 +113,83 @@ export function cambiarTabMusic(tab) {
         const btn = document.querySelector('.tab-btn:nth-child(2)'); // Segundo botón
         if(btn) btn.classList.add('active');
     }
+}
+
+
+// 2. Renderizar la Tabla 🎨
+export function renderAlbumSongs(songs) {
+    const container = document.getElementById('albumInventoryContainer'); 
+    const tbody = document.getElementById('albumSongsTableBody');
+    const badge = document.getElementById('albumTotalSongs');
+
+    if (!container || !tbody) return;
+
+    tbody.innerHTML = '';
+
+    if (songs.length === 0) {
+        tbody.innerHTML = `
+            <tr>
+                <td colspan="4" class="text-center text-muted py-5">
+                    <i class="ph ph-music-notes-simple fs-1 mb-2"></i><br>
+                    Este álbum está vacío. ¡Sube algo arriba!
+                </td>
+            </tr>`;
+        if(badge) badge.textContent = "0 canciones";
+    } else {
+        songs.forEach((song, index) => {
+            const tr = document.createElement('tr');
+            const trackNum = index + 1; // Usamos índice simple por ahora
+            
+            tr.innerHTML = `
+                <td class="text-center text-secondary" style="width: 50px;">${trackNum}</td>
+                <td>
+                    <div class="d-flex align-items-center">
+                        <div class="ms-2">
+                            <div class="fw-bold text-white">${song.titulo_cancion}</div>
+                        </div>
+                    </div>
+                </td>
+                <td class="text-center font-monospace" style="color: #bbb;">
+                    ${formatDuration(song.duracion_cancion)} 
+                </td>
+                <td class="text-end">
+                    <button class="btn btn-sm btn-icon btn-outline-danger" title="Borrar (Próximamente)">
+                        <i class="ph ph-trash"></i>
+                    </button>
+                </td>
+            `;
+            tbody.appendChild(tr);
+        });
+        if(badge) badge.textContent = `${songs.length} canciones`;
+    }
+
+    container.style.display = 'block';
+    container.classList.add('animate__animated', 'animate__fadeInUp');
+}
+
+// Helper para convertir segundos (float) a MM:SS
+function formatDuration(rawDuration) {
+    if (!rawDuration) return '--:--';
+    
+    // Convertimos a string por si viene como número
+    const str = rawDuration.toString();
+    
+    // Separamos minutos y segundos por el punto
+    const parts = str.split('.');
+    
+    const min = parts[0];
+    let sec = parts[1] || '00';
+    
+    // Caso especial: Si es 4.5, significa 4:50, no 4:05
+    if (sec.length === 1) {
+        sec += '0'; 
+    }
+    
+    // Nos aseguramos de tomar solo los primeros 2 dígitos de los segundos
+    return `${min}:${sec.substring(0, 2)}`;
+}
+
+export function hideAlbumPreview() {
+    const container = document.getElementById('albumPreviewContainer');
+    if (container) container.style.display = 'none';
 }

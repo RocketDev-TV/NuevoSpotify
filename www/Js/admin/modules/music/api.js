@@ -26,7 +26,11 @@ export async function getArtistas(genreId) {
 }
 
 export async function getAlbums(artistId) {
-    return await getDB().from('album').select('id_album, titulo_album, imagen_url').eq('artista_id', artistId).order('titulo_album');
+    return await getDB()
+        .from('album')
+        .select('*')
+        .eq('artista_id', artistId)
+        .order('titulo_album');
 }
 
 export async function getCancionesPorAlbum(albumId) {
@@ -105,4 +109,26 @@ export async function getPublicUrl(path) {
     const fullUrl = `${SERVER_URL}/musica/${path}`;
     
     return { data: { publicUrl: fullUrl } };
+}
+
+// JS/admin/modules/music/api.js
+
+export async function getSongsByAlbum(albumId) {
+    const db = getDB(); 
+    
+    console.log("🕵️ Buscando canciones para el Álbum ID:", albumId);
+
+    const { data, error } = await db
+        .from('canciones')
+        .select('*')
+        .eq('album_id', albumId)
+        .order('titulo_cancion', { ascending: true }); // ✅ Ya corregido
+
+    if (error) {
+        console.error("❌ Error Supabase:", error);
+        return [];
+    }
+    
+    console.log("✅ Canciones encontradas:", data); // ¿Es [] o trae datos?
+    return data;
 }

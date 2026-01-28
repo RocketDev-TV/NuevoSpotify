@@ -16,33 +16,105 @@ export async function handleGenreChange(e) {
     state.genreId = e.target.value;
     state.artistId = null;
     state.albumId = null;
-    
-    UI.resetSelect('selectAlbum', 'Selecciona un artista primero');
+
+
+    // Limpiezas visuales
+    UI.resetSelect('selectArtista', 'Cargando...');
+    UI.resetSelect('selectAlbum', 'Selecciona Artista Primero');
+    UI.hideAlbumPreview(); // Ocultamos la tabla
     UI.hideCoverPreview();
+
+    if (!state.genreId) return;
     
     const { data } = await API.getArtistas(state.genreId);
     UI.llenarSelect(document.getElementById('selectArtista'), data, 'id_artista', 'nombre', 'Selecciona Artista');
 }
 
+// JS/admin/modules/music/events.js
+
 export async function handleArtistChange(e) {
-    state.artistId = e.target.value;
-    state.albumId = null;
-    UI.hideCoverPreview();
+    const artistId = e.target.value;
+    console.log("🎨 Artista seleccionado ID:", artistId); // Debe ser 2 (ZOE)
+
+    const selectAlbum = document.getElementById('selectAlbum');
     
-    const { data } = await API.getAlbums(state.artistId);
-    UI.llenarSelect(document.getElementById('selectAlbum'), data, 'id_album', 'titulo_album', 'Selecciona Álbum / EP', 'imagen_url');
+    // Reset preventivo
+    UI.resetSelect('selectAlbum', 'Cargando...');
+    UI.hideAlbumPreview(); 
+
+    if (!artistId) return;
+
+    // Pedimos los datos
+    const { data, error } = await API.getAlbums(artistId);
+
+    if (error) {
+        console.error("❌ Error API Albums:", error);
+        return;
+    }
+
+    // 👇 AQUÍ ESTÁ LA MAGIA DEL DEBUG
+    console.log("📦 DATA CRUDA DE ÁLBUMES:", data); 
+
+    if (data && data.length > 0) {
+        // Checamos el primer álbum para ver sus columnas
+        console.log("🔍 Primer álbum - ID Album:", data[0].id_album);
+        console.log("🔍 Primer álbum - Artista ID:", data[0].artista_id);
+        
+        // Llenamos el select
+        UI.llenarSelect(
+            selectAlbum, 
+            data, 
+            'id_album',
+            'titulo_album', 
+            'Selecciona Álbum',
+            'imagen_url',
+            'fecha_lanzamiento'
+        );
+    } else {
+        console.warn("⚠️ No se encontraron álbumes para este artista");
+        UI.resetSelect('selectAlbum', 'Sin álbumes');
+    }
 }
 
-export function handleAlbumChange(e) {
+// JS/admin/modules/music/events.js
+
+export async function handleAlbumChange(e) {
     state.albumId = e.target.value;
     const option = e.target.options[e.target.selectedIndex];
     
+    // Referencias HTML
+    const container = document.getElementById('albumInventoryContainer');
+    const titleEl = document.getElementById('inventoryTitle');
+    const yearEl = document.getElementById('inventoryYear');
+    // ❌ BORRAMOS LA REFERENCIA A coverEl AQUÍ
+
+    // 1. Mostrar Portada GRANDE en el formulario (Arriba)
     if (state.albumId && option.dataset.cover) {
         UI.showCoverPreview(option.dataset.cover);
     } else {
         UI.hideCoverPreview();
     }
+
+    // 2. Actualizar Cabecera del Inventario (Abajo)
+    if (state.albumId) {
+        titleEl.textContent = option.text;
+        yearEl.textContent = `(${option.dataset.year || '----'})`; // Le puse paréntesis para que se vea nice
+        
+        // ❌ BORRAMOS TODO EL BLOQUE IF/ELSE QUE ACTUALIZABA coverEl.src AQUÍ
+
+        // Cargar Canciones
+        const songs = await API.getSongsByAlbum(state.albumId);
+        UI.renderAlbumSongs(songs);
+        
+        // Mostrar contenedor con animación
+        container.style.display = 'block';
+        container.classList.add('animate__animated', 'animate__fadeIn');
+    } else {
+        container.style.display = 'none';
+        UI.hideAlbumPreview();
+    }
 }
+
 
 // --- FUNCIONES PARA CREAR ---
 
@@ -312,3 +384,4 @@ export function resetearTodoElSistema() {
         UI.llenarSelect(document.getElementById('selectGenero'), data, 'id_gener', 'nombre_genero', 'Selecciona Género');
     });
 }
+
