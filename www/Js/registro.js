@@ -1,6 +1,15 @@
-// 1. Conexión a Supabase
-const _supabase = conectarSupabase();
 
+// 1. Conexión a Supabase
+import { client as _supabase } from './config.js';
+
+// Validamos que haya llegado bien
+if (!_supabase) {
+    console.error("❌ Error CRÍTICO: No se pudo importar el cliente de Supabase en login.js");
+    // Si tienes una función global de notificación, úsala con cuidado
+    if(typeof mostrarNotificacion === 'function') {
+        mostrarNotificacion("Error de sistema: No hay conexión con la base de datos.");
+    }
+}
 // 2. Referencias del DOM
 const nombreInput = document.getElementById('nombreInput');
 const paternoInput = document.getElementById('paternoInput');
@@ -93,6 +102,9 @@ btnRegistrar.addEventListener('click', async () => {
             email: email,
             password: password,
             options: {
+                // Redireccionar al login para iniciar sesion
+                emailRedirectTo: window.location.origin + '/html/login.html',
+                
                 data: {
                     full_name: `${nombre} ${paterno} ${materno}`,
                 }
