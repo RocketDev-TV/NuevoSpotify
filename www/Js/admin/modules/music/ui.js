@@ -117,6 +117,7 @@ export function cambiarTabMusic(tab) {
 
 
 // 2. Renderizar la Tabla 🎨
+
 export function renderAlbumSongs(songs) {
     const container = document.getElementById('albumInventoryContainer'); 
     const tbody = document.getElementById('albumSongsTableBody');
@@ -134,37 +135,36 @@ export function renderAlbumSongs(songs) {
                     Este álbum está vacío. ¡Sube algo arriba!
                 </td>
             </tr>`;
-        if(badge) badge.textContent = "0 canciones";
+        if(badge) badge.textContent = "0 tracks";
     } else {
         songs.forEach((song, index) => {
             const tr = document.createElement('tr');
-            const trackNum = index + 1; // Usamos índice simple por ahora
+            const trackNum = index + 1;
             
             tr.innerHTML = `
-                <td class="text-center text-secondary" style="width: 50px;">${trackNum}</td>
-                <td>
-                    <div class="d-flex align-items-center">
-                        <div class="ms-2">
-                            <div class="fw-bold text-white">${song.titulo_cancion}</div>
-                        </div>
-                    </div>
+                <td class="text-center align-middle text-secondary">${trackNum}</td>
+                
+                <td class="align-middle">
+                    <div class="song-title-cell">${song.titulo_cancion}</div>
                 </td>
-                <td class="text-center font-monospace" style="color: #bbb;">
+                
+                <td class="text-center align-middle font-monospace" style="color: #bbb;">
                     ${formatDuration(song.duracion_cancion)} 
                 </td>
-                <td class="text-end">
-                    <button class="btn btn-sm btn-icon btn-outline-danger" title="Borrar (Próximamente)">
+                
+                <td class="text-center align-middle">
+                    <button class="btn btn-sm btn-icon btn-ghost-danger" title="Borrar">
                         <i class="ph ph-trash"></i>
                     </button>
                 </td>
             `;
             tbody.appendChild(tr);
         });
-        if(badge) badge.textContent = `${songs.length} canciones`;
+        if(badge) badge.textContent = `${songs.length} tracks`;
     }
 
     container.style.display = 'block';
-    container.classList.add('animate__animated', 'animate__fadeInUp');
+    container.classList.add('animate__animated', 'animate__fadeIn');
 }
 
 // Helper para convertir segundos (float) a MM:SS

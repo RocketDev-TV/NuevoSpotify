@@ -355,3 +355,32 @@ select:disabled {
         width: 100%;
     }
 }
+
+/* 1. Forzar a TODAS las cabeceras (TH) a centrarse */
+    #albumInventoryContainer table th {
+        text-align: center !important;
+        vertical-align: middle !important;
+        padding-left: 0 !important; /* Quitamos el padding rebelde */
+    }
+
+    /* 2. Forzar a TODAS las celdas (TD) a centrarse */
+    #albumInventoryContainer table td {
+        text-align: center !important;
+        vertical-align: middle !important;
+    }
+
+    /* 3. El truco para el Título (Columna 2) */
+    /* Hacemos que la cajita del texto se centre automáticamente */
+    #albumInventoryContainer table td .song-title-cell {
+        margin: 0 auto !important;     /* Centrar el bloque */
+        text-align: center !important; /* Centrar el texto adentro */
+        
+        /* Opcional: Si quieres que corte texto largo */
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        max-width: 200px; /* Ajusta esto si quieres más o menos ancho */
+        display: block;   /* Necesario para que el margin auto funcione */
+        color: white;
+        font-weight: bold;
+    }
