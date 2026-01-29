@@ -2,57 +2,92 @@
 import * as API from './api.js';
 import * as UI from './ui.js';
 import * as Events from './events.js';
-import { bloquearContextoUI } from './ui.js';
 
 console.log("🎵 Music Manager (Modular) Cargado");
 
-// --- EXPONER FUNCIONES AL HTML ---
+// --- 1. CONEXIÓN HTML <-> JS (El Puente) ---
+// Conectamos los onclick del HTML directamente a las funciones nuevas de Events.js
 window.crearGenero = Events.crearGenero;
 window.crearArtista = Events.crearArtista;
 window.crearAlbum = Events.crearAlbum;
 window.abrirModal = (id) => document.getElementById(`modal-${id}`).classList.add('active');
 window.cerrarModal = UI.cerrarModal;
-
 window.cambiarTabMusic = UI.cambiarTabMusic;
 
-// Inicialización
+// 🔥 AQUÍ EL FIX PRINCIPAL: 
+// Hacemos que el botón del HTML llame a la función REAL de bloqueo
+window.bloquearContexto = Events.toggleContextLock; 
+
+// --- 2. INICIALIZACIÓN ---
 document.addEventListener('DOMContentLoaded', async () => {
-    // 1. Cargar Géneros Iniciales
+    
+    // A. Cargar Géneros
     const { data, error } = await API.getGeneros();
     if (!error) {
         UI.llenarSelect(document.getElementById('selectGenero'), data, 'id_gener', 'nombre_genero', 'Selecciona Género');
     }
 
-    // 2. Listeners de Selects
+    // B. Listeners de Cambios (Selects)
     document.getElementById('selectGenero').addEventListener('change', Events.handleGenreChange);
     document.getElementById('selectArtista').addEventListener('change', Events.handleArtistChange);
     document.getElementById('selectAlbum').addEventListener('change', Events.handleAlbumChange);
 
-    // 3. Listener de Submit (Subida)
+    // C. Subida de Canciones
     const formCancion = document.getElementById('formCancion');
     if (formCancion) {
         formCancion.addEventListener('submit', Events.handleSongUpload);
     }
-
-    // 4. Botón Bloquear Contexto
-    document.getElementById('btnLockContext').addEventListener('click', () => {
-        if (!Events.state.albumId) return Swal.fire('Ojo', 'Selecciona un álbum primero', 'warning');
-        UI.bloquearContextoUI(true);
-        Swal.fire({
-            title: 'Listo', text: 'Arrastra tus canciones ahora', icon: 'success', 
-            confirmButtonColor: '#1db954', background: '#1e1e1e', color: '#fff'
-        });
-    });
-
-    const btnLock = document.getElementById('btnLockContext');
-    if (btnLock) {
-        // Ahora delegamos la lógica a Events.js
-        btnLock.addEventListener('click', Events.toggleContextLock);
-    }
     
-    // 5. Drag & Drop (Zona de Arrastre)
+    // D. Drag & Drop
     setupDragAndDrop();
+
+    // --- 3. AUTO-RECUPERACIÓN INTELIGENTE 🧠 ---
+    // Esto arregla el error de "Selecciona Artista" al dar Refresh
+    await recuperarEstadoPrevio();
 });
+
+// Función separada para limpiar el código
+async function recuperarEstadoPrevio() {
+    console.log("🔄 Intentando recuperar sesión...");
+
+    const selectArtista = document.getElementById('selectArtista');
+    const selectAlbum = document.getElementById('selectAlbum');
+
+    // 1. Capturamos los valores visuales ANTES de que se borren
+    const savedArtistId = selectArtista.value;
+    const savedAlbumId = selectAlbum.value; // ¡Aquí está la clave! Lo guardamos antes del reset.
+
+    if (savedArtistId) {
+        console.log("✅ Artista detectado:", savedArtistId);
+        
+        // 2. Sincronizamos el estado
+        Events.state.artistId = savedArtistId;
+
+        // 3. Disparamos la carga de álbumes MANUALMENTE
+        // Simulamos el evento para que traiga la lista de la BD
+        await Events.handleArtistChange({ target: { value: savedArtistId } });
+
+        // 4. Ahora sí, si teníamos un álbum, lo restauramos
+        if (savedAlbumId) {
+            console.log("✅ Álbum detectado (Restaurando):", savedAlbumId);
+            
+            // Como handleArtistChange reseteó el select, volvemos a ponerle el valor
+            selectAlbum.value = savedAlbumId;
+            
+            // Y actualizamos el estado y la vista (portada, tabla, etc.)
+            // Necesitamos pasar el elemento select completo para que lea los datasets (cover, year)
+            // Buscamos la opción seleccionada manualmente para simular el evento completo
+            const option = selectAlbum.querySelector(`option[value="${savedAlbumId}"]`);
+            
+            if(option) {
+                option.selected = true;
+                Events.state.albumId = savedAlbumId;
+                // Disparamos el cambio final para mostrar la tabla
+                await Events.handleAlbumChange({ target: selectAlbum });
+            }
+        }
+    }
+}
 
 function setupDragAndDrop() {
     const dropZone = document.getElementById('dropZone');
@@ -70,12 +105,10 @@ function setupDragAndDrop() {
     dropZone.addEventListener('drop', (e) => {
         const files = e.dataTransfer.files;
         input.files = files;
-        // Simular cambio para actualizar UI
         const event = new Event('change');
         input.dispatchEvent(event);
     });
 
-    // Listener visual para el input file
     input.addEventListener('change', (e) => {
         const count = e.target.files.length;
         const label = document.getElementById('fileLabelText');
@@ -90,28 +123,3 @@ function setupDragAndDrop() {
         }
     });
 }
-
-let contextoBloqueado = false;
-
-// 2. Función Lógica (Cerebro)
-function bloquearContexto() {
-    // Validar que haya datos antes de bloquear (Opcional pero recomendado)
-    const genero = document.getElementById('selectGenero').value;
-    if (!genero && !contextoBloqueado) {
-        alert("Selecciona al menos un género antes de bloquear.");
-        return;
-    }
-
-    // Cambiar estado (Switch)
-    contextoBloqueado = !contextoBloqueado;
-
-    // Llamar a la UI para que se pinte (Cara)
-    bloquearContextoUI(contextoBloqueado);
-
-    console.log("🔒 Contexto Bloqueado:", contextoBloqueado);
-}
-
-///Exportar funciones globales si las necesitas en el HTML (onclicks viejos)
-window.crearAlbum = Events.crearAlbum; // Si usas onclick="crearAlbum()" en el HTML
-
-window.bloquearContexto = bloquearContexto;

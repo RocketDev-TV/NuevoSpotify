@@ -384,3 +384,80 @@ select:disabled {
         color: white;
         font-weight: bold;
     }
+
+/* --- 1. ACCIONES DE LA TABLA (Botones lado a lado) --- */
+.table-actions {
+    display: flex !important;
+    justify-content: center;
+    align-items: center;
+    gap: 10px; /* Espacio sano entre lapiz y basura */
+    white-space: nowrap;
+}
+
+.btn-action-icon {
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 6px;
+    transition: all 0.2s ease;
+    border: none;
+    background: transparent;
+    color: #888;
+}
+
+.btn-action-icon:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+    color: #fff;
+    transform: translateY(-2px); /* Pequeño brinco al pasar el mouse */
+}
+
+.btn-action-icon.edit:hover { color: #1db954; } /* Verde Spotify al editar */
+.btn-action-icon.delete:hover { color: #ff4d4d; } /* Rojo al borrar */
+
+
+/* --- 2. SWEETALERT DARK THEME (Fix Desbordes) --- */
+div:where(.swal2-container) div:where(.swal2-popup) {
+    background: #181818 !important;
+    border: 1px solid #333;
+    border-radius: 16px;
+    padding: 2rem !important;
+    width: 100%;
+    max-width: 420px !important; /* Ancho fijo elegante */
+}
+
+/* Arreglo del Título */
+div:where(.swal2-container) h2:where(.swal2-title) {
+    color: #fff !important;
+    font-size: 1.4rem !important;
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+}
+
+/* Arreglo del Input (Aquí estaba el desborde) */
+div:where(.swal2-container) input.swal2-input {
+    background: #252525 !important;
+    color: #fff !important;
+    border: 1px solid #444 !important;
+    border-radius: 8px !important;
+    font-size: 1rem !important;
+    margin: 1rem auto !important;
+    width: 90% !important; /* Forzamos que no toque los bordes */
+    box-shadow: none !important;
+}
+
+div:where(.swal2-container) input.swal2-input:focus {
+    border-color: #1db954 !important;
+    box-shadow: 0 0 0 2px rgba(29, 185, 84, 0.2) !important;
+}
+
+/* Botones del Modal */
+div:where(.swal2-container) button.swal2-confirm,
+div:where(.swal2-container) button.swal2-cancel {
+    border-radius: 50px !important;
+    padding: 10px 24px !important;
+    font-weight: 600 !important;
+    font-size: 0.9rem !important;
+    box-shadow: none !important;
+}

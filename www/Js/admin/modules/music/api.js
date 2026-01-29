@@ -2,8 +2,11 @@
 
 import { client } from '../../../config.js'; 
 
-// 2. CONFIGURACIÓN DEL SERVIDOR (por VPN)
+// (Modo VPN / Remoto):
 const SERVER_URL = 'http://100.115.34.116:3000';
+
+// (Si no estás en la misma PC):
+// const SERVER_URL = 'http://127.0.0.1:3000';
 
 // 3. Función auxiliar para obtener la BD
 function getDB() {
@@ -15,7 +18,6 @@ function getDB() {
 }
 
 // --- FUNCIONES DE BASE DE DATOS (Supabase) ---
-// Estas se quedan IGUAL porque la info de texto sí va a la nube
 
 export async function getGeneros() {
     return await getDB().from('genero').select('id_gener, nombre_genero').order('nombre_genero');
@@ -111,24 +113,82 @@ export async function getPublicUrl(path) {
     return { data: { publicUrl: fullUrl } };
 }
 
-// JS/admin/modules/music/api.js
-
 export async function getSongsByAlbum(albumId) {
     const db = getDB(); 
-    
     console.log("🕵️ Buscando canciones para el Álbum ID:", albumId);
 
     const { data, error } = await db
         .from('canciones')
         .select('*')
         .eq('album_id', albumId)
-        .order('titulo_cancion', { ascending: true }); // ✅ Ya corregido
+        .order('titulo_cancion', { ascending: true });
 
     if (error) {
         console.error("❌ Error Supabase:", error);
         return [];
     }
     
-    console.log("✅ Canciones encontradas:", data); // ¿Es [] o trae datos?
+    console.log("✅ Canciones encontradas:", data);
     return data;
+}
+
+// En JS/admin/modules/music/api.js
+
+export async function deleteCancion(idCancion) {
+    const db = getDB();
+
+    // 1. PASO PREVIO: Obtener la URL del archivo antes de que desaparezca del registro
+    const { data: song, error: findError } = await db
+        .from('canciones')
+        .select('audio_path') // Traemos la URL guardada
+        .eq('id_cancion', idCancion)
+        .single();
+
+    if (findError) {
+        console.error("❌ No encontré la canción para borrar el archivo:", findError);
+        // Aún así intentamos borrar de la BD por si acaso es un registro fantasma
+    }
+
+    // 2. BORRAR EL ARCHIVO FÍSICO (Llamada a tu servidor Python)
+    if (song && song.audio_path) {
+        try {
+            // Tu URL es tipo: http://100.115.34.116:3000/musica/zoe/memo_rex/archivo.mp3
+            // El servidor necesita solo: "zoe/memo_rex/archivo.mp3"
+            // Hacemos split por '/musica/' que es tu ruta estática
+            const parts = song.audio_path.split('/musica/');
+            
+            if (parts.length > 1) {
+                const relativePath = parts[1]; // Esto es "zoe/memo_rex/..."
+                
+                console.log(`🗑️ Pidiendo al servidor borrar físico: ${relativePath}`);
+
+                await fetch(`${SERVER_URL}/delete`, {
+                    method: 'POST', // Usamos POST para enviar JSON fácil
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ ruta: relativePath })
+                });
+            }
+        } catch (serverErr) {
+            console.error("⚠️ Alerta: Se borró de la BD pero falló el borrado físico:", serverErr);
+        }
+    }
+
+    // 3. BORRAR DE SUPABASE (Lo que ya hacías)
+    console.log("🔥 Borrando registro de Supabase ID:", idCancion);
+    const { error } = await db
+        .from('canciones')
+        .delete()
+        .eq('id_cancion', idCancion);
+    
+    return { error };
+}
+
+export async function updateCancionTitle(idCancion, newTitle) {
+    const db = getDB();
+    const { data, error } = await db
+        .from('canciones')
+        .update({ titulo_cancion: newTitle })
+        .eq('id_cancion', idCancion)
+        .select();
+    return { data, error };
 }

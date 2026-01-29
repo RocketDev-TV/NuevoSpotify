@@ -81,7 +81,8 @@ async function inicializarGrafica() {
         const controller = new AbortController();
         const timeoutId = setTimeout(() => controller.abort(), 2000); 
 
-        const response = await fetch('http://127.0.0.1:5000/api/growth', { signal: controller.signal });
+        const response = await fetch('http://127.0.0.1:3000/api/growth', { signal: controller.signal });
+
         clearTimeout(timeoutId);
         
         const data = await response.json();

@@ -118,6 +118,8 @@ export function cambiarTabMusic(tab) {
 
 // 2. Renderizar la Tabla 🎨
 
+// JS/admin/modules/music/ui.js
+
 export function renderAlbumSongs(songs) {
     const container = document.getElementById('albumInventoryContainer'); 
     const tbody = document.getElementById('albumSongsTableBody');
@@ -141,6 +143,9 @@ export function renderAlbumSongs(songs) {
             const tr = document.createElement('tr');
             const trackNum = index + 1;
             
+            // Escapar comillas simples para evitar errores de JS
+            const safeTitle = song.titulo_cancion.replace(/'/g, "\\'"); 
+
             tr.innerHTML = `
                 <td class="text-center align-middle text-secondary">${trackNum}</td>
                 
@@ -152,10 +157,28 @@ export function renderAlbumSongs(songs) {
                     ${formatDuration(song.duracion_cancion)} 
                 </td>
                 
-                <td class="text-center align-middle">
-                    <button class="btn btn-sm btn-icon btn-ghost-danger" title="Borrar">
-                        <i class="ph ph-trash"></i>
-                    </button>
+                <td class="align-middle">
+                    <div class="d-flex justify-content-center align-items-center gap-3">
+                        
+                        <button class="btn-icon-action edit" 
+                                style="background:none; border:none; color:#888; transition:0.2s; cursor:pointer;"
+                                onmouseover="this.style.color='#1db954'; this.style.transform='scale(1.1)'"
+                                onmouseout="this.style.color='#888'; this.style.transform='scale(1)'"
+                                onclick="window.editarCancion(${song.id_cancion}, '${safeTitle}')" 
+                                title="Editar nombre">
+                            <i class="ph ph-pencil-simple fs-5"></i>
+                        </button>
+
+                        <button class="btn-icon-action delete" 
+                                style="background:none; border:none; color:#888; transition:0.2s; cursor:pointer;"
+                                onmouseover="this.style.color='#ff4d4d'; this.style.transform='scale(1.1)'"
+                                onmouseout="this.style.color='#888'; this.style.transform='scale(1)'"
+                                onclick="window.borrarCancion(${song.id_cancion})" 
+                                title="Borrar canción">
+                            <i class="ph ph-trash fs-5"></i>
+                        </button>
+
+                    </div>
                 </td>
             `;
             tbody.appendChild(tr);

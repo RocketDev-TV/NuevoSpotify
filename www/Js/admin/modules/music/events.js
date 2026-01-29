@@ -246,13 +246,31 @@ export async function crearAlbum() {
 
 // --- LÓGICA DE BLOQUEO DE CONTEXTO ---
 export function toggleContextLock() {
-    // 1. Validar que haya datos
+    // 🔍 PLAN B: Si el estado está vacío, leemos del HTML a la fuerza
+    if (!state.artistId) {
+        const val = document.getElementById('selectArtista').value;
+        if (val) state.artistId = val;
+    }
+    if (!state.albumId) {
+        const val = document.getElementById('selectAlbum').value;
+        if (val) state.albumId = val;
+    }
+
+    // DEBUG: Para saber qué está viendo el botón
+    console.log("🔒 Intentando bloquear con State:", state);
+
+    // 1. Validar (Ahora sí, con datos frescos)
     if (!state.albumId || !state.artistId) {
-        return Swal.fire('Espera', 'Selecciona Artista y Álbum antes de confirmar.', 'warning');
+        return Swal.fire({
+            title: 'Espera',
+            text: 'Selecciona Artista y Álbum antes de confirmar.',
+            icon: 'warning',
+            background: '#1e1e1e', color: '#fff'
+        });
     }
 
     // 2. Cambiar estado
-    state.isContextLocked = !state.isContextLocked; // Invierte (true/false)
+    state.isContextLocked = !state.isContextLocked; 
 
     // 3. Actualizar UI
     UI.bloquearContextoUI(state.isContextLocked);
@@ -385,3 +403,85 @@ export function resetearTodoElSistema() {
     });
 }
 
+// --- FUNCIONES GLOBALES (Para botones de la Tabla) ---
+
+// Configuración de estilo Dark para los modales
+const swalDarkConfig = {
+    background: '#181818',
+    color: '#fff',
+    confirmButtonColor: '#1db954',
+    cancelButtonColor: '#333',
+    customClass: {
+        popup: 'border border-secondary shadow-lg rounded-4',
+        input: 'bg-dark text-white border-secondary focus-ring-success my-3'
+    }
+};
+
+// 1. Borrar Canción (Estilo GitHub)
+window.borrarCancion = async (id) => {
+    const result = await Swal.fire({
+        ...swalDarkConfig,
+        title: '¿Borrar canción?',
+        html: `<p class="text-secondary fs-6">Escribe <strong class="text-danger">borrar</strong> para confirmar:</p>`,
+        input: 'text',
+        inputPlaceholder: 'borrar',
+        confirmButtonText: 'Eliminar',
+        confirmButtonColor: '#d33', // Rojo específico para borrar
+        showCancelButton: true,
+        cancelButtonText: 'Cancelar',
+        preConfirm: (value) => {
+            if (value !== 'borrar') {
+                Swal.showValidationMessage('Escribe "borrar" exactamente.');
+            }
+        }
+    });
+
+    if (result.isConfirmed) {
+        const { error } = await API.deleteCancion(id);
+        
+        if (error) {
+            Swal.fire({ ...swalDarkConfig, icon: 'error', title: 'Error', text: error.message });
+        } else {
+            // Recargar tabla
+            const songs = await API.getSongsByAlbum(state.albumId);
+            UI.renderAlbumSongs(songs);
+            
+            Swal.fire({
+                icon: 'success', title: 'Eliminada',
+                toast: true, position: 'top-end', showConfirmButton: false, timer: 2000,
+                background: '#181818', color: '#fff'
+            });
+        }
+    }
+};
+
+// 2. Editar Canción
+window.editarCancion = async (id, currentTitle) => {
+    const { value: newTitle } = await Swal.fire({
+        ...swalDarkConfig,
+        title: 'Editar Título',
+        input: 'text',
+        inputValue: currentTitle,
+        showCancelButton: true,
+        confirmButtonText: 'Guardar',
+        cancelButtonText: 'Cancelar',
+        inputValidator: (val) => !val && 'El nombre no puede estar vacío'
+    });
+
+    if (newTitle && newTitle !== currentTitle) {
+        const { error } = await API.updateCancionTitle(id, newTitle);
+
+        if (error) {
+            Swal.fire({ ...swalDarkConfig, icon: 'error', title: 'Error', text: 'No se pudo actualizar' });
+        } else {
+            const songs = await API.getSongsByAlbum(state.albumId);
+            UI.renderAlbumSongs(songs);
+            
+            Swal.fire({
+                icon: 'success', title: 'Actualizado',
+                toast: true, position: 'top-end', showConfirmButton: false, timer: 2000,
+                background: '#181818', color: '#fff'
+            });
+        }
+    }
+};
