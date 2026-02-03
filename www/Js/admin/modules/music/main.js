@@ -5,8 +5,7 @@ import * as Events from './events.js';
 
 console.log("🎵 Music Manager (Modular) Cargado");
 
-// --- 1. CONEXIÓN HTML <-> JS (El Puente) ---
-// Conectamos los onclick del HTML directamente a las funciones nuevas de Events.js
+// --- 1. PUENTE HTML <-> JS ---
 window.crearGenero = Events.crearGenero;
 window.crearArtista = Events.crearArtista;
 window.crearAlbum = Events.crearAlbum;
@@ -14,81 +13,85 @@ window.abrirModal = (id) => document.getElementById(`modal-${id}`).classList.add
 window.cerrarModal = UI.cerrarModal;
 window.cambiarTabMusic = UI.cambiarTabMusic;
 
-// 🔥 AQUÍ EL FIX PRINCIPAL: 
-// Hacemos que el botón del HTML llame a la función REAL de bloqueo
-window.bloquearContexto = Events.toggleContextLock; 
+// Funciones de Carga Masiva (Staging)
+window.bloquearContexto = Events.toggleContextLock;
+window.editarNombreStaging = Events.editarNombreStaging;
+window.eliminarDeStaging = Events.eliminarDeStaging;
+window.actualizarOrdenStaging = Events.actualizarOrdenStaging;
+window.resetearTodo = Events.resetearTodo;
 
 // --- 2. INICIALIZACIÓN ---
-document.addEventListener('DOMContentLoaded', async () => {
-    
-    // A. Cargar Géneros
+export async function initMusicManager() {
+    console.log("🚀 Iniciando Music Manager...");
+
+    // A. Cargar Datos Iniciales
     const { data, error } = await API.getGeneros();
     if (!error) {
         UI.llenarSelect(document.getElementById('selectGenero'), data, 'id_gener', 'nombre_genero', 'Selecciona Género');
     }
 
-    // B. Listeners de Cambios (Selects)
-    document.getElementById('selectGenero').addEventListener('change', Events.handleGenreChange);
-    document.getElementById('selectArtista').addEventListener('change', Events.handleArtistChange);
-    document.getElementById('selectAlbum').addEventListener('change', Events.handleAlbumChange);
+    // B. Listeners de Selects (Contexto)
+    const selGenero = document.getElementById('selectGenero');
+    const selArtista = document.getElementById('selectArtista');
+    const selAlbum = document.getElementById('selectAlbum');
 
-    // C. Subida de Canciones
+    if (selGenero) selGenero.addEventListener('change', Events.handleGenreChange);
+    if (selArtista) selArtista.addEventListener('change', Events.handleArtistChange);
+    if (selAlbum) selAlbum.addEventListener('change', Events.handleAlbumChange);
+
+    // C. Preparar el Formulario de Carga (LA CORRECCIÓN) 🛠️
     const formCancion = document.getElementById('formCancion');
     if (formCancion) {
-        formCancion.addEventListener('submit', Events.handleSongUpload);
+        // 1. Clonamos el formulario PRIMERO para limpiar cualquier listener viejo
+        const newForm = formCancion.cloneNode(true);
+        formCancion.parentNode.replaceChild(newForm, formCancion);
+
+        // 2. Ahora conectamos el evento SUBMIT al NUEVO formulario
+        newForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            Events.procesarColaDeSubida();
+        });
+
+        // 3. Conectamos el Input de Archivos (que está DENTRO del nuevo form)
+        const newInputFile = document.getElementById('inputFileAudio');
+        if (newInputFile) {
+            newInputFile.addEventListener('change', (e) => {
+                console.log("📂 Archivos seleccionados:", e.target.files.length); // Debug
+                Events.handleFileSelect(e);
+            });
+        }
+
+        // 4. Conectamos Drag & Drop al nuevo form
+        setupDragAndDrop();
     }
-    
-    // D. Drag & Drop
-    setupDragAndDrop();
 
-    // --- 3. AUTO-RECUPERACIÓN INTELIGENTE 🧠 ---
-    // Esto arregla el error de "Selecciona Artista" al dar Refresh
+    // D. Restaurar Sesión
     await recuperarEstadoPrevio();
-});
+}
 
-// Función separada para limpiar el código
+// --- 3. AUTO-RECUPERACIÓN ---
 async function recuperarEstadoPrevio() {
-    console.log("🔄 Intentando recuperar sesión...");
-
+    // ... (Tu código de recuperación, igual que antes) ...
     const selectArtista = document.getElementById('selectArtista');
     const selectAlbum = document.getElementById('selectAlbum');
+    
+    if (selectArtista && selectArtista.value) {
+        Events.state.artistId = selectArtista.value;
+        await Events.handleArtistChange({ target: { value: selectArtista.value } });
 
-    // 1. Capturamos los valores visuales ANTES de que se borren
-    const savedArtistId = selectArtista.value;
-    const savedAlbumId = selectAlbum.value; // ¡Aquí está la clave! Lo guardamos antes del reset.
-
-    if (savedArtistId) {
-        console.log("✅ Artista detectado:", savedArtistId);
-        
-        // 2. Sincronizamos el estado
-        Events.state.artistId = savedArtistId;
-
-        // 3. Disparamos la carga de álbumes MANUALMENTE
-        // Simulamos el evento para que traiga la lista de la BD
-        await Events.handleArtistChange({ target: { value: savedArtistId } });
-
-        // 4. Ahora sí, si teníamos un álbum, lo restauramos
-        if (savedAlbumId) {
-            console.log("✅ Álbum detectado (Restaurando):", savedAlbumId);
-            
-            // Como handleArtistChange reseteó el select, volvemos a ponerle el valor
-            selectAlbum.value = savedAlbumId;
-            
-            // Y actualizamos el estado y la vista (portada, tabla, etc.)
-            // Necesitamos pasar el elemento select completo para que lea los datasets (cover, year)
-            // Buscamos la opción seleccionada manualmente para simular el evento completo
-            const option = selectAlbum.querySelector(`option[value="${savedAlbumId}"]`);
-            
+        if (selectAlbum && selectAlbum.value) {
+            selectAlbum.value = selectAlbum.value;
+            const option = selectAlbum.querySelector(`option[value="${selectAlbum.value}"]`);
             if(option) {
                 option.selected = true;
-                Events.state.albumId = savedAlbumId;
-                // Disparamos el cambio final para mostrar la tabla
+                Events.state.albumId = selectAlbum.value;
                 await Events.handleAlbumChange({ target: selectAlbum });
             }
         }
     }
 }
 
+// --- 4. DRAG & DROP ---
 function setupDragAndDrop() {
     const dropZone = document.getElementById('dropZone');
     const input = document.getElementById('inputFileAudio');
@@ -105,21 +108,11 @@ function setupDragAndDrop() {
     dropZone.addEventListener('drop', (e) => {
         const files = e.dataTransfer.files;
         input.files = files;
+        // Disparamos el cambio manualmente
         const event = new Event('change');
         input.dispatchEvent(event);
     });
-
-    input.addEventListener('change', (e) => {
-        const count = e.target.files.length;
-        const label = document.getElementById('fileLabelText');
-        const badge = document.getElementById('fileCountBadge');
-        
-        if (count > 0) {
-            label.textContent = `${count} canciones listas`;
-            badge.style.display = 'inline-block';
-            badge.textContent = `${count}`;
-        } else {
-            UI.resetFileUploadUI();
-        }
-    });
 }
+
+// 🔥 ARRANQUE AUTOMÁTICO
+document.addEventListener('DOMContentLoaded', initMusicManager);

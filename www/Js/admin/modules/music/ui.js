@@ -2,12 +2,12 @@
 
 export function llenarSelect(selectElement, dataArray, valueKey, textKey, placeholder, imageKey = null, yearKey = null) {
     selectElement.innerHTML = `<option value="" data-cover="" data-year="">${placeholder}</option>`;
-    
+
     dataArray.forEach(item => {
         const option = document.createElement('option');
         option.value = item[valueKey];
         option.textContent = item[textKey];
-        
+
         // Guardar Portada
         if (imageKey) {
             option.dataset.cover = item[imageKey] || "https://placehold.co/400x400?text=Sin+Portada";
@@ -16,14 +16,14 @@ export function llenarSelect(selectElement, dataArray, valueKey, textKey, placeh
         // Guardar Año (NUEVO) 📅
         if (yearKey && item[yearKey]) {
             // La fecha viene como "2008-11-20", cortamos solo el año
-            option.dataset.year = item[yearKey].substring(0, 4); 
+            option.dataset.year = item[yearKey].substring(0, 4);
             option.dataset.fullDate = item[yearKey];
         }
 
         // Guardar Tipo y Cantidad para la edición
         if (item.tipo_lanzamiento) option.dataset.type = item.tipo_lanzamiento;
         if (item.num_canciones) option.dataset.songs = item.num_canciones;
-        
+
         selectElement.appendChild(option);
     });
     selectElement.disabled = false;
@@ -31,7 +31,7 @@ export function llenarSelect(selectElement, dataArray, valueKey, textKey, placeh
 
 export function resetSelect(id, placeholder) {
     const s = document.getElementById(id);
-    if(s) {
+    if (s) {
         s.innerHTML = `<option value="">${placeholder}</option>`;
         s.disabled = true;
         s.value = "";
@@ -93,7 +93,7 @@ export function bloquearContextoUI(isLocked) {
 export function cerrarModal(suffix) {
     // El HTML manda 'genero', pero el ID real es 'modal-genero'
     const id = `modal-${suffix}`;
-    
+
     const el = document.getElementById(id);
     if (el) {
         el.classList.remove('active');
@@ -113,11 +113,11 @@ export function cambiarTabMusic(tab) {
     if (tab === 'importar') {
         document.getElementById('tab-importar').style.display = 'block';
         const btn = document.querySelector('.tab-btn:nth-child(1)');
-        if(btn) btn.classList.add('active');
+        if (btn) btn.classList.add('active');
     } else if (tab === 'manual') {
         document.getElementById('tab-manual').style.display = 'block';
         const btn = document.querySelector('.tab-btn:nth-child(2)');
-        if(btn) btn.classList.add('active');
+        if (btn) btn.classList.add('active');
     }
 }
 
@@ -127,7 +127,7 @@ window.cambiarTabMusic = cambiarTabMusic;
 // 2. Renderizar la Tabla 🎨
 
 export function renderAlbumSongs(songs) {
-    const container = document.getElementById('albumInventoryContainer'); 
+    const container = document.getElementById('albumInventoryContainer');
     const tbody = document.getElementById('albumSongsTableBody');
     const badge = document.getElementById('albumTotalSongs');
 
@@ -137,7 +137,7 @@ export function renderAlbumSongs(songs) {
 
     if (songs.length === 0) {
         tbody.innerHTML = `<tr><td colspan="4" class="text-center text-muted py-5">Álbum vacío</td></tr>`;
-        if(badge) badge.textContent = "0 tracks";
+        if (badge) badge.textContent = "0 tracks";
     } else {
         // Ordenamos visualmente por numero_track para que al renderizar se vean en orden
         // (Si no tienen numero, usamos el ID como respaldo)
@@ -145,13 +145,13 @@ export function renderAlbumSongs(songs) {
 
         songs.forEach((song, index) => {
             const tr = document.createElement('tr');
-            
+
             // 1. Clases y Data-ID para el Drag & Drop
-            tr.classList.add('song-item'); 
-            tr.dataset.id = song.id_cancion; 
+            tr.classList.add('song-item');
+            tr.dataset.id = song.id_cancion;
 
             const trackNum = index + 1;
-            const safeTitle = song.titulo_cancion.replace(/'/g, "\\'"); 
+            const safeTitle = song.titulo_cancion.replace(/'/g, "\\'");
 
             tr.innerHTML = `
                 <td class="text-center align-middle text-secondary">
@@ -195,7 +195,7 @@ export function renderAlbumSongs(songs) {
             `;
             tbody.appendChild(tr);
         });
-        if(badge) badge.textContent = `${songs.length} tracks`;
+        if (badge) badge.textContent = `${songs.length} tracks`;
     }
 
     container.style.display = 'block';
@@ -205,26 +205,135 @@ export function renderAlbumSongs(songs) {
 // Helper para convertir segundos (float) a MM:SS
 function formatDuration(rawDuration) {
     if (!rawDuration) return '--:--';
-    
+
     // Convertimos a string por si viene como número
     const str = rawDuration.toString();
-    
+
     // Separamos minutos y segundos por el punto
     const parts = str.split('.');
-    
+
     const min = parts[0];
     let sec = parts[1] || '00';
-    
+
     // Caso especial: Si es 4.5, significa 4:50, no 4:05
     if (sec.length === 1) {
-        sec += '0'; 
+        sec += '0';
     }
-    
+
     // Nos aseguramos de tomar solo los primeros 2 dígitos de los segundos
     return `${min}:${sec.substring(0, 2)}`;
 }
 
 export function hideAlbumPreview() {
-    const container = document.getElementById('albumPreviewContainer');
-    if (container) container.style.display = 'none';
+    const container = document.getElementById('albumInventoryContainer');
+    if (container) {
+        container.style.display = 'none';
+        // Limpiar el título también para que no se vea el rastro
+        document.getElementById('inventoryTitle').textContent = 'Título';
+        document.getElementById('inventoryYear').textContent = '(----)';
+        document.getElementById('albumSongsTableBody').innerHTML = '';
+    }
+}
+
+let stagingSortable = null;
+
+export function renderUploadPreview(filesArray) {
+    const container = document.getElementById('fileListPreview');
+    if (!container) return;
+
+    const existingTracksCount = document.querySelectorAll('#albumSongsTableBody tr').length;
+
+    container.innerHTML = `
+        <table class="table table-dark table-hover table-sm align-middle mb-0" style="table-layout: fixed; width: 100%;">
+            <thead style="position: sticky; top: 0; background: #121212; z-index: 5; box-shadow: 0 2px 5px rgba(0,0,0,0.5);">
+                <tr class="text-secondary" style="font-size: 0.75rem;">
+                    <th style="width: 40px;"></th> 
+                    <th style="width: 40px;" class="text-center">#</th>
+                    <th>Título</th>
+                    <th style="width: 70px;" class="text-end"><i class="ph ph-clock"></i></th>
+                    <th style="width: 50px;"></th> 
+                </tr>
+            </thead>
+            <tbody id="stagingTableBody">
+                </tbody>
+        </table>
+    `;
+
+    const tbody = document.getElementById('stagingTableBody');
+
+    if (filesArray.length === 0) {
+        container.innerHTML = `
+            <div class="d-flex flex-column align-items-center justify-content-center text-muted" style="height: 150px;">
+                <i class="ph ph-cloud-arrow-up fs-1 mb-2" style="opacity: 0.5;"></i>
+                <span class="small">Arrastra tus canciones aquí</span>
+            </div>`;
+        const btn = document.getElementById('btnProcesarAlbum');
+        if (btn) btn.style.display = 'none';
+        return;
+    }
+
+    filesArray.forEach((item, index) => {
+        const tr = document.createElement('tr');
+        tr.dataset.tempId = item.id_temp;
+        tr.classList.add('staged-item');
+
+        const displayNum = existingTracksCount + index + 1;
+        item.trackNum = displayNum;
+
+        tr.innerHTML = `
+            <td class="text-center">
+                <i class="ph ph-dots-six-vertical drag-handle-staged" 
+                   style="cursor: grab; color: #555; font-size: 1.2rem;"></i>
+            </td>
+            
+            <td class="text-secondary font-monospace text-center small">
+                ${displayNum}
+            </td>
+
+            <td style="overflow: hidden;">
+                <div class="d-flex align-items-center justify-content-between gap-3 pe-2">
+                    <div class="d-flex flex-column" style="min-width: 0;">
+                        <div class="text-truncate text-white fw-bold" title="${item.title}">
+                            ${item.title}
+                        </div>
+                        <div class="text-muted" style="font-size: 0.65rem;">
+                            ${(item.file.size / 1024 / 1024).toFixed(2)} MB
+                        </div>
+                    </div>
+                    
+                    <button type="button" 
+                            class="btn-staging edit"
+                            style="flex-shrink: 0;"
+                            onclick="window.editarNombreStaging('${item.id_temp}')">
+                        <i class="ph ph-pencil-simple fs-5"></i>
+                    </button>
+                </div>
+            </td>
+
+            <td class="text-end font-monospace text-secondary small">
+                ${item.duration.toString().replace('.', ':')}
+            </td>
+
+            <td class="text-end">
+                <button type="button"
+                        class="btn-staging delete"
+                        onclick="window.eliminarDeStaging('${item.id_temp}')">
+                    <i class="ph ph-x fs-5"></i>
+                </button>
+            </td>
+        `;
+        tbody.appendChild(tr);
+    });
+
+    if (stagingSortable) stagingSortable.destroy();
+    stagingSortable = new Sortable(tbody, {
+        animation: 150,
+        handle: '.drag-handle-staged',
+        onEnd: function () {
+            window.actualizarOrdenStaging();
+        }
+    });
+
+    const btnProcess = document.getElementById('btnProcesarAlbum');
+    if (btnProcess) btnProcess.style.display = 'block';
 }
