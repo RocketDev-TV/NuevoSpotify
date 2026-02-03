@@ -118,8 +118,6 @@ export function cambiarTabMusic(tab) {
 
 // 2. Renderizar la Tabla 🎨
 
-// JS/admin/modules/music/ui.js
-
 export function renderAlbumSongs(songs) {
     const container = document.getElementById('albumInventoryContainer'); 
     const tbody = document.getElementById('albumSongsTableBody');
@@ -127,30 +125,36 @@ export function renderAlbumSongs(songs) {
 
     if (!container || !tbody) return;
 
-    tbody.innerHTML = '';
+    tbody.innerHTML = ''; // Limpiar tabla
 
     if (songs.length === 0) {
-        tbody.innerHTML = `
-            <tr>
-                <td colspan="4" class="text-center text-muted py-5">
-                    <i class="ph ph-music-notes-simple fs-1 mb-2"></i><br>
-                    Este álbum está vacío. ¡Sube algo arriba!
-                </td>
-            </tr>`;
+        tbody.innerHTML = `<tr><td colspan="4" class="text-center text-muted py-5">Álbum vacío</td></tr>`;
         if(badge) badge.textContent = "0 tracks";
     } else {
+        // Ordenamos visualmente por numero_track para que al renderizar se vean en orden
+        // (Si no tienen numero, usamos el ID como respaldo)
+        songs.sort((a, b) => (a.numero_track || 999) - (b.numero_track || 999));
+
         songs.forEach((song, index) => {
             const tr = document.createElement('tr');
-            const trackNum = index + 1;
             
-            // Escapar comillas simples para evitar errores de JS
+            // 1. Clases y Data-ID para el Drag & Drop
+            tr.classList.add('song-item'); 
+            tr.dataset.id = song.id_cancion; 
+
+            const trackNum = index + 1;
             const safeTitle = song.titulo_cancion.replace(/'/g, "\\'"); 
 
             tr.innerHTML = `
-                <td class="text-center align-middle text-secondary">${trackNum}</td>
+                <td class="text-center align-middle text-secondary">
+                    <div class="d-flex align-items-center justify-content-center gap-2">
+                        <i class="ph ph-list drag-handle" style="cursor: grab; color: #666;"></i>
+                        <span class="small font-monospace">${trackNum}</span>
+                    </div>
+                </td>
                 
                 <td class="align-middle">
-                    <div class="song-title-cell">${song.titulo_cancion}</div>
+                    <div class="song-title-cell text-white fw-bold">${song.titulo_cancion}</div>
                 </td>
                 
                 <td class="text-center align-middle font-monospace" style="color: #bbb;">

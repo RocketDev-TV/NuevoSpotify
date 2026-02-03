@@ -2,6 +2,7 @@
 import * as API from './api.js';
 import * as UI from './ui.js';
 import * as Utils from './utils.js';
+import {updateTrackOrder} from './api.js';
 
 // Estado Local
 export const state = {
@@ -105,6 +106,8 @@ export async function handleAlbumChange(e) {
         // Cargar Canciones
         const songs = await API.getSongsByAlbum(state.albumId);
         UI.renderAlbumSongs(songs);
+
+        activarDragAndDrop();
         
         // Mostrar contenedor con animación
         container.style.display = 'block';
@@ -485,3 +488,33 @@ window.editarCancion = async (id, currentTitle) => {
         }
     }
 };
+
+let sortableInstance = null; // Para guardar la instancia y no crear dobles
+
+export function activarDragAndDrop() {
+    const lista = document.getElementById('albumSongsTableBody'); 
+
+    if (sortableInstance) sortableInstance.destroy();
+
+    sortableInstance = new Sortable(lista, {
+        animation: 150,
+        handle: '.drag-handle', // Esto coincide con el icono que pusimos en UI.js
+        ghostClass: 'bg-dark-highlight', // Clase visual opcional
+        onEnd: async function (evt) {
+            // ... (tu lógica de updates estaba perfecta) ...
+            const items = lista.querySelectorAll('.song-item');
+            const updates = [];
+
+            items.forEach((item, index) => {
+                const id = item.dataset.id;
+                updates.push({
+                    id_cancion: id,
+                    numero_track: index + 1
+                });
+            });
+            
+            // Usamos API.updateTrackOrder si importaste todo como API
+            await API.updateTrackOrder(updates); 
+        }
+    });
+}

@@ -121,6 +121,8 @@ export async function getSongsByAlbum(albumId) {
         .from('canciones')
         .select('*')
         .eq('album_id', albumId)
+        // (Prioriza el número, y si empatan, usa el título):
+        .order('numero_track', { ascending: true })
         .order('titulo_cancion', { ascending: true });
 
     if (error) {
@@ -191,4 +193,30 @@ export async function updateCancionTitle(idCancion, newTitle) {
         .eq('id_cancion', idCancion)
         .select();
     return { data, error };
+}
+
+// EN JS/admin/modules/music/api.js
+
+export async function updateTrackOrder(updates) {
+    console.log("🔄 Reordenando canciones...", updates);
+
+    try {
+        // En lugar de 'upsert' (que pide todos los datos), hacemos un update directo por cada canción
+        // Como son pocas canciones (10-20 por álbum), esto es súper rápido y seguro.
+        const promesas = updates.map(item => 
+            getDB()
+                .from('canciones')
+                .update({ numero_track: item.numero_track }) // Solo tocamos el número
+                .eq('id_cancion', item.id_cancion) // Buscamos por ID
+        );
+
+        // Esperamos a que todas se guarden
+        await Promise.all(promesas);
+
+        console.log("✅ Nuevo orden guardado.");
+        return { data: true };
+    } catch (error) {
+        console.error("❌ Error guardando orden:", error);
+        return { error };
+    }
 }
