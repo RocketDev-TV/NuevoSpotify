@@ -17,7 +17,12 @@ export function llenarSelect(selectElement, dataArray, valueKey, textKey, placeh
         if (yearKey && item[yearKey]) {
             // La fecha viene como "2008-11-20", cortamos solo el año
             option.dataset.year = item[yearKey].substring(0, 4); 
+            option.dataset.fullDate = item[yearKey];
         }
+
+        // Guardar Tipo y Cantidad para la edición
+        if (item.tipo_lanzamiento) option.dataset.type = item.tipo_lanzamiento;
+        if (item.num_canciones) option.dataset.songs = item.num_canciones;
         
         selectElement.appendChild(option);
     });
@@ -100,20 +105,23 @@ export function cerrarModal(suffix) {
 }
 
 export function cambiarTabMusic(tab) {
+    // ... (tu código actual para ocultar/mostrar tabs) ...
     document.getElementById('tab-importar').style.display = 'none';
     document.getElementById('tab-manual').style.display = 'none';
     document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
 
     if (tab === 'importar') {
         document.getElementById('tab-importar').style.display = 'block';
-        const btn = document.querySelector('.tab-btn:nth-child(1)'); // Primer botón
+        const btn = document.querySelector('.tab-btn:nth-child(1)');
         if(btn) btn.classList.add('active');
     } else if (tab === 'manual') {
         document.getElementById('tab-manual').style.display = 'block';
-        const btn = document.querySelector('.tab-btn:nth-child(2)'); // Segundo botón
+        const btn = document.querySelector('.tab-btn:nth-child(2)');
         if(btn) btn.classList.add('active');
     }
 }
+
+window.cambiarTabMusic = cambiarTabMusic;
 
 
 // 2. Renderizar la Tabla 🎨

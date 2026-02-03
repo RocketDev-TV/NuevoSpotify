@@ -77,8 +77,6 @@ export async function handleArtistChange(e) {
     }
 }
 
-// JS/admin/modules/music/events.js
-
 export async function handleAlbumChange(e) {
     state.albumId = e.target.value;
     const option = e.target.options[e.target.selectedIndex];
@@ -99,6 +97,17 @@ export async function handleAlbumChange(e) {
     // 2. Actualizar Cabecera del Inventario (Abajo)
     if (state.albumId) {
         titleEl.textContent = option.text;
+        titleEl.innerHTML = `
+            ${option.text} 
+            <button class="btn-icon-action edit ms-2" 
+                    style="background:none; border:none; color:#888; transition:0.2s; cursor:pointer;" 
+                    onmouseover="this.style.color='#1db954'; this.style.transform='scale(1.1)'" 
+                    onmouseout="this.style.color='#888'; this.style.transform='scale(1)'"
+                    onclick="window.abrirModalEditarAlbum()" 
+                    title="Editar Portada/Info">
+                <i class="ph ph-pencil-simple fs-4"></i>
+            </button>
+        `;
         yearEl.textContent = `(${option.dataset.year || '----'})`; // Le puse paréntesis para que se vea nice
         
         // ❌ BORRAMOS TODO EL BLOQUE IF/ELSE QUE ACTUALIZABA coverEl.src AQUÍ
@@ -175,75 +184,6 @@ export async function crearArtista() {
         document.getElementById('selectArtista').value = data.id_artista;
         document.getElementById('selectArtista').dispatchEvent(new Event('change'));
         Swal.fire('Listo', 'Artista creado', 'success');
-    }
-}
-
-export async function crearAlbum() {
-    // Lectura de inputs
-    const titulo = document.getElementById('newAlbumTitle').value;
-    const numCanciones = document.getElementById('newAlbumSongs').value || 1;
-    const file = document.getElementById('newAlbumCover').files[0];
-    const tipo = document.getElementById('newAlbumType').value;
-    const fecha = document.getElementById('newAlbumDate').value;
-
-    if (!titulo) return Swal.fire('Falta título', '', 'warning');
-    if (!state.artistId) return Swal.fire('Falta Artista', 'Selecciona uno al fondo', 'warning');
-    if (!fecha) return Swal.fire('Falta Fecha', 'La fecha original es obligatoria', 'warning');
-
-    // UI Loading
-    const btn = document.querySelector('#modal-album button.btn-confirm') || document.querySelector('#modal-album button:last-child');
-    UI.toggleLoadingButton(btn, true, 'Guardando...');
-
-    try {
-        // 1. Verificar existencia
-        const { data: existentes } = await API.checkAlbumExists(titulo, state.artistId);
-        const existe = (existentes && existentes.length > 0) ? existentes[0] : null;
-        let urlPortada = existe ? existe.imagen_url : null;
-
-        // 2. Subir Portada (Si hay)
-        if (file) {
-            const artistName = Utils.cleanString(document.getElementById('selectArtista').selectedOptions[0].text);
-            const albumName = Utils.cleanString(titulo);
-            const path = `${artistName}/${albumName}/${Date.now()}_${Utils.cleanString(file.name)}`;
-            
-            await API.uploadFileToStorage(path, file);
-            const { data: urlData } = await API.getPublicUrl(path);
-            urlPortada = urlData.publicUrl;
-        }
-
-        // 3. Guardar en BD
-        const payload = {
-            titulo_album: titulo,
-            artista_id: state.artistId,
-            num_canciones: numCanciones,
-            imagen_url: urlPortada,
-            tipo_lanzamiento: tipo,
-            fecha_lanzamiento: fecha
-        };
-
-        const { data: albumGuardado, error } = await API.upsertAlbum(payload, existe ? existe.id_album : null);
-        if (error) throw error;
-
-        // 4. Actualizar UI
-        UI.cerrarModal('album');
-        const { data: albums } = await API.getAlbums(state.artistId);
-        UI.llenarSelect(document.getElementById('selectAlbum'), albums, 'id_album', 'titulo_album', 'Selecciona', 'imagen_url');
-        
-        if (albumGuardado && albumGuardado.length > 0) {
-            document.getElementById('selectAlbum').value = albumGuardado[0].id_album;
-            document.getElementById('selectAlbum').dispatchEvent(new Event('change'));
-        }
-        
-        Swal.fire('Éxito', existe ? 'Álbum actualizado' : 'Álbum creado', 'success');
-
-    } catch (err) {
-        console.error(err);
-        Swal.fire('Error', err.message, 'error');
-    } finally {
-        UI.toggleLoadingButton(btn, false, 'Guardar');
-        // Limpiar inputs específicos
-        document.getElementById('newAlbumCover').value = '';
-        document.getElementById('coverPreviewImg').style.display = 'none';
     }
 }
 
@@ -518,3 +458,29 @@ export function activarDragAndDrop() {
         }
     });
 }
+
+// 1. Función para abrir el modal en MODO EDICIÓN
+
+window.abrirModalEditarAlbum = async () => {
+    if (!state.albumId) return;
+
+    const select = document.getElementById('selectAlbum');
+    const option = select.options[select.selectedIndex];
+
+    // Llenar inputs
+    document.getElementById('newAlbumTitle').value = option.text;
+    document.getElementById('newAlbumDate').value = option.dataset.fullDate || ''; 
+
+    if (option.dataset.type) document.getElementById('newAlbumType').value = option.dataset.type;
+    if (option.dataset.songs) document.getElementById('newAlbumSongs').value = option.dataset.songs;
+    
+    const modalTitle = document.querySelector('#modal-album h2') || document.querySelector('#modal-album .modal-title');
+    const modalBtn = document.querySelector('#modal-album .btn-confirm') || document.querySelector('#modal-album button[type="submit"]') || document.querySelector('#modal-album button:last-child');
+
+    // Solo intentamos cambiar el texto si los encontramos (para que no truene)
+    if (modalTitle) modalTitle.textContent = 'Editar Álbum';
+    if (modalBtn) modalBtn.textContent = 'Guardar Cambios';
+
+    // Abrir modal
+    document.getElementById('modal-album').classList.add('active');
+};
