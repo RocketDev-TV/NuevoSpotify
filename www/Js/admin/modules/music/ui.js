@@ -337,3 +337,81 @@ export function renderUploadPreview(filesArray) {
     const btnProcess = document.getElementById('btnProcesarAlbum');
     if (btnProcess) btnProcess.style.display = 'block';
 }
+
+export function renderSpotifyImportTable(tracks) {
+    const container = document.getElementById('cloner-status');
+    if (!container) return;
+
+    if (!tracks || tracks.length === 0) {
+        container.innerHTML = '<p class="text-muted text-center mt-3">No hay canciones para mostrar.</p>';
+        return;
+    }
+
+    let html = `
+    <div class="glass-panel mt-4 animate__animated animate__fadeIn" style="border: 1px solid rgba(29, 185, 84, 0.3);">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <h4 class="text-success"><i class="ph ph-spotify-logo"></i> Resultados encontrados</h4>
+            <span class="badge bg-success text-black border-0 fw-bold">${tracks.length} tracks</span>
+        </div>
+        
+        <div class="table-responsive custom-scroll" style="max-height: 400px; overflow-y: auto;">
+            <table class="table table-dark table-hover table-sm align-middle mb-0" style="table-layout: fixed;">
+                <thead style="position: sticky; top: 0; background: #121212; z-index: 10;">
+                    <tr class="text-secondary small">
+                        <th width="40" class="text-center">#</th>
+                        <th width="60">Cover</th>
+                        <th>Título</th>
+                        <th>Artista</th>
+                        <th>Álbum</th>
+                        <th class="text-end" width="60">Dur.</th>
+                    </tr>
+                </thead>
+                <tbody>
+    `;
+
+    tracks.forEach((track, index) => {
+        html += `
+            <tr>
+                <td class="text-center text-muted small">${index + 1}</td>
+                <td>
+                    <img src="${track.cover_url}" style="width: 40px; height: 40px; border-radius: 4px; object-fit: cover; box-shadow: 0 2px 5px rgba(0,0,0,0.5);">
+                </td>
+                <td class="fw-bold text-white text-truncate" title="${track.titulo}">
+                    ${track.titulo}
+                </td>
+                <td class="text-secondary text-truncate" title="${track.artista}">
+                    ${track.artista}
+                </td>
+                <td class="text-muted small text-truncate" title="${track.album}">
+                    ${track.album}
+                </td>
+                <td class="text-end font-monospace small text-secondary">
+                    ${track.duracion_fmt}
+                </td>
+            </tr>
+        `;
+    });
+
+    html += `
+                </tbody>
+            </table>
+        </div>
+        
+        <div class="mt-3 text-end pt-3 border-top border-secondary">
+            <button id="btnImportarSupabase" class="btn-primary" style="background-color: #1db954; color: black; font-weight: bold; width: 100%;">
+                <i class="ph ph-cloud-arrow-up"></i> Guardar en mi Catálogo
+            </button>
+        </div>
+    </div>
+    `;
+
+    container.innerHTML = html;
+
+    // Listener temporal para el botón de guardar
+    const btnSave = document.getElementById('btnImportarSupabase');
+    if(btnSave) {
+        btnSave.addEventListener('click', () => {
+             Swal.fire('¡Siguiente Paso!', 'Aquí iniciaremos la descarga y conversión (Fase 2).', 'info');
+        });
+    }
+}

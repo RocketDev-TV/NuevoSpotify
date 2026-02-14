@@ -1,0 +1,5 @@
+# configApiSpotify.py
+
+# --- CREDENTIALS DE SPOTIFY ---
+CLIENT_ID = '7fa0175dc0ee49bda077b8c1acbd8e1e'
+CLIENT_SECRET = 'c4dc0a79b36e406c9b6258e70171bc38'

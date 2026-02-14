@@ -114,5 +114,68 @@ function setupDragAndDrop() {
     });
 }
 
+// EN JS/admin/modules/music/main.js (Dentro de initMusicManager o al final)
+
+// Referencias al DOM
+const btnClonar = document.getElementById('btnClonar');
+const inputLink = document.getElementById('spotifyLink');
+const statusArea = document.getElementById('cloner-status');
+
+if (btnClonar) {
+    btnClonar.addEventListener('click', async () => {
+        const url = inputLink.value.trim();
+
+        if (!url) return Swal.fire('¡Aguanta!', 'Primero pega un link de Spotify, ¿no?', 'warning');
+
+        // 1. UI: Modo Cargando
+        btnClonar.disabled = true;
+        btnClonar.innerHTML = `<i class="ph ph-spinner ph-spin"></i> Espiando...`;
+        statusArea.innerHTML = `
+            <div class="text-center text-warning mt-3">
+                <i class="ph ph-magnifying-glass mb-2"></i><br>
+                Contactando a Spotify...
+            </div>`;
+
+        try {
+            // 2. PETICIÓN AL PYTHON 🐍
+            const response = await fetch('http://localhost:3001/api/spotify/analyze', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ link: url })
+            });
+
+            const data = await response.json();
+
+            if (!data.success) throw new Error(data.error || "Error desconocido del servidor");
+
+            // 3. ÉXITO: Pintamos la tabla
+            console.log("🔥 Metadata Recibida:", data);
+            UI.renderSpotifyImportTable(data.tracks); 
+            
+            statusArea.innerHTML = ''; // Borramos el texto de carga antes de que el UI pinte la tabla
+            
+            statusArea.innerHTML = ''; // Limpiamos el mensaje de carga
+            Swal.fire({
+                title: '¡Encontrado!',
+                text: `Se detectaron ${data.count} canciones.`,
+                icon: 'success',
+                toast: true, position: 'top-end', timer: 3000, showConfirmButton: false
+            });
+
+        } catch (err) {
+            console.error("Error importando:", err);
+            statusArea.innerHTML = `
+                <div class="alert alert-danger mt-3">
+                    <i class="ph ph-warning-circle"></i> ${err.message}
+                </div>`;
+        } finally {
+            // 4. Restaurar botón
+            btnClonar.disabled = false;
+            btnClonar.innerHTML = `<i class="ph ph-download-simple"></i> Clonar`;
+        }
+    });
+}
+
+
 // 🔥 ARRANQUE AUTOMÁTICO
 document.addEventListener('DOMContentLoaded', initMusicManager);
