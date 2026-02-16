@@ -1,4 +1,7 @@
 // JS/admin/modules/music/ui.js
+import * as API from './api.js';
+import * as UI from './ui.js';
+
 
 export function llenarSelect(selectElement, dataArray, valueKey, textKey, placeholder, imageKey = null, yearKey = null) {
     selectElement.innerHTML = `<option value="" data-cover="" data-year="">${placeholder}</option>`;
@@ -414,4 +417,90 @@ export function renderSpotifyImportTable(tracks) {
              Swal.fire('¡Siguiente Paso!', 'Aquí iniciaremos la descarga y conversión (Fase 2).', 'info');
         });
     }
+}
+
+export function renderYTPreview(data) {
+    const container = document.getElementById('yt-preview-container');
+    const tbody = document.getElementById('yt-results-body');
+    const albumInput = document.getElementById('yt-album-name');
+
+    // Ponemos el nombre de la playlist en la cajita verde grande
+    albumInput.value = data.playlist_name;
+    tbody.innerHTML = ''; 
+
+    data.tracks.forEach((track, index) => {
+        const tr = document.createElement('tr');
+        tr.className = 'staged-item'; 
+        tr.innerHTML = `
+            <td class="text-center">
+                <input type="checkbox" checked class="track-select" data-index="${index}">
+            </td>
+            <td>
+                <img src="${track.thumbnail}" style="width: 45px; height: 45px; border-radius: 6px; object-fit: cover;">
+            </td>
+            <td>
+                <input type="text" class="edit-input-yt title" value="${track.titulo}" style="width: 100%;">
+            </td>
+            <td class="text-end font-monospace text-secondary small">
+                ${track.duracion_fmt}
+            </td>
+        `;
+        tbody.appendChild(tr);
+    });
+
+    container.style.display = 'block';
+}
+
+export function initYTManager() {
+    const btnConsultar = document.getElementById('btnConsultarYT');
+    const inputYT = document.getElementById('ytLink');
+
+    btnConsultar?.addEventListener('click', async () => {
+        const url = inputYT.value.trim();
+        
+        if (!url) {
+            return Swal.fire('Ojo', 'Pega un link de YouTube primero, mai.', 'warning');
+        }
+
+        // Bloqueamos el botón con un spinner (esto ya lo tienes en ui.js)
+        UI.toggleLoadingButton(btnConsultar, true, 'Buscando...');
+
+        try {
+            // 2. Llamada a tu servidor Flask local
+            const res = await API.consultarYTMetadata(url);
+
+            if (res.error) {
+                Swal.fire('Error del Búnker', res.error, 'error');
+            } else {
+                // 3. Renderizamos la tabla con la metadata
+                UI.renderYTPreview(res);
+            }
+        } catch (error) {
+            console.error("❌ Fallo de conexión con Flask:", error);
+            Swal.fire('Error', 'No pude conectar con el servidor Python. ¿Está encendido?', 'error');
+        } finally {
+            UI.toggleLoadingButton(btnConsultar, false, 'Consultar');
+        }
+    });
+}
+
+// Agrega esto dentro de tu initYTManager o en el bloque de inicialización
+export async function syncYTCombos() {
+    const selectGeneroYT = document.getElementById('yt-select-genero');
+    const selectArtistaYT = document.getElementById('yt-select-artista');
+
+    // 1. Llenar géneros inicialmente
+    const { data: generos } = await API.getGeneros();
+    UI.llenarSelect(selectGeneroYT, generos, 'id_gener', 'nombre_genero', 'Seleccionar Género');
+
+    // 2. Evento de cambio de género para YouTube
+    selectGeneroYT.addEventListener('change', async (e) => {
+        const genId = e.target.value;
+        UI.resetSelect('yt-select-artista', 'Cargando artistas...');
+        
+        if (genId) {
+            const { data: artistas } = await API.getArtistas(genId);
+            UI.llenarSelect(selectArtistaYT, artistas, 'id_artista', 'nombre', 'Seleccionar Artista');
+        }
+    });
 }

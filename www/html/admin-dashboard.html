@@ -104,22 +104,97 @@
                 <div class="manager-header">
                     <h2>Gestor de Música</h2>
                     <div class="tabs">
-                        <button class="tab-btn active" onclick="cambiarTabMusic('importar')">Importar (Spotify)</button>
+                        <button class="tab-btn active" onclick="cambiarTabMusic('importar')">Importar (YouTube)</button>
                         <button class="tab-btn" onclick="cambiarTabMusic('manual')">Subida Manual</button>
                     </div>
                 </div>
 
                 <div id="tab-importar" class="music-tab active">
                     <div class="glass-panel">
-                        <h3><i class="ph ph-spotify-logo"></i> Clonador de Playlists</h3>
-                        <p>Pega el link de una playlist o canción de Spotify y deja que la magia suceda.</p>
+                        <h3><i class="ph ph-youtube-logo" style="color: #ff0000;"></i> Importador desde YouTube</h3>
+                        <p>Pega el link de una playlist o video y previsualiza el contenido antes de descargar.</p>
                         <div class="input-group-row">
-                            <input type="text" placeholder="https://open.spotify.com/playlist/..." id="spotifyLink">
-                            <button class="btn-primary" id="btnClonar">
-                                <i class="ph ph-download-simple"></i> Clonar
+                            <input type="text" placeholder="https://www.youtube.com/playlist?list=..." id="ytLink">
+                            <button class="btn-primary" id="btnConsultarYT">
+                                <i class="ph ph-magnifying-glass"></i> Consultar
                             </button>
                         </div>
-                        <div id="cloner-status" class="status-area">
+
+                        <div id="yt-preview-container" class="glass-panel animate__animated animate__fadeIn"
+                            style="display: none; margin-top: 25px;">
+
+                            <div class="grid-2-cols mb-4"
+                                style="border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 20px;">
+                                <div>
+                                    <label>Género para la descarga</label>
+                                    <div class="input-group-row compact">
+                                        <select id="yt-select-genero">
+                                            <option value="">Seleccionar Género</option>
+                                        </select>
+                                        <button type="button" class="btn-icon" onclick="abrirModal('genero')">
+                                            <i class="ph ph-plus"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                                <div>
+                                    <label>Artista (Seleccionar o crear nuevo)</label>
+                                    <div class="input-group-row compact">
+                                        <select id="yt-select-artista" disabled>
+                                            <option value="">Selecciona un género primero</option>
+                                        </select>
+                                        <button type="button" class="btn-icon" onclick="abrirModal('artista')">
+                                            <i class="ph ph-plus"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="grid-2-cols mb-4">
+                                <div>
+                                    <label>Año de Lanzamiento</label>
+                                    <input type="number" id="yt-album-year" class="edit-input-yt" placeholder="Ej: 2015"
+                                        min="1900" max="2099">
+                                </div>
+                                <div>
+                                    <label>Portada Personalizada (Opcional)</label>
+                                    <div class="custom-file-input-wrapper">
+                                        <label for="yt-custom-cover" class="yt-cover-label">
+                                            <i class="ph ph-image-square"></i>
+                                            <span id="cover-filename">Elegir imagen de alta calidad...</span>
+                                        </label>
+                                        <input type="file" id="yt-custom-cover" accept="image/*"
+                                            onchange="document.getElementById('cover-filename').innerText = this.files[0].name">
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="album-edit-zone mb-4">
+                                <label style="color: var(--accent); font-weight: bold; font-size: 14px;">Nombre del
+                                    Álbum / EP:</label>
+                                <div class="input-group-row">
+                                    <input type="text" id="yt-album-name" class="edit-input-yt"
+                                        style="font-size: 1.5rem; color: var(--accent); font-weight: bold; border-bottom: 2px solid var(--accent) !important;"
+                                        placeholder="Ej: Moctezuma">
+                                </div>
+                            </div>
+
+                            <div class="file-list-area">
+                                <table class="table table-dark table-hover table-sm align-middle mb-0">
+                                    <thead style="position: sticky; top: 0; background: #121212; z-index: 5;">
+                                        <tr class="text-secondary" style="font-size: 0.75rem;">
+                                            <th style="width: 45px;" class="text-center">#</th>
+                                            <th style="width: 65px;">Portada</th>
+                                            <th>Título Final en Catálogo</th>
+                                            <th style="width: 80px;" class="text-end"><i class="ph ph-clock"></i></th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="yt-results-body"></tbody>
+                                </table>
+                            </div>
+
+                            <button class="btn-primary full-width mt-4" id="btnDescargarMasivo">
+                                <i class="ph ph-rocket-launch"></i> Iniciar Descarga e Inserción en Catálogo
+                            </button>
                         </div>
                     </div>
                 </div>

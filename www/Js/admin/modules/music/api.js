@@ -3,13 +3,13 @@
 import { client } from '../../../config.js'; 
 
 // (Modo VPN / Remoto):
-const SERVER_URL = 'http://100.115.34.116:3000';
+//const SERVER_URL = 'http://100.115.34.116:3000';
 
-// (Si no estás en la misma PC):
-// const SERVER_URL = 'http://127.0.0.1:3000';
+// (Pruebas locales):
+const SERVER_URL = 'http://127.0.0.1:3000';
 
 // 3. Función auxiliar para obtener la BD
-function getDB() {
+export function getDB() {
     if (!client) {
         console.error("⛔ DETENIDO: Supabase no está inicializado en api.js");
         throw new Error("Supabase no inicializado");
@@ -218,5 +218,36 @@ export async function updateTrackOrder(updates) {
     } catch (error) {
         console.error("❌ Error guardando orden:", error);
         return { error };
+    }
+}
+
+// --- 🆕 FUNCIONES PARA YOUTUBE (FLASK) ---
+
+export async function consultarYTMetadata(url) {
+    try {
+        const response = await fetch(`${SERVER_URL}/api/metadata`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ url })
+        });
+        return await response.json();
+    } catch (error) {
+        console.error("❌ Error consultando metadata:", error);
+        return { error: error.message };
+    }
+}
+
+export async function descargarYTPlaylist(payload) {
+    try {
+        // Payload contiene: url, artista, album, genero, tracks_seleccionados
+        const response = await fetch(`${SERVER_URL}/api/download_playlist`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+        });
+        return await response.json();
+    } catch (error) {
+        console.error("❌ Error en descarga masiva:", error);
+        return { error: error.message };
     }
 }

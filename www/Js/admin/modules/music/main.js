@@ -2,6 +2,7 @@
 import * as API from './api.js';
 import * as UI from './ui.js';
 import * as Events from './events.js';
+import { initYTManager } from './events.js';
 
 console.log("🎵 Music Manager (Modular) Cargado");
 
@@ -177,5 +178,8 @@ if (btnClonar) {
 }
 
 
-// 🔥 ARRANQUE AUTOMÁTICO
-document.addEventListener('DOMContentLoaded', initMusicManager);
+// ARRANQUE AUTOMÁTICO
+document.addEventListener('DOMContentLoaded', () => {
+    initMusicManager();
+    initYTManager();
+});

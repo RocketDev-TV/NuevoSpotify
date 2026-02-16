@@ -536,3 +536,118 @@ div:where(.swal2-container) button.swal2-cancel {
 .btn-nuclear:active {
     transform: scale(0.95);
 }
+
+/* Estilo para los inputs editables dentro de la tabla de YouTube */
+.edit-input-yt {
+    background: rgba(255, 255, 255, 0.03) !important;
+    border: 1px solid rgba(255, 255, 255, 0.05) !important;
+    padding: 8px 12px !important;
+    margin-bottom: 0 !important;
+    font-size: 13px !important;
+    color: #eee !important;
+    border-radius: 6px !important;
+}
+
+.edit-input-yt:focus {
+    border-color: var(--accent) !important;
+    background: rgba(44, 194, 149, 0.05) !important;
+}
+
+/* Checkbox estilo Spotify */
+.track-select {
+    accent-color: var(--accent);
+    width: 18px;
+    height: 18px;
+    cursor: pointer;
+}
+
+/* Centrado del contenedor de previsualización */
+#yt-preview-container {
+    max-width: 900px; /* Limita el ancho para que no se estire infinito */
+    margin: 25px auto 0 auto !important; /* Centra el panel en la pantalla */
+    padding: 30px;
+}
+
+/* Centrado de la tabla interna */
+.file-list-area table {
+    width: 100%;
+    margin: 0 auto;
+}
+
+/* Estilo para el input del álbum centrado y grande */
+#yt-album-name {
+    text-align: center; /* Centra el texto del título del álbum */
+    border-radius: 0;
+    border-top: none !important;
+    border-left: none !important;
+    border-right: none !important;
+    background: transparent !important;
+}
+
+/* Contenedor del input de archivo */
+.custom-file-input-wrapper {
+    position: relative;
+    width: 100%;
+}
+
+/* Ocultamos el feo por defecto */
+#yt-custom-cover {
+    display: none;
+}
+
+/* El nuevo diseño del botón de carga */
+.yt-cover-label {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px dashed #444;
+    border-radius: 10px;
+    padding: 12px;
+    color: var(--text-muted);
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-size: 14px;
+}
+
+.yt-cover-label:hover {
+    background: rgba(44, 194, 149, 0.1);
+    border-color: var(--accent);
+    color: #fff;
+}
+
+.yt-cover-label i {
+    font-size: 20px;
+    color: var(--accent);
+}
+
+/* css/admin/music-manager.css */
+.custom-file-input-wrapper {
+    position: relative;
+    width: 100%;
+}
+
+.yt-cover-label {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px dashed #444;
+    border-radius: 10px;
+    padding: 12px;
+    color: #888;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.yt-cover-label:hover {
+    background: rgba(44, 194, 149, 0.1);
+    border-color: var(--accent);
+    color: #fff;
+}
+
+#yt-custom-cover {
+    display: none; /* Escondemos el feo del navegador */
+}

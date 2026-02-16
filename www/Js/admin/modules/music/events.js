@@ -153,12 +153,22 @@ export async function crearGenero() {
         }
     } else {
         UI.cerrarModal('genero');
-        const { data: generos } = await API.getGeneros();
-        UI.llenarSelect(document.getElementById('selectGenero'), generos, 'id_gener', 'nombre_genero', 'Selecciona Género');
-        
-        document.getElementById('selectGenero').value = data.id_gener;
-        document.getElementById('selectGenero').dispatchEvent(new Event('change'));
-        Swal.fire('Listo', 'Género creado', 'success');
+    const { data: generos } = await API.getGeneros();
+    
+    // 🔄 ACTUALIZAMOS AMBOS COMBOS AL MISMO TIEMPO
+    const manualSelect = document.getElementById('selectGenero');
+    const ytSelect = document.getElementById('yt-select-genero');
+
+    UI.llenarSelect(manualSelect, generos, 'id_gener', 'nombre_genero', 'Selecciona Género');
+    if (ytSelect) {
+        UI.llenarSelect(ytSelect, generos, 'id_gener', 'nombre_genero', 'Selecciona Género');
+    }
+    
+    // Seleccionamos el que acabas de crear automáticamente
+    if (manualSelect) manualSelect.value = data.id_gener;
+    if (ytSelect) ytSelect.value = data.id_gener;
+    
+    Swal.fire('Listo', 'Género creado y actualizado', 'success');
     }
 }
 
@@ -166,24 +176,36 @@ export async function crearArtista() {
     const nombre = document.getElementById('newArtistName').value;
     const desc = document.getElementById('newArtistDesc').value;
 
+    // 🔍 BUSCAMOS EL GÉNERO EN AMBOS COMBOS
+    const manualGenre = document.getElementById('selectGenero')?.value;
+    const ytGenre = document.getElementById('yt-select-genero')?.value;
+    const activeGenreId = manualGenre || ytGenre || state.genreId;
+
     if (!nombre) return Swal.fire('Falta info', 'Nombre obligatorio', 'warning');
-    if (!state.genreId) return Swal.fire('Error', 'Selecciona un género de fondo primero', 'error');
+    if (!activeGenreId) return Swal.fire('Error', 'Selecciona un género de fondo primero', 'error');
 
     const { data, error } = await API.createArtista({
         nombre: nombre,
         descripcion: desc,
-        genero_id: state.genreId
+        genero_id: activeGenreId // Usamos el ID que encontramos
     });
 
     if (error) {
         Swal.fire('Error', error.message, 'error');
     } else {
         UI.cerrarModal('artista');
-        const { data: artistas } = await API.getArtistas(state.genreId);
-        UI.llenarSelect(document.getElementById('selectArtista'), artistas, 'id_artista', 'nombre', 'Selecciona Artista');
+        const { data: artistas } = await API.getArtistas(activeGenreId);
         
-        document.getElementById('selectArtista').value = data.id_artista;
-        document.getElementById('selectArtista').dispatchEvent(new Event('change'));
+        // 🔄 ACTUALIZAMOS AMBOS COMBOS DE ARTISTAS
+        const manualArt = document.getElementById('selectArtista');
+        const ytArt = document.getElementById('yt-select-artista');
+
+        UI.llenarSelect(manualArt, artistas, 'id_artista', 'nombre', 'Selecciona Artista');
+        if (ytArt) {
+            UI.llenarSelect(ytArt, artistas, 'id_artista', 'nombre', 'Seleccionar Artista');
+            ytArt.disabled = false;
+        }
+
         Swal.fire('Listo', 'Artista creado', 'success');
     }
 }
@@ -753,4 +775,158 @@ export async function resetearTodo() {
         background: '#181818', color: '#fff', iconColor: '#d33'
     });
     Toast.fire({ icon: 'success', title: 'Todo limpio' });
+}
+
+// --- 🆕 EVENTOS DE YOUTUBE ---
+
+// JS/admin/modules/music/events.js
+
+export async function initYTManager() {
+    const btnConsultar = document.getElementById('btnConsultarYT');
+
+    btnConsultar?.addEventListener('click', async () => {
+        const url = document.getElementById('ytLink').value.trim();
+        if (!url) return Swal.fire('Ojo', 'Pega un link de YouTube', 'warning');
+
+        UI.toggleLoadingButton(btnConsultar, true, 'Buscando...');
+
+        try {
+            // Aquí definimos 'res'
+            const res = await API.consultarYTMetadata(url); 
+            console.log("📦 Respuesta recibida:", res);
+
+            if (res && !res.error) {
+                // 💡 'res' vive aquí adentro, así que aquí lo usamos
+                UI.renderYTPreview(res);
+                await cargarGenerosYT(); // La función que arregla tus combos
+            } else {
+                Swal.fire('Error', res.error || 'No se pudo obtener metadata', 'error');
+            }
+        } catch (error) {
+            console.error("❌ Error en el flujo:", error);
+            Swal.fire('Error', 'Fallo de conexión con el servidor Flask', 'error');
+        } finally {
+            UI.toggleLoadingButton(btnConsultar, false, 'Consultar');
+        }
+    });
+
+    const selectGeneroYT = document.getElementById('yt-select-genero');
+    const selectArtistaYT = document.getElementById('yt-select-artista');
+
+    // 🔄 El "Cable" para cargar artistas
+    selectGeneroYT?.addEventListener('change', async (e) => {
+        const genreId = e.target.value;
+        
+        if (!genreId) {
+            UI.resetSelect('yt-select-artista', 'Selecciona un género primero');
+            return;
+        }
+
+        UI.resetSelect('yt-select-artista', 'Cargando artistas...');
+        
+        try {
+            const { data } = await API.getArtistas(genreId);
+            UI.llenarSelect(selectArtistaYT, data, 'id_artista', 'nombre', 'Seleccionar Artista');
+        } catch (error) {
+            console.error("❌ Error cargando artistas para YT:", error);
+        }
+    });
+
+    const btnDescargar = document.getElementById('btnDescargarMasivo');
+    btnDescargar?.addEventListener('click', handleDescargaMasiva);
+}
+
+async function cargarGenerosYT() {
+    const select = document.getElementById('yt-select-genero');
+    // Si ya tiene opciones (más de la de "Seleccionar"), no lo volvemos a cargar
+    if (select.options.length > 1) return;
+
+    const { data, error } = await API.getGeneros();
+    if (data) {
+        UI.llenarSelect(select, data, 'id_gener', 'nombre_genero', 'Seleccionar Género');
+    }
+}
+
+// JS/admin/modules/music/events.js
+
+async function handleDescargaMasiva() {
+    const btnDescargar = document.getElementById('btnDescargarMasivo');
+    const ytUrl = document.getElementById('ytLink').value;
+    const artistId = document.getElementById('yt-select-artista').value;
+    const artistName = document.getElementById('yt-select-artista').selectedOptions[0].text;
+    const albumName = document.getElementById('yt-album-name').value;
+    const albumYear = document.getElementById('yt-album-year').value;
+    const genreId = document.getElementById('yt-select-genero').value;
+    const customCoverFile = document.getElementById('yt-custom-cover').files[0];
+
+    let finalCoverUrl = "";
+
+    if (customCoverFile) {
+        const fileName = `covers/${Date.now()}_${customCoverFile.name}`;
+        // Usamos el API de Storage de Supabase
+        const { data, error } = await API.getDB().storage
+            .from('portadas-albums') // ⚠️ Asegúrate de que el bucket sea PÚBLICO
+            .upload(fileName, customCoverFile);
+        
+        if (error) throw error;
+
+        // Obtenemos la URL pública para mandársela a Python
+        const { data: pubUrl } = API.getDB().storage
+            .from('portadas-albums')
+            .getPublicUrl(fileName);
+            
+        finalCoverUrl = pubUrl.publicUrl;
+    }
+    
+    if (!artistId || !albumName || !albumYear) {
+        return Swal.fire('Falta info', 'Artista, nombre del disco y año son obligatorios, mai.', 'warning');
+    }
+
+    UI.toggleLoadingButton(btnDescargar, true, 'Subiendo portada y procesando...');
+
+    try {
+        let finalCoverUrl = "";
+        
+        // 1. Subir portada manual al Bucket si existe
+        if (customCoverFile) {
+            const fileName = `covers/${Date.now()}_${customCoverFile.name}`;
+            const { data, error } = await API.getDB().storage
+                .from('portadas-albums') // ⚠️ Crea este bucket en el dashboard de Supabase primero
+                .upload(fileName, customCoverFile);
+            
+            if (error) throw error;
+            const { data: pubUrl } = API.getDB().storage.from('portadas-albums').getPublicUrl(fileName);
+            finalCoverUrl = pubUrl.publicUrl;
+        }
+
+        // 2. Armar el payload súper cargado
+        const payload = {
+            url: ytUrl,
+            artista_id: artistId,        // Para el query de Supabase
+            artista_nombre: artistName,  // Para la carpeta del server
+            album_titulo: albumName,
+            album_year: albumYear,
+            genero_id: genreId,
+            imagen_url: finalCoverUrl,   // La URL del bucket
+            tracks: Array.from(document.querySelectorAll('#yt-results-body tr'))
+                .filter(row => row.querySelector('.track-select').checked)
+                .map(row => ({
+                    titulo: row.querySelector('.edit-input-yt.title').value
+                }))
+        };
+
+        const res = await API.descargarYTPlaylist(payload);
+
+        if (res.success) {
+            Swal.fire('¡Éxito Total!', `Álbum "${albumName}" guardado en servidor y catálogo.`, 'success');
+            document.getElementById('yt-preview-container').style.display = 'none';
+        } else {
+            throw new Error(res.error);
+        }
+    } catch (error) {
+        console.error(error);
+        Swal.fire('Error', error.message, 'error');
+    } finally {
+        UI.toggleLoadingButton(btnDescargar, false, 'Iniciar Descarga Masiva');
+    }
 }
