@@ -1,14 +1,14 @@
 import os
+import pandas as pd
+import config
+import yt_dlp
 from flask import Flask, jsonify, request
 from flask_cors import CORS
 from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
 from flask import send_from_directory
 from supabase import create_client, Client
-import pandas as pd
-import config
-import yt_dlp
-
+from mutagen.mp3 import MP3
 from flask_cors import CORS
 
 app = Flask(__name__)
@@ -153,11 +153,11 @@ def get_metadata():
             for entry in entries:
                 tracks.append({
                     'titulo': entry.get('title'),
+                    # 🔗 Generamos la URL completa usando el ID del video
+                    'url_video': f"https://www.youtube.com/watch?v={entry.get('id')}", 
                     'duracion_seg': entry.get('duration'),
-                    # Formateamos la duración de segundos a MM:SS
                     'duracion_fmt': f"{int(entry.get('duration', 0)//60)}:{int(entry.get('duration', 0)%60):02d}" if entry.get('duration') else "0:00",
                     'thumbnail': entry.get('thumbnails')[0]['url'] if entry.get('thumbnails') else None,
-                    'artista_sugerido': entry.get('uploader') or entry.get('channel')
                 })
                 
             return jsonify({
@@ -224,62 +224,84 @@ def download_youtube_audio():
 def download_playlist_fidelity():
     try:
         data = request.json
-        # Extraemos todo lo que mandó el JS
         artista_id = data.get('artista_id')
         artista_nom = data.get('artista_nombre')
         album_tit = data.get('album_titulo')
         album_year = data.get('album_year')
-        genero_id = data.get('genero_id')
-        img_url = data.get('imagen_url')
-        tracks = data.get('tracks', [])
+        img_url = data.get('imagen_url') 
+        tracks = data.get('tracks', []) # Aquí necesitamos que cada track traiga su 'url_video'
 
-        ydl_opts = {
-            'format': 'bestaudio/best',
-            'outtmpl': os.path.join(app.config['UPLOAD_FOLDER'], f'{artista_nom}/{album_tit}/%(title)s.%(ext)s'),
-            'postprocessors': [
-                {'key': 'FFmpegExtractAudio', 'preferredcodec': 'mp3', 'preferredquality': '320'},
-                {'key': 'EmbedThumbnail'},      
-                {'key': 'FFmpegMetadata'},       
-            ],
-        }
-
-        with yt_dlp.YoutubeDL(ydl_opts) as ydl:
-            ydl.download([data.get('url')])
-
-        # 🚀 PASO SUPABASE: Insertar Álbum y Canciones
-        # 1. Crear el Álbum
+        # 1. Crear/Upsert del Álbum
         album_entry = {
             "titulo_album": album_tit,
             "artista_id": artista_id,
             "fecha_lanzamiento": f"{album_year}-01-01",
             "imagen_url": img_url,
+            "num_canciones": len(tracks),
             "tipo_lanzamiento": "ALBUM"
         }
         res_alb = supabase.table('album').upsert(album_entry).execute()
         new_album_id = res_alb.data[0]['id_album']
 
-        # 2. Insertar Canciones una por una
+        total_segundos_album = 0 
+
+        # 2. Bucle ÚNICO de descarga y registro
         for i, track in enumerate(tracks):
-            # Sanitizamos el título para evitar problemas en la URL
-            clean_title = track['titulo'].replace(" ", "_") # Opcional: mantener consistencia
+            titulo_editado = track.get('titulo', 'Sin Titulo')
+            video_url = track.get('url_video') # # Asegúrate de mandarlo desde el JS
             
-            # 🎯 IMPORTANTE: Si yt-dlp baja el archivo con un nombre y tú guardas otro 
-            # en la BD, no va a sonar. 
-            audio_url = f"http://localhost:3000/musica/{artista_nom}/{album_tit}/{track['titulo']}.mp3"
+            if not video_url:
+                print(f"⚠️ Saltando {titulo_editado} porque no tiene URL")
+                continue # Pasa a la siguiente rola en lugar de tronar
             
-            cancion_entry = {
-                "titulo_cancion": track['titulo'],
+            # Configuración para descargar esta canción específica con SU nombre editado
+            ydl_opts_individual = {
+                'format': 'bestaudio/best',
+                'outtmpl': os.path.join(app.config['UPLOAD_FOLDER'], f'{artista_nom}/{album_tit}/{titulo_editado}.%(ext)s'),
+                'postprocessors': [
+                    {'key': 'FFmpegExtractAudio', 'preferredcodec': 'mp3', 'preferredquality': '320'},
+                    {'key': 'EmbedThumbnail'},      
+                    {'key': 'FFmpegMetadata'},       
+                ],
+                'quiet': True
+            }
+
+            with yt_dlp.YoutubeDL(ydl_opts_individual) as ydl:
+                print(f"📥 Bajando rola {i+1}/{len(tracks)}: {titulo_editado}")
+                ydl.download([video_url]) # Descarga solo ese video
+
+            # 3. Medir y Registrar
+            file_path = os.path.join(app.config['UPLOAD_FOLDER'], f"{artista_nom}/{album_tit}/{titulo_editado}.mp3")
+            duracion_decimal = 0.0 
+            
+            try:
+                audio = MP3(file_path)
+                duracion_decimal = round(audio.info.length / 60, 2)
+                total_segundos_album += audio.info.length
+            except Exception as e:
+                print(f"⚠️ Error midiendo {file_path}: {e}")
+
+            supabase.table('canciones').insert({
+                "titulo_cancion": titulo_editado,
                 "artista_id": artista_id,
                 "album_id": new_album_id,
-                "audio_path": audio_url,
+                "audio_path": f"http://localhost:3000/musica/{artista_nom}/{album_tit}/{titulo_editado}.mp3",
                 "numero_track": i + 1,
                 "imagen_url": img_url,
+                "duracion_cancion": duracion_decimal,
                 "reproducciones": 0
-            }
-            supabase.table('canciones').insert(cancion_entry).execute()
+            }).execute()
 
-        return jsonify({"success": True})
+        # 4. Actualizar Duración del Álbum
+        duracion_final_album = round(total_segundos_album / 60, 2)
+        supabase.table('album').update({
+            "duracion_album": duracion_final_album 
+        }).eq('id_album', new_album_id).execute()
+
+        return jsonify({"success": True, "mensaje": f"Álbum {album_tit} listo."})
+
     except Exception as e:
+        print(f"❌ Error masivo: {e}")
         return jsonify({"error": str(e)}), 500
 # ---------------------------------------------------------
 # INICIO DEL SERVIDOR 🚀

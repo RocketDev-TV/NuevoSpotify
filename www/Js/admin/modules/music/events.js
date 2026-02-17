@@ -798,6 +798,7 @@ export async function initYTManager() {
             if (res && !res.error) {
                 // 💡 'res' vive aquí adentro, así que aquí lo usamos
                 UI.renderYTPreview(res);
+                document.getElementById('yt-preview-container').style.display = 'block';
                 await cargarGenerosYT(); // La función que arregla tus combos
             } else {
                 Swal.fire('Error', res.error || 'No se pudo obtener metadata', 'error');
@@ -847,9 +848,13 @@ async function cargarGenerosYT() {
     }
 }
 
-// JS/admin/modules/music/events.js
-
 async function handleDescargaMasiva() {
+    // 1. Definición de limpieza (Primero para que esté disponible)
+    const clean = (str) => str.toLowerCase().trim()
+        .replace(/\s+/g, '_')
+        .replace(/[^a-z0-9_]/g, '')
+        .replace(/_{2,}/g, '_');
+
     const btnDescargar = document.getElementById('btnDescargarMasivo');
     const ytUrl = document.getElementById('ytLink').value;
     const artistId = document.getElementById('yt-select-artista').value;
@@ -859,73 +864,71 @@ async function handleDescargaMasiva() {
     const genreId = document.getElementById('yt-select-genero').value;
     const customCoverFile = document.getElementById('yt-custom-cover').files[0];
 
-    let finalCoverUrl = "";
-
-    if (customCoverFile) {
-        const fileName = `covers/${Date.now()}_${customCoverFile.name}`;
-        // Usamos el API de Storage de Supabase
-        const { data, error } = await API.getDB().storage
-            .from('portadas-albums') // ⚠️ Asegúrate de que el bucket sea PÚBLICO
-            .upload(fileName, customCoverFile);
-        
-        if (error) throw error;
-
-        // Obtenemos la URL pública para mandársela a Python
-        const { data: pubUrl } = API.getDB().storage
-            .from('portadas-albums')
-            .getPublicUrl(fileName);
-            
-        finalCoverUrl = pubUrl.publicUrl;
-    }
-    
+    // 2. Validación inicial
     if (!artistId || !albumName || !albumYear) {
         return Swal.fire('Falta info', 'Artista, nombre del disco y año son obligatorios, mai.', 'warning');
     }
 
-    UI.toggleLoadingButton(btnDescargar, true, 'Subiendo portada y procesando...');
+    const selectedTracks = Array.from(document.querySelectorAll('#yt-results-body tr'))
+        .filter(row => row.querySelector('.track-select').checked)
+        .map(row => ({
+            titulo: row.querySelector('.edit-input-yt.title').value,
+            url_video: row.getAttribute('data-video-url') || row.dataset.videoUrl
+        }));
+
+    if (selectedTracks.length === 0 || selectedTracks.some(t => !t.url_video)) {
+        return Swal.fire('Error de Datos', 'Selecciona rolas válidas con link de video.', 'error');
+    }
+
+    UI.toggleLoadingButton(btnDescargar, true, 'Procesando portada y catálogo...');
 
     try {
+        // 3. LÓGICA DE PORTADA ÚNICA
         let finalCoverUrl = "";
-        
-        // 1. Subir portada manual al Bucket si existe
+
         if (customCoverFile) {
-            const fileName = `covers/${Date.now()}_${customCoverFile.name}`;
-            const { data, error } = await API.getDB().storage
-                .from('portadas-albums') // ⚠️ Crea este bucket en el dashboard de Supabase primero
-                .upload(fileName, customCoverFile);
-            
-            if (error) throw error;
-            const { data: pubUrl } = API.getDB().storage.from('portadas-albums').getPublicUrl(fileName);
+            // Subida manual al bucket 'audio'
+            const path = `${clean(artistName)}/${clean(albumName)}/${Date.now()}_cover.jpg`;
+            const { error: upError } = await API.getDB().storage.from('audio').upload(path, customCoverFile);
+            if (upError) throw upError;
+
+            const { data: pubUrl } = API.getDB().storage.from('audio').getPublicUrl(path);
             finalCoverUrl = pubUrl.publicUrl;
+        } else {
+            // Respaldo: Usamos la miniatura de YouTube de la primera rola
+            const firstImg = document.querySelector('.song-row-yt img')?.src;
+            finalCoverUrl = firstImg || ""; 
         }
 
-        // 2. Armar el payload súper cargado
+        // 4. Payload para Flask
         const payload = {
             url: ytUrl,
-            artista_id: artistId,        // Para el query de Supabase
-            artista_nombre: artistName,  // Para la carpeta del server
+            artista_id: artistId, 
+            artista_nombre: artistName,
             album_titulo: albumName,
             album_year: albumYear,
             genero_id: genreId,
-            imagen_url: finalCoverUrl,   // La URL del bucket
-            tracks: Array.from(document.querySelectorAll('#yt-results-body tr'))
-                .filter(row => row.querySelector('.track-select').checked)
-                .map(row => ({
-                    titulo: row.querySelector('.edit-input-yt.title').value
-                }))
+            imagen_url: finalCoverUrl,
+            tracks: selectedTracks
         };
 
         const res = await API.descargarYTPlaylist(payload);
 
         if (res.success) {
-            Swal.fire('¡Éxito Total!', `Álbum "${albumName}" guardado en servidor y catálogo.`, 'success');
+            Swal.fire({
+                title: '¡Misión cumplida!',
+                text: `Álbum "${albumName}" guardado.`,
+                icon: 'success',
+                background: '#181818', color: '#fff'
+            });
             document.getElementById('yt-preview-container').style.display = 'none';
         } else {
-            throw new Error(res.error);
+            throw new Error(res.error || 'Error en el servidor local');
         }
+
     } catch (error) {
-        console.error(error);
-        Swal.fire('Error', error.message, 'error');
+        console.error("❌ Error:", error);
+        Swal.fire({ title: 'Error', text: error.message, icon: 'error', background: '#181818', color: '#fff' });
     } finally {
         UI.toggleLoadingButton(btnDescargar, false, 'Iniciar Descarga Masiva');
     }

@@ -420,35 +420,26 @@ export function renderSpotifyImportTable(tracks) {
 }
 
 export function renderYTPreview(data) {
-    const container = document.getElementById('yt-preview-container');
-    const tbody = document.getElementById('yt-results-body');
-    const albumInput = document.getElementById('yt-album-name');
-
-    // Ponemos el nombre de la playlist en la cajita verde grande
-    albumInput.value = data.playlist_name;
-    tbody.innerHTML = ''; 
+    const container = document.getElementById('yt-results-body');
+    container.innerHTML = ''; 
 
     data.tracks.forEach((track, index) => {
         const tr = document.createElement('tr');
-        tr.className = 'staged-item'; 
-        tr.innerHTML = `
-            <td class="text-center">
-                <input type="checkbox" checked class="track-select" data-index="${index}">
-            </td>
-            <td>
-                <img src="${track.thumbnail}" style="width: 45px; height: 45px; border-radius: 6px; object-fit: cover;">
-            </td>
-            <td>
-                <input type="text" class="edit-input-yt title" value="${track.titulo}" style="width: 100%;">
-            </td>
-            <td class="text-end font-monospace text-secondary small">
-                ${track.duracion_fmt}
-            </td>
-        `;
-        tbody.appendChild(tr);
-    });
+        tr.dataset.videoUrl = track.url_video;
+        tr.className = 'song-row-yt';
 
-    container.style.display = 'block';
+        tr.innerHTML = `
+            <td><input type="checkbox" class="track-select" checked></td>
+            <td>
+                <img src="${track.thumbnail}" style="width: 40px; border-radius: 4px;">
+            </td>
+            <td>
+                <input type="text" class="edit-input-yt title" value="${track.titulo}">
+            </td>
+            <td>${track.duracion_fmt}</td>
+        `;
+        container.appendChild(tr);
+    });
 }
 
 export function initYTManager() {
