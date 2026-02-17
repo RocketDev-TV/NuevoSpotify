@@ -303,6 +303,78 @@ def download_playlist_fidelity():
     except Exception as e:
         print(f"❌ Error masivo: {e}")
         return jsonify({"error": str(e)}), 500
+
+# --- ENDPOINT PARA DESCARGA INDIVIDUAL (Soporta barra de progreso) ---
+@app.route('/api/download_single', methods=['POST'])
+@limiter.limit("10 per minute")
+def download_single_track():
+    try:
+        data = request.json
+        track = data.get('track')
+        artista_id = data.get('artista_id')
+        artista_nom = data.get('artista_nombre')
+        album_tit = data.get('album_titulo')
+        album_year = data.get('album_year')
+        img_url = data.get('imagen_url')
+        index = data.get('index')
+        total = data.get('total')
+        album_id = data.get('new_album_id')
+
+        # 1. Crear o recuperar el álbum (Solo si no tenemos el ID aún)
+        if not album_id:
+            album_entry = {
+                "titulo_album": album_tit,
+                "artista_id": artista_id,
+                "fecha_lanzamiento": f"{album_year}-01-01",
+                "imagen_url": img_url,
+                "num_canciones": total,
+                "tipo_lanzamiento": "ALBUM"
+            }
+            res_alb = supabase.table('album').upsert(album_entry).execute()
+            album_id = res_alb.data[0]['id_album']
+
+        # 2. Descargar la rola específica
+        titulo = track.get('titulo')
+        url_video = track.get('url_video')
+        
+        ydl_opts = {
+            'format': 'bestaudio/best',
+            'outtmpl': os.path.join(app.config['UPLOAD_FOLDER'], f'{artista_nom}/{album_tit}/{titulo}.%(ext)s'),
+            'postprocessors': [{'key': 'FFmpegExtractAudio', 'preferredcodec': 'mp3', 'preferredquality': '320'}],
+            'quiet': True
+        }
+
+        with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+            ydl.download([url_video])
+
+        # 3. Medir duración
+        file_path = os.path.join(app.config['UPLOAD_FOLDER'], f"{artista_nom}/{album_tit}/{titulo}.mp3")
+        audio = MP3(file_path)
+        duracion_decimal = round(audio.info.length / 60, 2)
+
+        # 4. Insertar canción
+        supabase.table('canciones').insert({
+            "titulo_cancion": titulo,
+            "artista_id": artista_id,
+            "album_id": album_id,
+            "audio_path": f"http://localhost:3000/musica/{artista_nom}/{album_tit}/{titulo}.mp3",
+            "numero_track": index,
+            "imagen_url": img_url,
+            "duracion_cancion": duracion_decimal,
+            "reproducciones": 0
+        }).execute()
+
+        # 5. Si es la última canción, calculamos la duración total del álbum
+        if index == total:
+            canciones = supabase.table('canciones').select("duracion_cancion").eq('album_id', album_id).execute()
+            suma_duracion = sum([c['duracion_cancion'] for c in canciones.data])
+            supabase.table('album').update({"duracion_album": round(suma_duracion, 2)}).eq('id_album', album_id).execute()
+
+        return jsonify({"success": True, "album_id": album_id})
+
+    except Exception as e:
+        print(f"❌ Error en track {data.get('index')}: {e}")
+        return jsonify({"error": str(e)}), 500
 # ---------------------------------------------------------
 # INICIO DEL SERVIDOR 🚀
 # ---------------------------------------------------------

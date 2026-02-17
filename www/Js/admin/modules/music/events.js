@@ -849,22 +849,20 @@ async function cargarGenerosYT() {
 }
 
 async function handleDescargaMasiva() {
-    // 1. Definición de limpieza (Primero para que esté disponible)
+    // 1. Definición de limpieza (Primero para que esté disponible siempre)
     const clean = (str) => str.toLowerCase().trim()
         .replace(/\s+/g, '_')
         .replace(/[^a-z0-9_]/g, '')
         .replace(/_{2,}/g, '_');
 
     const btnDescargar = document.getElementById('btnDescargarMasivo');
-    const ytUrl = document.getElementById('ytLink').value;
     const artistId = document.getElementById('yt-select-artista').value;
     const artistName = document.getElementById('yt-select-artista').selectedOptions[0].text;
     const albumName = document.getElementById('yt-album-name').value;
     const albumYear = document.getElementById('yt-album-year').value;
-    const genreId = document.getElementById('yt-select-genero').value;
     const customCoverFile = document.getElementById('yt-custom-cover').files[0];
 
-    // 2. Validación inicial
+    // 2. Validaciones iniciales
     if (!artistId || !albumName || !albumYear) {
         return Swal.fire('Falta info', 'Artista, nombre del disco y año son obligatorios, mai.', 'warning');
     }
@@ -876,55 +874,81 @@ async function handleDescargaMasiva() {
             url_video: row.getAttribute('data-video-url') || row.dataset.videoUrl
         }));
 
-    if (selectedTracks.length === 0 || selectedTracks.some(t => !t.url_video)) {
-        return Swal.fire('Error de Datos', 'Selecciona rolas válidas con link de video.', 'error');
-    }
+    if (selectedTracks.length === 0) return Swal.fire('Ojo', 'Selecciona tracks', 'warning');
 
-    UI.toggleLoadingButton(btnDescargar, true, 'Procesando portada y catálogo...');
+    UI.toggleLoadingButton(btnDescargar, true, 'Iniciando proceso...');
 
     try {
-        // 3. LÓGICA DE PORTADA ÚNICA
+        // 3. Procesar Portada PRIMERO
         let finalCoverUrl = "";
-
         if (customCoverFile) {
-            // Subida manual al bucket 'audio'
             const path = `${clean(artistName)}/${clean(albumName)}/${Date.now()}_cover.jpg`;
             const { error: upError } = await API.getDB().storage.from('audio').upload(path, customCoverFile);
             if (upError) throw upError;
-
             const { data: pubUrl } = API.getDB().storage.from('audio').getPublicUrl(path);
             finalCoverUrl = pubUrl.publicUrl;
         } else {
-            // Respaldo: Usamos la miniatura de YouTube de la primera rola
-            const firstImg = document.querySelector('.song-row-yt img')?.src;
-            finalCoverUrl = firstImg || ""; 
+            // Captura la imagen de la primera rola de la tabla
+            finalCoverUrl = document.querySelector('.song-row-yt img')?.src || ""; 
         }
 
-        // 4. Payload para Flask
-        const payload = {
-            url: ytUrl,
-            artista_id: artistId, 
-            artista_nombre: artistName,
-            album_titulo: albumName,
-            album_year: albumYear,
-            genero_id: genreId,
-            imagen_url: finalCoverUrl,
-            tracks: selectedTracks
-        };
+        // 4. Activar Barra de Progreso
+        const progressContainer = document.getElementById('yt-progress-container');
+        const progressBar = document.getElementById('yt-progress-bar');
+        const progressText = document.getElementById('yt-progress-text');
+        const progressPercent = document.getElementById('yt-progress-percent');
+        
+        progressContainer.style.display = 'block';
 
-        const res = await API.descargarYTPlaylist(payload);
+        let exitosas = 0;
+        let lastAlbumId = null;
 
-        if (res.success) {
-            Swal.fire({
-                title: '¡Misión cumplida!',
-                text: `Álbum "${albumName}" guardado.`,
-                icon: 'success',
-                background: '#181818', color: '#fff'
-            });
-            document.getElementById('yt-preview-container').style.display = 'none';
-        } else {
-            throw new Error(res.error || 'Error en el servidor local');
+        // 5. Bucle de descarga rola por rola
+        for (let i = 0; i < selectedTracks.length; i++) {
+            const track = selectedTracks[i];
+            
+            // Cálculo de porcentaje dentro del bucle
+            const percent = Math.round(((i + 1) / selectedTracks.length) * 100);
+            
+            // Actualización visual Pro
+            progressBar.style.width = `${percent}%`;
+            if (progressPercent) progressPercent.textContent = `${percent}%`;
+            progressText.innerHTML = `Descargando: <span class="text-success">${i + 1}/${selectedTracks.length}</span> - ${track.titulo}`;
+
+            const payload = {
+                artista_id: artistId, 
+                artista_nombre: artistName,
+                album_titulo: albumName,
+                album_year: albumYear,
+                imagen_url: finalCoverUrl,
+                track: track,
+                index: i + 1,
+                total: selectedTracks.length,
+                new_album_id: lastAlbumId 
+            };
+
+            const res = await API.descargarUnicaRola(payload);
+            if (res.success) {
+                lastAlbumId = res.album_id;
+                exitosas++;
+            }
         }
+
+        // 6. Éxito Final y Refresco de Catálogo
+        Swal.fire({ 
+            title: '¡Éxito!', 
+            text: `Álbum "${albumName}" guardado con ${exitosas} canciones.`, 
+            icon: 'success', 
+            background: '#181818', color: '#fff' 
+        });
+
+        // Refrescar el select de álbumes para que aparezca el lápiz ✏️
+        const { data: nuevosAlbums } = await API.getAlbums(artistId);
+        UI.llenarSelect(document.getElementById('selectAlbum'), nuevosAlbums, 'id_album', 'titulo_album', 'Selecciona Álbum', 'imagen_url', 'fecha_lanzamiento');
+
+        // Limpieza visual
+        document.getElementById('yt-preview-container').style.display = 'none';
+        progressContainer.style.display = 'none';
 
     } catch (error) {
         console.error("❌ Error:", error);

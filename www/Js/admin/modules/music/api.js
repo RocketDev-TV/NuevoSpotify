@@ -251,3 +251,12 @@ export async function descargarYTPlaylist(payload) {
         return { error: error.message };
     }
 }
+
+export async function descargarUnicaRola(payload) {
+    const res = await fetch(`${SERVER_URL}/api/download_single`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+    });
+    return await res.json();
+}

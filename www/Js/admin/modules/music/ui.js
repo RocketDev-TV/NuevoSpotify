@@ -421,22 +421,30 @@ export function renderSpotifyImportTable(tracks) {
 
 export function renderYTPreview(data) {
     const container = document.getElementById('yt-results-body');
+    const albumInput = document.getElementById('yt-album-name'); // Para auto-llenar el nombre
+    
     container.innerHTML = ''; 
+
+    if (albumInput && data.playlist_name) {
+        albumInput.value = data.playlist_name;
+    }
 
     data.tracks.forEach((track, index) => {
         const tr = document.createElement('tr');
-        tr.dataset.videoUrl = track.url_video;
+        tr.dataset.videoUrl = track.url_video; // El link que necesita Python
         tr.className = 'song-row-yt';
 
         tr.innerHTML = `
             <td><input type="checkbox" class="track-select" checked></td>
             <td>
-                <img src="${track.thumbnail}" style="width: 40px; border-radius: 4px;">
+                <img src="${track.thumbnail}" style="width: 40px; height: 40px; border-radius: 4px; object-fit: cover; box-shadow: 0 2px 4px rgba(0,0,0,0.3);">
             </td>
             <td>
                 <input type="text" class="edit-input-yt title" value="${track.titulo}">
             </td>
-            <td>${track.duracion_fmt}</td>
+            <td class="text-end font-monospace small" style="color: #bbb;">
+                ${track.duracion_fmt}
+            </td>
         `;
         container.appendChild(tr);
     });

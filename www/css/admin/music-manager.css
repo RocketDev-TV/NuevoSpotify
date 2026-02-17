@@ -651,3 +651,47 @@ div:where(.swal2-container) button.swal2-cancel {
 #yt-custom-cover {
     display: none; /* Escondemos el feo del navegador */
 }
+
+/* Animación de la barra de progreso estilo neón */
+#yt-progress-container {
+    background: rgba(255, 255, 255, 0.03);
+    padding: 15px;
+    border-radius: 12px;
+    border: 1px solid rgba(29, 185, 84, 0.2);
+}
+
+.progress-custom {
+    height: 10px;
+    background-color: #282828;
+    border-radius: 10px;
+    overflow: hidden;
+    box-shadow: inset 0 1px 3px rgba(0,0,0,0.5);
+}
+
+.progress-bar-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #1db954, #1ed760);
+    width: 0%;
+    transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1); /* Movimiento suave */
+    box-shadow: 0 0 15px rgba(29, 185, 84, 0.5);
+    position: relative;
+}
+
+/* El brillo que recorre la barra */
+.progress-bar-fill::after {
+    content: "";
+    position: absolute;
+    top: 0; left: 0; bottom: 0; right: 0;
+    background: linear-gradient(
+        90deg,
+        rgba(255,255,255,0) 0%,
+        rgba(255,255,255,0.2) 50%,
+        rgba(255,255,255,0) 100%
+    );
+    animation: shimmer 1.5s infinite;
+}
+
+@keyframes shimmer {
+    0% { transform: translateX(-100%); }
+    100% { transform: translateX(100%); }
+}

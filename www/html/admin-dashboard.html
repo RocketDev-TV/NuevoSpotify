@@ -195,6 +195,19 @@
                             <button class="btn-primary full-width mt-4" id="btnDescargarMasivo">
                                 <i class="ph ph-rocket-launch"></i> Iniciar Descarga e Inserción en Catálogo
                             </button>
+
+                            <div id="yt-progress-container" style="display: none;" class="animate__animated animate__fadeIn">
+                                <div class="d-flex justify-content-between align-items-center mb-2">
+                                    <div class="d-flex align-items-center gap-2">
+                                        <div class="spinner-border spinner-border-sm text-success" role="status"></div>
+                                        <span class="text-white small fw-bold" id="yt-progress-text">Preparando búnker...</span>
+                                    </div>
+                                    <span class="badge bg-success text-black fw-bold" id="yt-progress-percent">0%</span>
+                                </div>
+                                <div class="progress-custom">
+                                    <div id="yt-progress-bar" class="progress-bar-fill"></div>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
