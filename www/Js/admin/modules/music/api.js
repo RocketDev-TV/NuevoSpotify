@@ -3,10 +3,10 @@
 import { client } from '../../../config.js'; 
 
 // (Modo VPN / Remoto):
-//const SERVER_URL = 'http://100.115.34.116:3000';
+const SERVER_URL = 'http://100.115.34.116:3000';
 
 // (Pruebas locales):
-const SERVER_URL = 'http://127.0.0.1:3000';
+//const SERVER_URL = 'http://127.0.0.1:3000';
 
 // 3. Función auxiliar para obtener la BD
 export function getDB() {

@@ -99,23 +99,23 @@ export async function handleAlbumChange(e) {
     if (state.albumId) {
         titleEl.textContent = option.text;
         titleEl.innerHTML = `
-            ${option.text} 
-            <button class="btn-icon-action edit ms-2" 
-                    style="background:none; border:none; color:#888; transition:0.2s; cursor:pointer;" 
-                    onmouseover="this.style.color='#1db954'; this.style.transform='scale(1.1)'" 
-                    onmouseout="this.style.color='#888'; this.style.transform='scale(1)'"
-                    onclick="window.abrirModalEditarAlbum()" 
-                    title="Editar Portada/Info">
-                <i class="ph ph-pencil-simple fs-4"></i>
-            </button>
-            <button class="btn-icon-action delete ms-2" 
-                    style="background:none; border:none; color:#888; transition:0.2s; cursor:pointer;" 
-                    onmouseover="this.style.color='#d33'; this.style.transform='scale(1.1)'" 
-                    onmouseout="this.style.color='#888'; this.style.transform='scale(1)'"
-                    onclick="window.borrarAlbumNuclear()" 
-                    title="Destruir Álbum">
-                <i class="ph ph-trash fs-4"></i>
-            </button>
+            <div class="d-flex align-items-center flex-wrap">
+                <span>${option.text}</span>
+                <div class="ms-2 d-flex gap-2">
+                    <button class="btn-icon-action edit" 
+                            style="background:none; border:none; color:#1db954 !important; cursor:pointer;" 
+                            onclick="window.abrirModalEditarAlbum()" 
+                            title="Editar Portada/Info">
+                        <i class="ph ph-pencil-simple fs-4"></i>
+                    </button>
+                    <button class="btn-icon-action delete" 
+                            style="background:none; border:none; color:#ff4444 !important; cursor:pointer;" 
+                            onclick="window.borrarAlbumNuclear()" 
+                            title="Destruir Álbum">
+                        <i class="ph ph-trash fs-4"></i>
+                    </button>
+                </div>
+            </div>
         `;
         yearEl.textContent = `(${option.dataset.year || '----'})`; // Le puse paréntesis para que se vea nice
         
@@ -1024,18 +1024,18 @@ async function handleDescargaMasiva() {
     }
 }
 
-// Funcion para borrar album compleot (opcion nuclear)
+// Funcion para borrar album completo (opcion nuclear)
 
 window.borrarAlbumNuclear = async () => {
     if (!state.albumId) return;
 
-    // Obtener los nombres exactos para que Linux los encuentre
+    // 1. EXTRAEMOS LOS NOMBRES DIRECTO DEL SELECT (Sin limpiar para que coincida con la carpeta)
     const artistName = document.getElementById('selectArtista').selectedOptions[0].text;
     const albumTitle = document.getElementById('selectAlbum').selectedOptions[0].text;
 
     const result = await Swal.fire({
         title: '☢️ ¿BORRADO NUCLEAR? ☢️',
-        html: `Vas a destruir el disco <b>"${albumNameRaw}"</b> y TODAS sus canciones.<br><br><span class="text-danger">Esta acción no se puede deshacer.</span>`,
+        html: `Vas a destruir el disco <b>"${albumTitle}"</b> y TODAS sus canciones.<br><br><span class="text-danger">Esta acción no se puede deshacer.</span>`,
         icon: 'warning',
         showCancelButton: true,
         confirmButtonColor: '#d33',
@@ -1046,9 +1046,9 @@ window.borrarAlbumNuclear = async () => {
     });
 
     if (result.isConfirmed) {
-        // Bloquear UI mientras borra
         Swal.fire({ title: 'Destruyendo...', background: '#181818', color: '#fff', didOpen: () => Swal.showLoading() });
 
+        // 2. MANDAMOS LOS NOMBRES EXACTOS AL SERVIDOR
         const { error } = await API.deleteAlbumCompleto(state.albumId, artistName, albumTitle);
 
         if (error) {
@@ -1056,10 +1056,9 @@ window.borrarAlbumNuclear = async () => {
         } else {
             Swal.fire({ title: 'Aniquilado', text: 'El disco y sus archivos dejaron de existir.', icon: 'success', background: '#181818', color: '#fff' });
             
-            // Limpiar la pantalla y refrescar
             resetearTodoElSistema();
             const selectArtista = document.getElementById('selectArtista');
-            handleArtistChange({ target: selectArtista }); // Recarga los discos de ese artista
+            handleArtistChange({ target: selectArtista }); 
         }
     }
 };
