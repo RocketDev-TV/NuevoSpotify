@@ -19,6 +19,10 @@ export function getDB() {
 
 // --- FUNCIONES DE BASE DE DATOS (Supabase) ---
 
+export async function createAlbum(data) {
+    return await getDB().from('album').insert([data]).select().single();
+}
+
 export async function getGeneros() {
     return await getDB().from('genero').select('id_gener, nombre_genero').order('nombre_genero');
 }
@@ -259,4 +263,31 @@ export async function descargarUnicaRola(payload) {
         body: JSON.stringify(payload)
     });
     return await res.json();
+}
+
+// Funcion para borrar definitivamente 
+
+export async function deleteAlbumCompleto(idAlbum, artistName, albumTitle) {
+    const db = getDB();
+
+    // 1. Borrar la carpeta física en el servidor Python
+    const relativePath = `${artistName}/${albumTitle}`;
+    try {
+        console.log(`☢️ Pidiendo al servidor borrar carpeta: ${relativePath}`);
+        await fetch(`${SERVER_URL}/api/delete_folder`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ ruta: relativePath })
+        });
+    } catch (err) {
+        console.error("⚠️ Falló el borrado físico, pero intentaremos borrar de BD:", err);
+    }
+
+    // 2. Borrar primero las canciones de Supabase (Para evitar errores de Foreign Key)
+    await db.from('canciones').delete().eq('album_id', idAlbum);
+
+    // 3. Borrar el Álbum de Supabase
+    const { error } = await db.from('album').delete().eq('id_album', idAlbum);
+    
+    return { error };
 }

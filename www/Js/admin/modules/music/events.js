@@ -108,6 +108,14 @@ export async function handleAlbumChange(e) {
                     title="Editar Portada/Info">
                 <i class="ph ph-pencil-simple fs-4"></i>
             </button>
+            <button class="btn-icon-action delete ms-2" 
+                    style="background:none; border:none; color:#888; transition:0.2s; cursor:pointer;" 
+                    onmouseover="this.style.color='#d33'; this.style.transform='scale(1.1)'" 
+                    onmouseout="this.style.color='#888'; this.style.transform='scale(1)'"
+                    onclick="window.borrarAlbumNuclear()" 
+                    title="Destruir Álbum">
+                <i class="ph ph-trash fs-4"></i>
+            </button>
         `;
         yearEl.textContent = `(${option.dataset.year || '----'})`; // Le puse paréntesis para que se vea nice
         
@@ -130,6 +138,64 @@ export async function handleAlbumChange(e) {
 
 
 // --- FUNCIONES PARA CREAR ---
+
+export async function crearAlbum() {
+    const artistId = document.getElementById('selectArtista').value;
+    if (!artistId) return Swal.fire('Ojo', 'Selecciona un artista primero.', 'warning');
+
+    const titulo = document.getElementById('newAlbumTitle').value;
+    const fechaRaw = document.getElementById('newAlbumDate').value;
+    
+    const numCanciones = document.getElementById('newAlbumSongs')?.value || 1; // Fallback a 1 si lo dejan vacío
+    const tipo = document.getElementById('newAlbumType')?.value || 'ALBUM';
+
+    if (!titulo || !fechaRaw) return Swal.fire('Falta info', 'El título y la fecha son obligatorios.', 'warning');
+
+    // Convertir DD/MM/YYYY a YYYY-MM-DD
+    let fechaFinal = fechaRaw;
+    if (fechaRaw.includes('/')) {
+        const partes = fechaRaw.split('/'); // [22, 03, 2011]
+        if (partes.length === 3) {
+            fechaFinal = `${partes[2]}-${partes[1]}-${partes[0]}`; // 2011-03-22
+        }
+    } else if (fechaRaw.length === 4 && !fechaRaw.includes('-')) {
+        fechaFinal = `${fechaRaw}-01-01`; 
+    }
+
+    // 🚀 ARMAMOS EL PAQUETE COMPLETO (Ahora sí con las columnas que pide la BD)
+    const payload = {
+        titulo_album: titulo,
+        artista_id: artistId,
+        fecha_lanzamiento: fechaFinal,
+        num_canciones: parseInt(numCanciones, 10),
+        tipo_lanzamiento: tipo
+    };
+
+    console.log("📤 Mandando a Supabase:", payload);
+
+    const { data, error } = await API.createAlbum(payload);
+
+    if (error) {
+        console.error("❌ ERROR DE SUPABASE:", error);
+        Swal.fire({
+            title: 'Error de Base de Datos', 
+            text: error.message || error.details, 
+            icon: 'error',
+            background: '#181818', color: '#fff'
+        });
+    } else {
+        UI.cerrarModal('album');
+        const { data: nuevosAlbums } = await API.getAlbums(artistId);
+        UI.llenarSelect(document.getElementById('selectAlbum'), nuevosAlbums, 'id_album', 'titulo_album', 'Selecciona Álbum', 'imagen_url', 'fecha_lanzamiento');
+        
+        Swal.fire({
+            title: '¡Listo!', 
+            text: 'Álbum creado exitosamente.', 
+            icon: 'success',
+            background: '#181818', color: '#fff'
+        });
+    }
+}
 
 export async function crearGenero() {
     const nombre = document.getElementById('newGenreName').value;
@@ -957,3 +1023,43 @@ async function handleDescargaMasiva() {
         UI.toggleLoadingButton(btnDescargar, false, 'Iniciar Descarga Masiva');
     }
 }
+
+// Funcion para borrar album compleot (opcion nuclear)
+
+window.borrarAlbumNuclear = async () => {
+    if (!state.albumId) return;
+
+    // Obtener los nombres exactos para que Linux los encuentre
+    const artistName = document.getElementById('selectArtista').selectedOptions[0].text;
+    const albumTitle = document.getElementById('selectAlbum').selectedOptions[0].text;
+
+    const result = await Swal.fire({
+        title: '☢️ ¿BORRADO NUCLEAR? ☢️',
+        html: `Vas a destruir el disco <b>"${albumNameRaw}"</b> y TODAS sus canciones.<br><br><span class="text-danger">Esta acción no se puede deshacer.</span>`,
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#d33',
+        cancelButtonColor: '#333',
+        confirmButtonText: 'Sí, aniquilar disco',
+        cancelButtonText: 'Cancelar',
+        background: '#181818', color: '#fff'
+    });
+
+    if (result.isConfirmed) {
+        // Bloquear UI mientras borra
+        Swal.fire({ title: 'Destruyendo...', background: '#181818', color: '#fff', didOpen: () => Swal.showLoading() });
+
+        const { error } = await API.deleteAlbumCompleto(state.albumId, artistName, albumTitle);
+
+        if (error) {
+            Swal.fire({ title: 'Error', text: error.message, icon: 'error', background: '#181818', color: '#fff' });
+        } else {
+            Swal.fire({ title: 'Aniquilado', text: 'El disco y sus archivos dejaron de existir.', icon: 'success', background: '#181818', color: '#fff' });
+            
+            // Limpiar la pantalla y refrescar
+            resetearTodoElSistema();
+            const selectArtista = document.getElementById('selectArtista');
+            handleArtistChange({ target: selectArtista }); // Recarga los discos de ese artista
+        }
+    }
+};

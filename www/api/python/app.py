@@ -1,4 +1,5 @@
 import os
+import shutil
 import pandas as pd
 import config
 import yt_dlp
@@ -103,7 +104,7 @@ def upload_file():
 # 3. ENDPOINT DE BORRADO (Delete) 🗑️
 # ---------------------------------------------------------
 @app.route('/delete', methods=['POST'])
-@limiter.limit("3 per minute") # 👈 Súper estricto para evitar borrado accidental masivo
+@limiter.limit("3 per minute") # Súper estricto para evitar borrado accidental masivo
 def delete_file():
     try:
         data = request.json
@@ -130,6 +131,37 @@ def delete_file():
         print(f"❌ Error borrando: {e}")
         return jsonify({"error": str(e)}), 500
 
+
+# ---------------------------------------------------------
+# 3.5 ENDPOINT DE BORRADO NUCLEAR (Carpetas Completas) ☢️
+# ---------------------------------------------------------
+@app.route('/api/delete_folder', methods=['POST'])
+@limiter.limit("2 per minute")
+def delete_folder():
+    try:
+        data = request.json
+        ruta_relativa = data.get('ruta')
+
+        if not ruta_relativa or '..' in ruta_relativa:
+            return jsonify({"error": "Ruta inválida"}), 403
+
+        folder_path = os.path.abspath(os.path.join(app.config['UPLOAD_FOLDER'], ruta_relativa))
+
+        # Check de seguridad (Path Traversal)
+        if not folder_path.startswith(os.path.abspath(app.config['UPLOAD_FOLDER'])):
+             return jsonify({"error": "Acceso denegado"}), 403
+
+        if os.path.exists(folder_path):
+            shutil.rmtree(folder_path) # El comando nuclear para borrar carpetas
+            print(f"☢️ Carpeta aniquilada: {folder_path}")
+            return jsonify({"mensaje": "Carpeta eliminada por completo"}), 200
+        else:
+            return jsonify({"mensaje": "La carpeta ya no existía"}), 200
+
+    except Exception as e:
+        print(f"❌ Error borrando carpeta: {e}")
+        return jsonify({"error": str(e)}), 500
+
 # --- ENDPOINT METADATA (YOUTUBE) ---
 @app.route('/api/metadata', methods=['POST'])
 def get_metadata():
@@ -153,7 +185,7 @@ def get_metadata():
             for entry in entries:
                 tracks.append({
                     'titulo': entry.get('title'),
-                    # 🔗 Generamos la URL completa usando el ID del video
+                    # Generamos la URL completa usando el ID del video
                     'url_video': f"https://www.youtube.com/watch?v={entry.get('id')}", 
                     'duracion_seg': entry.get('duration'),
                     'duracion_fmt': f"{int(entry.get('duration', 0)//60)}:{int(entry.get('duration', 0)%60):02d}" if entry.get('duration') else "0:00",
