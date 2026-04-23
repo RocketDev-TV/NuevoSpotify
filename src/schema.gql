@@ -1,0 +1,19 @@
+# ------------------------------------------------------
+# THIS FILE WAS AUTOMATICALLY GENERATED (DO NOT MODIFY)
+# ------------------------------------------------------
+
+type User {
+  uid: ID!
+  nombre: String
+  correo: String
+  rol: String
+}
+
+type Query {
+  sayHello: String!
+  me(uid: String!): User!
+}
+
+type Mutation {
+  register(nombre: String!, correo: String!, password: String!): User!
+}

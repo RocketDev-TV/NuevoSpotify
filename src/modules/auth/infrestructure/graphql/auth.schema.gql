@@ -1,0 +1,25 @@
+# src/modules/auth/infrastructure/graphql/auth.schema.gql
+
+type User {
+  id: ID!
+  username: String!
+  email: String!
+  # No devolvemos el password por seguridad
+}
+
+type AuthResponse {
+  token: String!
+  user: User!
+}
+
+type Query {
+  me: User!
+}
+
+type Mutation {
+  # Solo pedimos lo esencial para el registro
+  register(username: String!, email: String!, password: String!): AuthResponse!
+  
+  # Login rápido y específico
+  login(email: String!, password: String!): AuthResponse!
+}
