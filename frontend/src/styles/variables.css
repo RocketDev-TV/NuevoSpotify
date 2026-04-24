@@ -1,0 +1,36 @@
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
+@import url("https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css");
+
+/* --- PALETA GLOBAL (Axiforma Dark Mode) --- */
+:root {
+  --rich-black: #000F01;       
+  --dark-green: #032221;       
+  --bangladesh-green: #03624C; 
+  --mountain-meadow: #2CC295;  
+  --caribbean-green: #00DF81;  
+  --anti-flash-white: #F1F7F6;
+  --text-white: #FFFFFF;
+  --text-muted: #889995;
+  --input-bg: #052b29;         
+}
+
+/* --- RESET GLOBAL --- */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: 'Poppins', sans-serif;
+}
+
+body {
+  background-color: var(--rich-black);
+  background-image: radial-gradient(circle at center, #062b25 0%, #000F01 70%);
+  color: var(--text-white);
+  min-height: 100vh;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px; 
+  overflow: hidden; 
+}

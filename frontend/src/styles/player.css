@@ -1,0 +1,39 @@
+/* --- ESTILOS DEL REPRODUCTOR --- */
+.play-btn {
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  border: none;
+  background: var(--bangladesh-green); 
+  color: var(--text-white);
+  font-size: 24px;
+  cursor: pointer;
+  transition: 0.3s;
+  box-shadow: 0 4px 15px rgba(3, 98, 76, 0.4);
+}
+
+.play-btn:hover {
+  background: var(--mountain-meadow);
+  transform: scale(1.05);
+}
+
+.progress-bar {
+  width: 80%;
+  max-width: 360px;
+  height: 6px;
+  appearance: none;
+  background: #1e293b;
+  border-radius: 10px;
+  outline: none;
+  margin-top: 20px;
+}
+
+.progress-bar::-webkit-slider-thumb {
+  appearance: none;
+  width: 16px;
+  height: 16px;
+  background: var(--mountain-meadow);
+  border-radius: 50%;
+  cursor: pointer;
+  box-shadow: 0 0 10px rgba(44, 194, 149, 0.5);
+}

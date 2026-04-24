@@ -130,11 +130,8 @@ document.addEventListener('DOMContentLoaded', async () => {
                 const { data, error } = await _supabase.auth.signInWithOAuth({
                     provider: 'google',
                     options: {
-                        redirectTo: window.location.origin, 
-                        queryParams: {
-                            access_type: 'offline',
-                            prompt: 'consent',
-                        },
+                        // Esta ruta DEBE estar registrada en el panel de Supabase > Authentication > URL Configuration
+                        redirectTo: window.location.origin + window.location.pathname,
                     },
                 });
                 if (error) throw error;
@@ -204,28 +201,44 @@ document.addEventListener('DOMContentLoaded', async () => {
 
 }); // Fin del DOMContentLoaded
 
-
-// --- FUNCIÓN DE VERIFICACIÓN (Puede estar fuera del listener si se llama dentro) ---
+// --- FUNCIÓN DE VERIFICACIÓN (VERSIÓN PRO) ---
 async function verificarSesionAlCargar() {
-    const { data: { session } } = await _supabase.auth.getSession();
+    // onAuthStateChange es perfecto para Google Login porque atrapa el token del '#'
+    _supabase.auth.onAuthStateChange(async (event, session) => {
+        
+        // Si el evento es SIGNED_IN o INITIAL_SESSION, significa que hay un token válido
+        if ((event === 'SIGNED_IN' || event === 'INITIAL_SESSION') && session) {
+            console.log("✅ Sesión detectada, probando conexión al Búnker...");
 
-    if (session) {
-        console.log("Sesión detectada, verificando rol...");
-        const { data: userData, error } = await _supabase
-            .from('usuarios')
-            .select('rol')
-            .eq('uid', session.user.id)
-            .single();
+            try {
+                // 1. La Prueba de Fuego con el Búnker
+                const queryPrueba = `query { sayHello }`;
+                const dataBunker = await fetchGraphQL(queryPrueba);
+                console.log("Respuesta del Búnker:", dataBunker.sayHello); 
 
-        if (error) {
-            console.error("Error al verificar rol:", error);
-            return;
+                // 2. Verificando rol en la base de datos
+                const { data: userData, error } = await _supabase
+                    .from('usuarios')
+                    .select('rol')
+                    .eq('uid', session.user.id)
+                    .single();
+
+                if (error) throw error;
+
+                // 3. El Semáforo 🚦 (Usamos window.location.replace para que no puedan dar "Atrás")
+                if (userData?.rol === 'admin') {
+                    console.log("👑 Bienvenido Administrador");
+                    window.location.replace("html/admin-dashboard.html");
+                } else {
+                    console.log("🎧 Bienvenido Usuario");
+                    window.location.replace("html/reproductor.html");
+                }
+                
+            } catch (error) {
+                 console.error("❌ Falló la verificación post-login:", error);
+                 // Si falla, borramos la sesión corrupta
+                 _supabase.auth.signOut();
+            }
         }
-
-        if (userData?.rol === 'admin') {
-            window.location.href = "html/admin-dashboard.html";
-        } else {
-            window.location.href = "html/reproductor.html";
-        }
-    }
+    });
 }

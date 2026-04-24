@@ -202,3 +202,50 @@ async function exigirFechaNacimientoSiFalta(supa) {
     );
   }
 }
+
+/**
+ * 6. EL MENSAJERO A NESTJS (GRAPHQL) 
+ * Envía peticiones a tu Búnker e inyecta el Token automáticamente.
+ * * @param {string} query - La consulta o mutación de GraphQL en formato texto.
+ * @param {object} variables - (Opcional) Variables para la consulta.
+ * @returns {Promise<any>} Los datos devueltos por la API.
+ */
+async function fetchGraphQL(query, variables = {}) {
+    const GRAPHQL_URL = 'http://localhost:3000/graphql'; // La ruta de tu búnker
+
+    try {
+        // 1. Conseguir el Token VIP de la sesión actual
+        // (Asumimos que window._supabase se setea en config.js como hiciste)
+        const { data: { session } } = await window._supabase.auth.getSession();
+        
+        const headers = {
+            'Content-Type': 'application/json',
+        };
+
+        // Si hay sesión activa, pegamos el token en los headers
+        if (session?.access_token) {
+            headers['Authorization'] = `Bearer ${session.access_token}`;
+        }
+
+        // 2. Hacer la petición
+        const response = await fetch(GRAPHQL_URL, {
+            method: 'POST',
+            headers: headers,
+            body: JSON.stringify({ query, variables })
+        });
+
+        const result = await response.json();
+
+        // 3. Manejar errores de GraphQL
+        if (result.errors) {
+            console.error("❌ Errores de GraphQL:", result.errors);
+            throw new Error(result.errors[0].message);
+        }
+
+        return result.data;
+
+    } catch (error) {
+        console.error("❌ Error en fetchGraphQL:", error);
+        throw error;
+    }
+}
