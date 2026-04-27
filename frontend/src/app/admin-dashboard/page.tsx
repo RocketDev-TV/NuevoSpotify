@@ -1,55 +1,39 @@
-'use client'; // Necesario para usar clics y hooks
+'use client';
 
-import { useRouter } from 'next/navigation';
-import { supabase } from '../../lib/supabase'; // Ajusta la ruta según tu estructura
-import Swal from 'sweetalert2';
+import { useState } from 'react';
+import Sidebar from '@/components/admin/Sidebar';
+import Topbar from '@/components/admin/Topbar';
+import AnalyticsView from '@/components/admin/AnalyticsView';
+import MusicManagerView from '@/components/admin/MusicManagerView';
 
-export default function AdminPage() {
-  const router = useRouter();
+// Estilos específicos
+import '@/styles/admin/dashboard.css';
 
-  const handleLogout = async () => {
-    try {
-      const { error } = await supabase.auth.signOut();
-      if (error) throw error;
-
-      // Limpieza exitosa, mandamos al usuario al inicio
-      router.push('/');
-      
-      // Opcional: Una notificación rápida
-      const Toast = Swal.mixin({
-        toast: true,
-        position: 'top-end',
-        showConfirmButton: false,
-        timer: 2000,
-        timerProgressBar: true,
-      });
-
-      Toast.fire({
-        icon: 'success',
-        title: 'Sesión cerrada. ¡Nos vemos, Jefe!'
-      });
-
-    } catch (error: any) {
-      console.error("Error al cerrar sesión:", error.message);
-      Swal.fire('Error', 'No se pudo cerrar la sesión correctamente.', 'error');
-    }
-  };
+export default function AdminDashboard() {
+  // Estado para la navegación
+  const [activeView, setActiveView] = useState('analytics');
 
   return (
-    <div style={{ padding: '50px', textAlign: 'center' }}>
-      <h1 style={{ color: 'white', marginBottom: '30px' }}>
-        👑 Bienvenido, Jefe (Dashboard)
-      </h1>
-      
-      {/* Botón de Logout con tus estilos de Axiforma */}
-      <button 
-        onClick={handleLogout}
-        className="btn-login" 
-        style={{ maxWidth: '200px', margin: '0 auto', backgroundColor: '#e74c3c' }}
-      >
-        <i className="bi bi-box-arrow-left" style={{ marginRight: '10px' }}></i>
-        Cerrar Sesión
-      </button>
+    <div className="admin-body">
+      <div className="admin-container">
+        
+        {/* Lado Izquierdo: Menú */}
+        <Sidebar activeView={activeView} setActiveView={setActiveView} />
+
+        <main className="main-content">
+          {/* Parte Superior: Saludo y Reloj */}
+          <Topbar />
+
+          {/* Vistas Dinámicas */}
+          {activeView === 'analytics' && <AnalyticsView />}
+          {activeView === 'music' && <MusicManagerView />}
+          
+          {activeView === 'users' && (
+            <h2 style={{color: 'white'}}>👥 Sección de Usuarios (Próximamente)</h2>
+          )}
+        </main>
+
+      </div>
     </div>
   );
 }

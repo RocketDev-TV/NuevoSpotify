@@ -1,0 +1,697 @@
+/* css/admin/music-manager.css */
+
+.manager-header {
+    display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px;
+}
+.manager-header h2 { font-size: 22px; color: #fff; margin: 0; }
+
+/* Pestañas */
+.tabs {
+    background: #111; padding: 5px; border-radius: 12px; display: flex; gap: 8px; border: 1px solid var(--glass-border);
+}
+.tab-btn {
+    background: transparent; border: none; color: var(--text-muted); padding: 10px 20px; border-radius: 8px; cursor: pointer; font-size: 14px; font-weight: 500; transition: all 0.3s ease;
+}
+.tab-btn:hover { color: #fff; background: rgba(255,255,255,0.05); }
+.tab-btn.active { background: var(--accent); color: #000; font-weight: 700; box-shadow: 0 4px 15px rgba(44, 194, 149, 0.3); }
+
+/* Paneles y Layout */
+.glass-panel {
+    background: rgba(20, 20, 20, 0.6); border: 1px solid var(--glass-border); backdrop-filter: blur(10px); padding: 30px; border-radius: 16px; margin-bottom: 25px; box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+}
+.glass-panel h3 { margin-top: 0; margin-bottom: 10px; color: var(--accent); display: flex; align-items: center; gap: 10px; }
+.glass-panel p { color: var(--text-muted); font-size: 14px; margin-bottom: 20px; }
+
+.grid-2-cols { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 25px; }
+.input-group-row { display: flex; gap: 15px; margin-top: 15px; }
+
+/* Inputs y Botones Generales */
+form label { display: block; margin-bottom: 8px; color: #bbb; font-size: 13px; font-weight: 500; }
+
+input[type="text"], input[type="file"] {
+    width: 100%; background: #0a0a0a; border: 1px solid #333; padding: 14px; border-radius: 10px; color: #fff; outline: none; margin-bottom: 20px; transition: all 0.3s ease; font-size: 14px;
+}
+input[type="text"]:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(44, 194, 149, 0.1); }
+
+.btn-primary {
+    background: var(--accent); color: #000; border: none; padding: 14px 25px; border-radius: 10px; font-weight: 700; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; gap: 10px; transition: transform 0.2s, box-shadow 0.2s; width: auto;
+}
+.btn-primary:hover { transform: translateY(-2px); box-shadow: 0 5px 15px rgba(44, 194, 149, 0.4); }
+
+.btn-secondary {
+    background: rgba(255, 255, 255, 0.1); color: #fff; border: 1px solid rgba(255, 255, 255, 0.1); padding: 14px; border-radius: 10px; cursor: pointer; width: 100%; font-weight: 600; transition: all 0.3s;
+}
+.btn-secondary:hover { background: rgba(255, 255, 255, 0.2); border-color: #fff; }
+.full-width { width: 100%; }
+
+/* Uploaders Personalizados (Música y Portada) */
+.file-upload-wrapper { position: relative; margin-bottom: 20px; }
+
+.custom-file-upload {
+    display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 30px; border: 2px dashed #333; border-radius: 12px; background: rgba(255, 255, 255, 0.02); cursor: pointer; transition: all 0.3s ease; text-align: center; color: var(--text-muted);
+}
+.custom-file-upload:hover { border-color: var(--accent); background: rgba(44, 194, 149, 0.05); color: #fff; }
+.custom-file-upload i { font-size: 32px; margin-bottom: 10px; color: #555; transition: color 0.3s; }
+.custom-file-upload:hover i { color: var(--accent); transform: translateY(-3px); }
+
+.file-count { margin-top: 10px; background: var(--accent); color: #000; padding: 4px 10px; border-radius: 20px; font-size: 12px; font-weight: 700; }
+.file-list-area {
+    margin-bottom: 15px;
+    max-height: 500px;
+    overflow-y: auto;  /* El scroll ocurre aquí */
+    
+    /* Borde opcional para que se vea contenido */
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    border-radius: 8px;
+    background: rgba(0, 0, 0, 0.2);
+}
+/* 2. PERSONALIZAR SCROLLBAR (Agrega esto al final del archivo) */
+.file-list-area::-webkit-scrollbar {
+    width: 8px;
+}
+.file-list-area::-webkit-scrollbar-track {
+    background: #181818;
+    border-radius: 4px;
+}
+.file-list-area::-webkit-scrollbar-thumb {
+    background: #444;
+    border-radius: 4px;
+}
+.file-list-area::-webkit-scrollbar-thumb:hover {
+    background: #1db954; /* Verde Spotify al tocar */
+}
+
+/* 3. ESTILOS DE BOTONES (Para quitar los !important del JS) */
+.btn-staging {
+    background: transparent;
+    border: none;
+    color: #666;
+    padding: 6px;
+    transition: all 0.2s ease;
+    border-radius: 4px;
+    cursor: pointer;
+}
+.btn-staging.edit:hover {
+    color: #1db954;
+    background-color: rgba(29, 185, 84, 0.1);
+    transform: scale(1.1);
+}
+.btn-staging.delete:hover {
+    color: #ff4d4d;
+    background-color: rgba(255, 77, 77, 0.1);
+    transform: scale(1.1);
+}
+
+.file-item-mini { padding: 4px 0; border-bottom: 1px solid rgba(255,255,255,0.05); }
+
+/* Portada Upload */
+#inputPortada { display: none; }
+.cover-upload-btn {
+    display: flex; align-items: center; justify-content: center; gap: 10px; width: 100%; padding: 15px; background: rgba(255, 255, 255, 0.05); border: 1px dashed #444; border-radius: 10px; color: var(--text-muted); cursor: pointer; transition: all 0.3s ease; margin-bottom: 20px;
+}
+.cover-upload-btn:hover { background: rgba(44, 194, 149, 0.1); border-color: var(--accent); color: #fff; }
+.cover-preview { width: 40px; height: 40px; border-radius: 6px; object-fit: cover; display: none; }
+
+/* Selectores compactos con botón + */
+.input-group-row.compact {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 20px;
+    margin-top: 0;
+}
+
+select {
+    flex: 1;
+    /* 1. Quitamos el estilo feo por defecto del navegador */
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    appearance: none;
+
+    /* 2. Estilo Base */
+    background-color: #0a0a0a;
+    border: 1px solid #333;
+    color: #fff;
+    border-radius: 8px;
+    outline: none;
+    cursor: pointer;
+    
+    /* 3. Espaciado: 40px a la derecha para que quepa la flecha sin que el texto la pise */
+    padding: 12px 40px 12px 15px; 
+
+    /* 4. Flechita personalizada (SVG color verde accent #2CC295) */
+    background-image: url("data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%232CC295%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E");
+    background-repeat: no-repeat;
+    background-position: right 15px center; /* Centrada verticalmente a la derecha */
+    background-size: 12px; /* Tamaño discreto */
+    
+    transition: all 0.3s ease;
+}
+
+select:hover {
+    border-color: #555;
+    background-color: #111;
+}
+
+select:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px rgba(44, 194, 149, 0.1);
+}
+
+select:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    background-image: none; /* Quitamos flecha si está desactivado */
+}
+
+.btn-icon {
+    width: 46px;
+    background: rgba(255,255,255,0.1);
+    border: 1px solid rgba(255,255,255,0.1);
+    color: #fff;
+    border-radius: 8px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+    transition: all 0.2s;
+}
+
+.btn-icon:hover {
+    background: var(--accent);
+    color: #000;
+}
+
+
+/* --- MODALES ROCKSTAR --- */
+
+/* Fondo oscurecido con blur */
+.modal-overlay {
+    position: fixed;
+    top: 0; left: 0; width: 100%; height: 100%;
+    background: rgba(0, 0, 0, 0.7);
+    backdrop-filter: blur(8px); /* Efecto vidrio empañado */
+    display: none; 
+    justify-content: center;
+    align-items: center;
+    z-index: 9999;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.modal-overlay.active {
+    display: flex;
+    opacity: 1;
+}
+
+/* La tarjeta del modal */
+.modal-content {
+    background: #121212; /* Fondo casi negro */
+    border: 1px solid var(--glass-border);
+    padding: 35px;
+    border-radius: 20px;
+    width: 100%;
+    max-width: 450px; /* Un poco más ancho para que respire */
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.8);
+    transform: scale(0.9);
+    transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); /* Rebote suave al abrir */
+}
+
+.modal-overlay.active .modal-content {
+    transform: scale(1);
+}
+
+/* Títulos */
+.modal-content h3 {
+    color: #fff;
+    margin-top: 0;
+    margin-bottom: 25px;
+    font-size: 20px;
+    border-bottom: 1px solid rgba(255,255,255,0.1);
+    padding-bottom: 15px;
+}
+
+/* Inputs dentro del modal */
+.modal-content input[type="text"],
+.modal-content input[type="number"],
+.modal-content textarea,
+.modal-content input[type="date"] {
+    background: #050505;
+    border: 1px solid #333;
+    color: #fff;
+    border-radius: 8px;
+    padding: 12px 15px;
+    width: 100%;
+    font-size: 14px;
+    margin-bottom: 20px;
+    outline: none;
+    transition: border 0.3s;
+}
+
+.modal-content input:focus,
+.modal-content textarea:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 2px rgba(44, 194, 149, 0.1);
+}
+
+/* Arreglo para inputs de fecha en modo oscuro */
+.modal-content input[type="date"] {
+    color-scheme: dark; /* Hace que el calendario nativo sea oscuro */
+}
+
+/* Arreglo para el input de archivo FEO */
+.modal-content input[type="file"] {
+    background: #080808;
+    padding: 8px;
+    font-size: 12px;
+}
+
+.modal-content input[type="file"]::file-selector-button {
+    background: #333;
+    color: #fff;
+    border: none;
+    padding: 8px 12px;
+    border-radius: 6px;
+    cursor: pointer;
+    margin-right: 10px;
+    transition: 0.2s;
+}
+
+.modal-content input[type="file"]::file-selector-button:hover {
+    background: var(--accent);
+    color: #000;
+}
+
+/* Layout para Fecha y Canciones (en la misma fila) */
+.row-dates {
+    display: grid;
+    grid-template-columns: 1fr 1fr; /* Mitad y mitad */
+    gap: 15px;
+}
+
+/* Botones de acción */
+.modal-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
+    margin-top: 10px;
+    padding-top: 20px;
+    border-top: 1px solid rgba(255,255,255,0.05);
+}
+
+.btn-cancel {
+    background: transparent;
+    border: none;
+    color: #888;
+    padding: 10px 20px;
+    cursor: pointer;
+    font-weight: 500;
+    transition: color 0.2s;
+}
+
+.btn-cancel:hover {
+    color: #fff;
+    text-decoration: underline;
+}
+
+.btn-confirm {
+    background: var(--accent);
+    color: #000;
+    border: none;
+    padding: 10px 25px;
+    border-radius: 8px;
+    font-weight: 700;
+    cursor: pointer;
+    box-shadow: 0 4px 15px rgba(44, 194, 149, 0.3);
+    transition: transform 0.2s;
+}
+
+.btn-confirm:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(44, 194, 149, 0.5);
+}
+
+/* Previsualización de Portada en el Sidebar */
+#coverArea {
+    text-align: center;
+    margin-top: 20px;
+    background: rgba(0,0,0,0.3);
+    padding: 15px;
+    border-radius: 12px;
+    border: 1px solid var(--glass-border);
+}
+
+.cover-preview-large {
+    width: 100%;
+    max-width: 200px; /* Que no se coma toda la pantalla */
+    aspect-ratio: 1/1; /* Cuadrada perfecta */
+    object-fit: cover;
+    border-radius: 8px;
+    box-shadow: 0 8px 20px rgba(0,0,0,0.5);
+    border: 2px solid #222;
+}
+
+/* Clase que se agrega automáticamente cuando arrastras archivos encima */
+#dropZone.highlight {
+    border-color: #1db954; /* Verde Spotify */
+    background-color: rgba(29, 185, 84, 0.1);
+    transform: scale(1.02); /* Un pequeño zoom */
+}
+
+/* --- RESPONSIVE: MUSIC MANAGER --- */
+@media (max-width: 768px) {
+    /* 1. Header con Pestañas */
+    .manager-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 15px;
+    }
+    .tabs {
+        width: 100%;
+        justify-content: center;
+    }
+    .tab-btn {
+        flex: 1; /* Botones ocupan mitad y mitad */
+        text-align: center;
+        padding: 10px 5px;
+    }
+
+    /* 2. Grid de 2 Columnas -> 1 Columna */
+    .grid-2-cols {
+        grid-template-columns: 1fr;
+    }
+
+    /* 3. Inputs y Botones del formulario */
+    .input-group-row, 
+    .input-group-row.compact {
+        flex-direction: column; /* Inputs uno abajo del otro */
+        gap: 10px;
+    }
+
+    .btn-icon {
+        width: 100%; /* Botón de "+" ancho completo para que sea fácil picarle */
+        height: 40px;
+    }
+
+    /* 4. Panel de Spotify */
+    #tab-importar .input-group-row {
+        flex-direction: column;
+    }
+    #tab-importar .btn-primary {
+        width: 100%;
+    }
+}
+
+/* 1. Forzar a TODAS las cabeceras (TH) a centrarse */
+    #albumInventoryContainer table th {
+        text-align: center !important;
+        vertical-align: middle !important;
+        padding-left: 0 !important; /* Quitamos el padding rebelde */
+    }
+
+    /* 2. Forzar a TODAS las celdas (TD) a centrarse */
+    #albumInventoryContainer table td {
+        text-align: center !important;
+        vertical-align: middle !important;
+    }
+
+    /* 3. El truco para el Título (Columna 2) */
+    /* Hacemos que la cajita del texto se centre automáticamente */
+    #albumInventoryContainer table td .song-title-cell {
+        margin: 0 auto !important;     /* Centrar el bloque */
+        text-align: center !important; /* Centrar el texto adentro */
+        
+        /* Opcional: Si quieres que corte texto largo */
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        max-width: 200px; /* Ajusta esto si quieres más o menos ancho */
+        display: block;   /* Necesario para que el margin auto funcione */
+        color: white;
+        font-weight: bold;
+    }
+
+/* --- 1. ACCIONES DE LA TABLA (Botones lado a lado) --- */
+.table-actions {
+    display: flex !important;
+    justify-content: center;
+    align-items: center;
+    gap: 10px; /* Espacio sano entre lapiz y basura */
+    white-space: nowrap;
+}
+
+.btn-action-icon {
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 6px;
+    transition: all 0.2s ease;
+    border: none;
+    background: transparent;
+    color: #888;
+}
+
+.btn-action-icon:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+    color: #fff;
+    transform: translateY(-2px); /* Pequeño brinco al pasar el mouse */
+}
+
+.btn-action-icon.edit:hover { color: #1db954; } /* Verde Spotify al editar */
+.btn-action-icon.delete:hover { color: #ff4d4d; } /* Rojo al borrar */
+
+
+/* --- 2. SWEETALERT DARK THEME (Fix Desbordes) --- */
+div:where(.swal2-container) div:where(.swal2-popup) {
+    background: #181818 !important;
+    border: 1px solid #333;
+    border-radius: 16px;
+    padding: 2rem !important;
+    width: 100%;
+    max-width: 420px !important; /* Ancho fijo elegante */
+}
+
+/* Arreglo del Título */
+div:where(.swal2-container) h2:where(.swal2-title) {
+    color: #fff !important;
+    font-size: 1.4rem !important;
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+}
+
+/* Arreglo del Input (Aquí estaba el desborde) */
+div:where(.swal2-container) input.swal2-input {
+    background: #252525 !important;
+    color: #fff !important;
+    border: 1px solid #444 !important;
+    border-radius: 8px !important;
+    font-size: 1rem !important;
+    margin: 1rem auto !important;
+    width: 90% !important; /* Forzamos que no toque los bordes */
+    box-shadow: none !important;
+}
+
+div:where(.swal2-container) input.swal2-input:focus {
+    border-color: #1db954 !important;
+    box-shadow: 0 0 0 2px rgba(29, 185, 84, 0.2) !important;
+}
+
+/* Botones del Modal */
+div:where(.swal2-container) button.swal2-confirm,
+div:where(.swal2-container) button.swal2-cancel {
+    border-radius: 50px !important;
+    padding: 10px 24px !important;
+    font-weight: 600 !important;
+    font-size: 0.9rem !important;
+    box-shadow: none !important;
+}
+
+/* Botón Nuclear (Reset) */
+.btn-nuclear {
+    width: 42px; /* Mismo alto estándar de tus inputs/botones */
+    height: 42px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 8px;
+    border: 1px solid #4a1a1a;
+    background: #250505; /* Rojo muy oscuro de fondo */
+    color: #ff4d4d;
+    font-size: 1.3rem;
+    cursor: pointer;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    flex-shrink: 0; /* Que no se aplaste nunca */
+}
+
+.btn-nuclear:hover {
+    background: #ff4d4d;
+    color: white;
+    box-shadow: 0 0 15px rgba(255, 77, 77, 0.4);
+    transform: scale(1.05) rotate(5deg); /* Efecto sutil de "Alerta" */
+    border-color: #ff4d4d;
+}
+
+.btn-nuclear:active {
+    transform: scale(0.95);
+}
+
+/* Estilo para los inputs editables dentro de la tabla de YouTube */
+.edit-input-yt {
+    background: rgba(255, 255, 255, 0.03) !important;
+    border: 1px solid rgba(255, 255, 255, 0.05) !important;
+    padding: 8px 12px !important;
+    margin-bottom: 0 !important;
+    font-size: 13px !important;
+    color: #eee !important;
+    border-radius: 6px !important;
+}
+
+.edit-input-yt:focus {
+    border-color: var(--accent) !important;
+    background: rgba(44, 194, 149, 0.05) !important;
+}
+
+/* Checkbox estilo Spotify */
+.track-select {
+    accent-color: var(--accent);
+    width: 18px;
+    height: 18px;
+    cursor: pointer;
+}
+
+/* Centrado del contenedor de previsualización */
+#yt-preview-container {
+    max-width: 900px; /* Limita el ancho para que no se estire infinito */
+    margin: 25px auto 0 auto !important; /* Centra el panel en la pantalla */
+    padding: 30px;
+}
+
+/* Centrado de la tabla interna */
+.file-list-area table {
+    width: 100%;
+    margin: 0 auto;
+}
+
+/* Estilo para el input del álbum centrado y grande */
+#yt-album-name {
+    text-align: center; /* Centra el texto del título del álbum */
+    border-radius: 0;
+    border-top: none !important;
+    border-left: none !important;
+    border-right: none !important;
+    background: transparent !important;
+}
+
+/* Contenedor del input de archivo */
+.custom-file-input-wrapper {
+    position: relative;
+    width: 100%;
+}
+
+/* Ocultamos el feo por defecto */
+#yt-custom-cover {
+    display: none;
+}
+
+/* El nuevo diseño del botón de carga */
+.yt-cover-label {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px dashed #444;
+    border-radius: 10px;
+    padding: 12px;
+    color: var(--text-muted);
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-size: 14px;
+}
+
+.yt-cover-label:hover {
+    background: rgba(44, 194, 149, 0.1);
+    border-color: var(--accent);
+    color: #fff;
+}
+
+.yt-cover-label i {
+    font-size: 20px;
+    color: var(--accent);
+}
+
+/* css/admin/music-manager.css */
+.custom-file-input-wrapper {
+    position: relative;
+    width: 100%;
+}
+
+.yt-cover-label {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px dashed #444;
+    border-radius: 10px;
+    padding: 12px;
+    color: #888;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.yt-cover-label:hover {
+    background: rgba(44, 194, 149, 0.1);
+    border-color: var(--accent);
+    color: #fff;
+}
+
+#yt-custom-cover {
+    display: none; /* Escondemos el feo del navegador */
+}
+
+/* Animación de la barra de progreso estilo neón */
+#yt-progress-container {
+    background: rgba(255, 255, 255, 0.03);
+    padding: 15px;
+    border-radius: 12px;
+    border: 1px solid rgba(29, 185, 84, 0.2);
+}
+
+.progress-custom {
+    height: 10px;
+    background-color: #282828;
+    border-radius: 10px;
+    overflow: hidden;
+    box-shadow: inset 0 1px 3px rgba(0,0,0,0.5);
+}
+
+.progress-bar-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #1db954, #1ed760);
+    width: 0%;
+    transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1); /* Movimiento suave */
+    box-shadow: 0 0 15px rgba(29, 185, 84, 0.5);
+    position: relative;
+}
+
+/* El brillo que recorre la barra */
+.progress-bar-fill::after {
+    content: "";
+    position: absolute;
+    top: 0; left: 0; bottom: 0; right: 0;
+    background: linear-gradient(
+        90deg,
+        rgba(255,255,255,0) 0%,
+        rgba(255,255,255,0.2) 50%,
+        rgba(255,255,255,0) 100%
+    );
+    animation: shimmer 1.5s infinite;
+}
+
+@keyframes shimmer {
+    0% { transform: translateX(-100%); }
+    100% { transform: translateX(100%); }
+}
