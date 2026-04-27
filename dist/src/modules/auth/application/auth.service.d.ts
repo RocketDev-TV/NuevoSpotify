@@ -5,10 +5,10 @@ export declare class AuthService {
     findUserByUid(uid: string): Promise<({
         playlists: {
             uid: string;
-            idPlaylist: bigint;
-            tituloPlaylist: string;
             descripcion: string | null;
             imagen_url: string | null;
+            idPlaylist: bigint;
+            tituloPlaylist: string;
             duracion: number | null;
             created_at: Date;
         }[];

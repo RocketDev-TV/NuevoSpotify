@@ -1,3 +1,8 @@
 node_modules
 
 /src/generated/prisma
+
+# Entornos y variables secretas
+.env
+.env.production
+.env.local

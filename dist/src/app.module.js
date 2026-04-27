@@ -11,8 +11,10 @@ const common_1 = require("@nestjs/common");
 const graphql_1 = require("@nestjs/graphql");
 const apollo_1 = require("@nestjs/apollo");
 const path_1 = require("path");
+const config_1 = require("@nestjs/config");
 const prsima_module_1 = require("./prsima.module");
 const app_module_1 = require("./modules/auth/app.module");
+const music_manager_module_1 = require("./modules/music-manager/music-manager.module");
 let AppModule = class AppModule {
 };
 exports.AppModule = AppModule;
@@ -24,8 +26,10 @@ exports.AppModule = AppModule = __decorate([
                 autoSchemaFile: (0, path_1.join)(process.cwd(), 'src/schema.gql'),
                 playground: true,
             }),
+            config_1.ConfigModule.forRoot(),
             prsima_module_1.PrismaModule,
             app_module_1.AuthModule,
+            music_manager_module_1.MusicManagerModule,
         ],
         controllers: [],
         providers: [],
