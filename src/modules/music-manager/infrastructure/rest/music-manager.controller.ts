@@ -1,5 +1,5 @@
-import { Controller, Post, UseInterceptors, UploadedFiles, Body, HttpException, HttpStatus } from '@nestjs/common';
-import { FilesInterceptor } from '@nestjs/platform-express';
+import { Controller, Post, UseInterceptors, UploadedFiles, UploadedFile, Body, HttpException, HttpStatus } from '@nestjs/common';
+import { FilesInterceptor, FileInterceptor } from '@nestjs/platform-express';
 import { MusicManagerService } from '../../application/music-manager.service';
 import 'multer';
 
@@ -27,5 +27,16 @@ export class MusicManagerController {
     const metadata = JSON.parse(metadataStr);
 
     return await this.musicService.procesarCargaMasiva(albumId, artistaId, files, metadata);
+  }
+
+  @Post('upload-cover')
+  @UseInterceptors(FileInterceptor('cover'))
+  async uploadCover(
+    @UploadedFile() file: Express.Multer.File,
+    @Body('artistaNombre') artistaNombre: string,
+    @Body('albumTitulo') albumTitulo: string,
+  ) {
+    const url = await this.musicService.subirPortada(file, artistaNombre, albumTitulo);
+    return { url }; // Le regresamos a React un JSON con la URL lista
   }
 }

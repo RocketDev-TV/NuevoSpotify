@@ -60,7 +60,7 @@ export declare class MusicManagerService {
         descripcion: string | null;
         url_imagen_art: string | null;
     }>;
-    crearAlbum(titulo: string, fecha: string, tipo: string, num: number, artistaId: string): Promise<{
+    crearAlbum(titulo: string, fecha: string, tipo: string, num: number, artistaId: string, imagenUrl?: string): Promise<{
         id_album: bigint;
         titulo_album: string;
         artista_id: bigint;
@@ -70,7 +70,7 @@ export declare class MusicManagerService {
         imagen_url: string | null;
         tipo_lanzamiento: string | null;
     }>;
-    actualizarAlbum(albumId: string, titulo: string, fecha: string, tipo: string, num: number): Promise<{
+    actualizarAlbum(albumId: string, titulo: string, fecha: string, tipo: string, num: number, imagenUrl?: string): Promise<{
         id_album: bigint;
         titulo_album: string;
         artista_id: bigint;
@@ -112,4 +112,5 @@ export declare class MusicManagerService {
         imagen_url: string | null;
         tipo_lanzamiento: string | null;
     }>;
+    subirPortada(file: Express.Multer.File, artistaNombre: string, albumTitulo: string): Promise<any>;
 }

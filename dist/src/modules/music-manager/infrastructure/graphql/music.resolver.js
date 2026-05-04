@@ -44,12 +44,12 @@ let MusicManagerResolver = class MusicManagerResolver {
         await this.musicService.crearArtista(nombre, descripcion, generoId);
         return true;
     }
-    async createAlbum(titulo, fecha, tipo, num, artistaId) {
-        await this.musicService.crearAlbum(titulo, fecha, tipo, num, artistaId);
+    async createAlbum(titulo, fecha, tipo, num, artistaId, imagenUrl) {
+        await this.musicService.crearAlbum(titulo, fecha, tipo, num, artistaId, imagenUrl);
         return true;
     }
-    async updateAlbum(albumId, titulo, fecha, tipo, num) {
-        await this.musicService.actualizarAlbum(albumId, titulo, fecha, tipo, num);
+    async updateAlbum(albumId, titulo, fecha, tipo, num, imagenUrl) {
+        await this.musicService.actualizarAlbum(albumId, titulo, fecha, tipo, num, imagenUrl);
         return true;
     }
     async deleteCancion(cancionId) {
@@ -117,8 +117,9 @@ __decorate([
     __param(2, (0, graphql_1.Args)('tipo')),
     __param(3, (0, graphql_1.Args)('num')),
     __param(4, (0, graphql_1.Args)('artistaId')),
+    __param(5, (0, graphql_1.Args)({ name: 'imagenUrl', nullable: true })),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [String, String, String, Number, String]),
+    __metadata("design:paramtypes", [String, String, String, Number, String, String]),
     __metadata("design:returntype", Promise)
 ], MusicManagerResolver.prototype, "createAlbum", null);
 __decorate([
@@ -128,8 +129,9 @@ __decorate([
     __param(2, (0, graphql_1.Args)('fecha')),
     __param(3, (0, graphql_1.Args)('tipo')),
     __param(4, (0, graphql_1.Args)('num')),
+    __param(5, (0, graphql_1.Args)({ name: 'imagenUrl', nullable: true })),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [String, String, String, String, Number]),
+    __metadata("design:paramtypes", [String, String, String, String, Number, String]),
     __metadata("design:returntype", Promise)
 ], MusicManagerResolver.prototype, "updateAlbum", null);
 __decorate([

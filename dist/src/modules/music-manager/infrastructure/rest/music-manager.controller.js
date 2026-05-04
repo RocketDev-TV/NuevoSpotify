@@ -31,6 +31,10 @@ let MusicManagerController = class MusicManagerController {
         const metadata = JSON.parse(metadataStr);
         return await this.musicService.procesarCargaMasiva(albumId, artistaId, files, metadata);
     }
+    async uploadCover(file, artistaNombre, albumTitulo) {
+        const url = await this.musicService.subirPortada(file, artistaNombre, albumTitulo);
+        return { url };
+    }
 };
 exports.MusicManagerController = MusicManagerController;
 __decorate([
@@ -44,6 +48,16 @@ __decorate([
     __metadata("design:paramtypes", [Array, String, String, String]),
     __metadata("design:returntype", Promise)
 ], MusicManagerController.prototype, "uploadAlbum", null);
+__decorate([
+    (0, common_1.Post)('upload-cover'),
+    (0, common_1.UseInterceptors)((0, platform_express_1.FileInterceptor)('cover')),
+    __param(0, (0, common_1.UploadedFile)()),
+    __param(1, (0, common_1.Body)('artistaNombre')),
+    __param(2, (0, common_1.Body)('albumTitulo')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, String, String]),
+    __metadata("design:returntype", Promise)
+], MusicManagerController.prototype, "uploadCover", null);
 exports.MusicManagerController = MusicManagerController = __decorate([
     (0, common_1.Controller)('music-manager'),
     __metadata("design:paramtypes", [music_manager_service_1.MusicManagerService])

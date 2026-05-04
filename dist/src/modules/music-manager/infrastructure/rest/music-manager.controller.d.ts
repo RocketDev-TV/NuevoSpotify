@@ -9,4 +9,7 @@ export declare class MusicManagerController {
         total: number;
         message: string;
     }>;
+    uploadCover(file: Express.Multer.File, artistaNombre: string, albumTitulo: string): Promise<{
+        url: any;
+    }>;
 }

@@ -45,6 +45,7 @@ export const useManualUpload = () => {
   const [stagedFiles, setStagedFiles] = useState<any[]>([]);
 
   const [activeModal, setActiveModal] = useState<'genero' | 'artista' | 'album' | null>(null);
+  const [coverPreview, setCoverPreview] = useState('');
   const [isEditing, setIsEditing] = useState(false);
   const [formG, setFormG] = useState({ nombre: '', decada: '2020-01-01' });
   const [formArt, setFormArt] = useState({ nombre: '', desc: '' });
@@ -92,7 +93,7 @@ export const useManualUpload = () => {
 
   useEffect(() => {
     if (!albumId) { setAlbumActual(null); setCancionesBD([]); return; }
-    const album = albums.find(a => a.id_album.toString() === albumId);
+    const album = albums.find(a => (a.idAlbum || a.id_album).toString() === albumId);
     setAlbumActual(album);
     loadCanciones();
   }, [albumId, albums]);
@@ -259,16 +260,55 @@ export const useManualUpload = () => {
     setActiveModal(null); 
   };
   
-  const saveAlbum = async () => { 
-    if (isEditing) {
-      await fetchGQL(`mutation { updateAlbum(albumId: "${albumId}", titulo: "${formAlb.titulo}", fecha: "${formAlb.fecha}", tipo: "${formAlb.tipo}", num: ${formAlb.num}) }`);
-    } else {
-      await fetchGQL(`mutation { createAlbum(titulo: "${formAlb.titulo}", fecha: "${formAlb.fecha}", tipo: "${formAlb.tipo}", num: ${formAlb.num}, artistaId: "${artistId}") }`);
+  const saveAlbum = async () => {
+    let finalImageUrl = ""; // Aquí guardaremos la URL si se sube una portada
+
+    // 1. Si el usuario seleccionó una imagen, la disparamos por REST primero
+    if (formAlb.coverFile) {
+      Swal.fire({ title: 'Subiendo portada...', didOpen: () => Swal.showLoading(), customClass: { popup: 'swal-popup-pro' } });
+      
+      // Buscamos el nombre real del artista para que Python pueda crear la carpeta bien
+      const artistaSelect = artistas.find(a => a.id_artista.toString() === artistId);
+      const artistaNombre = artistaSelect ? artistaSelect.nombre : 'Desconocido';
+
+      const formData = new FormData();
+      formData.append('cover', formAlb.coverFile);
+      formData.append('artistaNombre', artistaNombre);
+      formData.append('albumTitulo', formAlb.titulo);
+
+      try {
+        const res = await fetch(`${BACKEND_URL}/music-manager/upload-cover`, {
+          method: 'POST',
+          body: formData
+        });
+        const data = await res.json();
+        finalImageUrl = data.url; // URL publica
+      } catch (e) {
+        Swal.fire('Error', 'No se pudo enviar la foto al servidor', 'error');
+        return; // Detenemos todo si la foto falló
+      }
     }
-    const data = await fetchGQL(`query { getAlbums(artistaId: "${artistId}") }`);
-    setAlbums(JSON.parse(data.getAlbums)); 
-    setActiveModal(null); 
-    Swal.fire('¡Éxito!', `Disco guardado a través de NestJS.`, 'success'); 
+
+    // 2. Preparamos el pedacito de GraphQL para la imagen (si existe)
+    const imgArg = finalImageUrl ? `, imagenUrl: "${finalImageUrl}"` : '';
+
+    // 3. Guardamos los datos oficiales en Prisma (Supabase)
+    Swal.fire({ title: 'Guardando datos...', didOpen: () => Swal.showLoading(), customClass: { popup: 'swal-popup-pro' } });
+    try {
+      if (isEditing) {
+        await fetchGQL(`mutation { updateAlbum(albumId: "${albumId}", titulo: "${formAlb.titulo}", fecha: "${formAlb.fecha}", tipo: "${formAlb.tipo}", num: ${formAlb.num} ${imgArg}) }`);
+      } else {
+        await fetchGQL(`mutation { createAlbum(titulo: "${formAlb.titulo}", fecha: "${formAlb.fecha}", tipo: "${formAlb.tipo}", num: ${formAlb.num}, artistaId: "${artistId}" ${imgArg}) }`);
+      }
+      
+      const data = await fetchGQL(`query { getAlbums(artistaId: "${artistId}") }`);
+      setAlbums(JSON.parse(data.getAlbums)); 
+      setActiveModal(null); 
+      setCoverPreview(''); // Limpiamos la vista previa local
+      Swal.fire('¡Éxito!', `Álbum guardado con su portada en el Búnker.`, 'success'); 
+    } catch (error) {
+      Swal.fire('Error', 'Fallo al guardar el álbum en la base de datos', 'error');
+    }
   };
 
   return {
@@ -278,6 +318,6 @@ export const useManualUpload = () => {
     tbodyRef, tbodyStagingRef,
     procesarArchivosSeleccionados, quitarDeStaging, editarNombreStaging, handleDragOver, handleDrop,
     handleProcesarSubida, handleReset, handleBorradoNuclear, handleBorrarCancion, saveGenero, saveArtista, saveAlbum,
-    handleEditarTitulo
+    handleEditarTitulo, coverPreview, setCoverPreview
   };
 };

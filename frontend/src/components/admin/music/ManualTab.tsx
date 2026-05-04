@@ -11,7 +11,7 @@ export default function ManualTab() {
     activeModal, setActiveModal, isEditing, setIsEditing, formG, setFormG, formArt, setFormArt, formAlb, setFormAlb,
     tbodyRef, tbodyStagingRef,
     procesarArchivosSeleccionados, quitarDeStaging, editarNombreStaging, handleDragOver, handleDrop,
-    handleProcesarSubida, handleReset, handleBorradoNuclear, handleBorrarCancion, saveGenero, saveArtista, saveAlbum, handleEditarTitulo
+    handleProcesarSubida, handleReset, handleBorradoNuclear, handleBorrarCancion, saveGenero, saveArtista, saveAlbum, handleEditarTitulo, coverPreview, setCoverPreview
   } = useManualUpload();
 
   return (
@@ -55,10 +55,14 @@ export default function ManualTab() {
               </select>
               <button type="button" className="btn-icon" onClick={() => { setFormAlb({ titulo: '', fecha: '', tipo: 'ALBUM', num: 0, coverFile: null }); setIsEditing(false); setActiveModal('album'); }} disabled={!artistId || isLocked}><i className="bi bi-plus"></i></button>
             </div>
-
+            
             {albumActual && (
               <div style={{ marginTop: '15px', textAlign: 'center' }}>
-                <img src={albumActual.imagen_url || "https://placehold.co/400x400?text=Sin+Portada"} alt="Cover" style={{ maxWidth: '150px', borderRadius: '8px', border: '2px solid #222' }} />
+                <img 
+                  src={albumActual.imagenUrl || albumActual.imagen_url || "https://placehold.co/400x400?text=Sin+Portada"} 
+                  alt="Cover" 
+                  style={{ maxWidth: '150px', borderRadius: '8px', border: '2px solid #222', aspectRatio: '1/1', objectFit: 'cover' }} 
+                />
               </div>
             )}
 
@@ -162,7 +166,12 @@ export default function ManualTab() {
               </thead>
               <tbody ref={tbodyStagingRef}>
                 {stagedFiles.length === 0 ? (
-                  <tr><td colSpan={4} className="text-center text-muted" style={{ padding: '40px 0' }}><i className="bi bi-inbox fs-3 mb-2 d-block opacity-50"></i>No hay archivos en espera</td></tr>
+                  <tr>
+                    <td colSpan={4} style={{ textAlign: 'center', padding: '4rem 1rem', color: '#666' }}>
+                      <i className="bi bi-inbox" style={{ fontSize: '2.5rem', display: 'block', marginBottom: '10px', opacity: 0.3 }}></i>
+                      <span style={{ fontSize: '0.9rem', fontWeight: 500 }}>No hay archivos en espera</span>
+                    </td>
+                  </tr>
                 ) : (
                   stagedFiles.map((file) => (
                     <tr key={file.id_temp} style={{ borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
@@ -225,7 +234,34 @@ export default function ManualTab() {
                 <input type="text" placeholder="Título Álbum" value={formAlb.titulo} onChange={e => setFormAlb({ ...formAlb, titulo: e.target.value })} />
                 <div style={{ marginBottom: '15px' }}>
                   <label style={{ color: '#bbb', fontSize: '13px', display: 'block', marginBottom: '5px' }}>Portada del Disco</label>
-                  <input type="file" accept="image/*" style={{ background: '#111', padding: '10px', borderRadius: '8px', border: '1px dashed #444', color: '#fff', width: '100%' }} onChange={(e) => { if (e.target.files && e.target.files[0]) { setFormAlb({ ...formAlb, coverFile: e.target.files[0] }); } }} />
+                  <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+                    <input 
+                      type="file" 
+                      accept="image/*" 
+                      style={{ background: '#111', padding: '10px', borderRadius: '8px', border: '1px dashed #444', color: '#fff', width: '100%' }} 
+                      onChange={(e) => { 
+                        if (e.target.files && e.target.files[0]) {
+                          const file = e.target.files[0];
+                          setFormAlb({ ...formAlb, coverFile: file }); 
+                          
+                          // Magia para la vista previa local
+                          const reader = new FileReader();
+                          reader.onloadend = () => {
+                            setCoverPreview(reader.result as string); 
+                          };
+                          reader.readAsDataURL(file);
+                        } 
+                      }} 
+                    />
+                    {/* Vista Previa de la imagen seleccionada o la que ya tiene el álbum */}
+                    {(coverPreview || (albumActual && isEditing && albumActual.imagen_url)) && (
+                      <img 
+                        src={coverPreview || (isEditing ? albumActual.imagen_url : '')} 
+                        alt="Preview" 
+                        style={{ width: '50px', height: '50px', borderRadius: '5px', objectFit: 'cover', border: '1px solid #444' }} 
+                      />
+                    )}
+                  </div>
                 </div>
                 <div className="row-dates"><input type="date" value={formAlb.fecha} onChange={e => setFormAlb({ ...formAlb, fecha: e.target.value })} />
                   <input type="number"

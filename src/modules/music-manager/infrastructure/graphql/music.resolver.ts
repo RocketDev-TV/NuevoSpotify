@@ -50,14 +50,15 @@ export class MusicManagerResolver {
 
   @Mutation(() => Boolean)
   async createAlbum(
-    @Args('titulo') titulo: string, 
-    @Args('fecha') fecha: string, 
-    @Args('tipo') tipo: string, 
-    @Args('num') num: number, 
-    @Args('artistaId') artistaId: string
+    @Args('titulo') titulo: string,
+    @Args('fecha') fecha: string,
+    @Args('tipo') tipo: string,
+    @Args('num') num: number,
+    @Args('artistaId') artistaId: string,
+    @Args({ name: 'imagenUrl', nullable: true }) imagenUrl?: string
   ) {
-    await this.musicService.crearAlbum(titulo, fecha, tipo, num, artistaId);
-    return true;
+    await this.musicService.crearAlbum(titulo, fecha, tipo, num, artistaId, imagenUrl);
+    return true; 
   }
 
   @Mutation(() => Boolean)
@@ -66,9 +67,10 @@ export class MusicManagerResolver {
     @Args('titulo') titulo: string, 
     @Args('fecha') fecha: string, 
     @Args('tipo') tipo: string, 
-    @Args('num') num: number, 
+    @Args('num') num: number,
+    @Args({ name: 'imagenUrl', nullable: true }) imagenUrl?: string 
   ) {
-    await this.musicService.actualizarAlbum(albumId, titulo, fecha, tipo, num);
+    await this.musicService.actualizarAlbum(albumId, titulo, fecha, tipo, num, imagenUrl);
     return true;
   }
 
@@ -89,4 +91,6 @@ export class MusicManagerResolver {
     await this.musicService.actualizarTituloCancion(cancionId, titulo);
     return true;
   }
+
+
 }

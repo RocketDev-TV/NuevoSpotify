@@ -24,8 +24,8 @@ type Mutation {
   register(nombre: String!, correo: String!, password: String!): User!
   createGenero(nombre: String!, decada: String!): Boolean!
   createArtista(nombre: String!, descripcion: String!, generoId: String!): Boolean!
-  createAlbum(titulo: String!, fecha: String!, tipo: String!, num: Float!, artistaId: String!): Boolean!
-  updateAlbum(albumId: String!, titulo: String!, fecha: String!, tipo: String!, num: Float!): Boolean!
+  createAlbum(titulo: String!, fecha: String!, tipo: String!, num: Float!, artistaId: String!, imagenUrl: String): Boolean!
+  updateAlbum(albumId: String!, titulo: String!, fecha: String!, tipo: String!, num: Float!, imagenUrl: String): Boolean!
   deleteCancion(cancionId: String!): Boolean!
   nuclearDeleteAlbum(albumId: String!): Boolean!
   updateCancionTitle(cancionId: String!, titulo: String!): Boolean!

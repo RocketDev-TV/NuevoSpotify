@@ -4,6 +4,7 @@ import { PrismaService } from '../../../prisma.service'; // Ajusta la ruta a tu 
 import { lastValueFrom } from 'rxjs';
 import FormData from 'form-data';
 import 'multer';
+import axios from 'axios';
 
 @Injectable()
 export class MusicManagerService {
@@ -163,7 +164,7 @@ export class MusicManagerService {
     });
   }
 
-  async crearAlbum(titulo: string, fecha: string, tipo: string, num: number, artistaId: string) {
+  async crearAlbum(titulo: string, fecha: string, tipo: string, num: number, artistaId: string, imagenUrl?: string) {
     return this.prisma.album.create({
       data: {
         titulo_album: titulo,
@@ -171,11 +172,12 @@ export class MusicManagerService {
         tipo_lanzamiento: tipo,
         num_canciones: num,
         artista_id: BigInt(artistaId),
+        imagen_url: imagenUrl
       }
     });
   }
 
-  async actualizarAlbum(albumId: string, titulo: string, fecha: string, tipo: string, num: number) {
+  async actualizarAlbum(albumId: string, titulo: string, fecha: string, tipo: string, num: number, imagenUrl?: string) {
     return this.prisma.album.update({
       where: { id_album: BigInt(albumId) },
       data: {
@@ -183,6 +185,7 @@ export class MusicManagerService {
         fecha_lanzamiento: fecha ? new Date(fecha) : null,
         tipo_lanzamiento: tipo,
         num_canciones: num,
+        imagen_url: imagenUrl
       }
     });
   }
@@ -236,6 +239,25 @@ export class MusicManagerService {
     // 2. Borrado en cascada en Prisma (Borra canciones y luego el álbum)
     await this.prisma.cancion.deleteMany({ where: { albumId: BigInt(albumId) } });
     return this.prisma.album.delete({ where: { id_album: BigInt(albumId) } });
+  }
+
+  async subirPortada(file: Express.Multer.File, artistaNombre: string, albumTitulo: string) {
+    const formData = new FormData();
+    // Empacamos el archivo crudo
+    formData.append('file', file.buffer, file.originalname);
+    formData.append('artista_nombre', artistaNombre);
+    formData.append('album_titulo', albumTitulo);
+
+    try {
+      const response = await axios.post(`${this.PYTHON_SERVER}/upload_cover`, formData, {
+        headers: formData.getHeaders(),
+      });
+      // Regresamos la URL final que nos escupió Python
+      return response.data.url;
+    } catch (error) {
+      console.error("Error enviando portada a Python:", (error as any).message);
+      throw new Error("Fallo al subir la portada al Búnker");
+    }
   }
 }
 

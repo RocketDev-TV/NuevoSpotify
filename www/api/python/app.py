@@ -3,6 +3,7 @@ import shutil
 import pandas as pd
 import config
 import yt_dlp
+import glob
 from flask import Flask, jsonify, request
 from flask_cors import CORS
 from flask_limiter import Limiter
@@ -407,6 +408,69 @@ def download_single_track():
     except Exception as e:
         print(f"❌ Error en track {data.get('index')}: {e}")
         return jsonify({"error": str(e)}), 500
+
+# ---------------------------------------------------------
+# 2.5 ENDPOINT DE PORTADAS (Upload Cover) 🖼️
+# ---------------------------------------------------------
+@app.route('/upload_cover', methods=['POST'])
+@limiter.limit("10 per minute")
+def upload_cover():
+    try:
+        if 'file' not in request.files:
+            return jsonify({"error": "No file part"}), 400
+        
+        file = request.files['file']
+        artista_nom = request.form.get('artista_nombre', 'Desconocido')
+        album_tit = request.form.get('album_titulo', 'Desconocido')
+
+        if file.filename == '':
+            return jsonify({"error": "No selected file"}), 400
+
+        # Sacamos la extensión original de la foto (.jpg, .png, etc)
+        ext = os.path.splitext(file.filename)[1]
+        nombre_portada = f"cover{ext}" # Siempre se llamará 'cover' para mantener el orden
+
+        # Construimos la ruta segura: storage_musica/Artista/Album/cover.jpg
+        ruta_relativa = os.path.join(artista_nom, album_tit, nombre_portada)
+        full_path = os.path.abspath(os.path.join(app.config['UPLOAD_FOLDER'], ruta_relativa))
+
+        # Doble check de seguridad (Path Traversal)
+        if not full_path.startswith(os.path.abspath(app.config['UPLOAD_FOLDER'])):
+            return jsonify({"error": "Acceso denegado a ruta externa"}), 403
+
+        # Creamos las carpetas si no existen
+        folder_path = os.path.dirname(full_path)
+        os.makedirs(folder_path, exist_ok=True)
+        
+        # --- OPERACIÓN LIMPIEZA ---
+        # Buscamos cualquier archivo que empiece con "cover." y lo aniquilamos
+        portadas_viejas = glob.glob(os.path.join(folder_path, 'cover.*'))
+        for vieja in portadas_viejas:
+            try:
+                os.remove(vieja)
+                print(f"Portada anterior eliminada: {vieja}")
+            except Exception as e:
+                print(f"No se pudo borrar portada vieja: {e}")
+                
+        # Ahora sí, guardamos la imagen nueva limpiecita
+        file.save(full_path)
+        
+        # Devolvemos la URL pública para que NestJS la pueda guardar en la base de datos
+        public_url = f"http://localhost:3000/musica/{artista_nom}/{album_tit}/{nombre_portada}"
+        print(f"🖼️ Portada guardada con éxito: {full_path}")
+
+        return jsonify({"mensaje": "Portada subida", "url": public_url}), 200
+
+    except Exception as e:
+        print(f"❌ Error subiendo portada: {e}")
+        return jsonify({"error": str(e)}), 500
+
+# --- SERVIDOR DE ARCHIVOS (Para ver portadas y escuchar música) ---
+@app.route('/musica/<path:filename>')
+def serve_musica(filename):
+    # Esto le dice a Flask: "si alguien pide /musica/..., búscalo en storage_musica"
+    return send_from_directory(app.config['UPLOAD_FOLDER'], filename)
+
 # ---------------------------------------------------------
 # INICIO DEL SERVIDOR 🚀
 # ---------------------------------------------------------

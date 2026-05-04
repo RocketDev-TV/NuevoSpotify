@@ -20,6 +20,7 @@ const prisma_service_1 = require("../../../prisma.service");
 const rxjs_1 = require("rxjs");
 const form_data_1 = __importDefault(require("form-data"));
 require("multer");
+const axios_2 = __importDefault(require("axios"));
 let MusicManagerService = MusicManagerService_1 = class MusicManagerService {
     prisma;
     httpService;
@@ -131,7 +132,7 @@ let MusicManagerService = MusicManagerService_1 = class MusicManagerService {
             data: { nombre, descripcion, genero_id: BigInt(generoId) }
         });
     }
-    async crearAlbum(titulo, fecha, tipo, num, artistaId) {
+    async crearAlbum(titulo, fecha, tipo, num, artistaId, imagenUrl) {
         return this.prisma.album.create({
             data: {
                 titulo_album: titulo,
@@ -139,10 +140,11 @@ let MusicManagerService = MusicManagerService_1 = class MusicManagerService {
                 tipo_lanzamiento: tipo,
                 num_canciones: num,
                 artista_id: BigInt(artistaId),
+                imagen_url: imagenUrl
             }
         });
     }
-    async actualizarAlbum(albumId, titulo, fecha, tipo, num) {
+    async actualizarAlbum(albumId, titulo, fecha, tipo, num, imagenUrl) {
         return this.prisma.album.update({
             where: { id_album: BigInt(albumId) },
             data: {
@@ -150,6 +152,7 @@ let MusicManagerService = MusicManagerService_1 = class MusicManagerService {
                 fecha_lanzamiento: fecha ? new Date(fecha) : null,
                 tipo_lanzamiento: tipo,
                 num_canciones: num,
+                imagen_url: imagenUrl
             }
         });
     }
@@ -193,6 +196,22 @@ let MusicManagerService = MusicManagerService_1 = class MusicManagerService {
         }
         await this.prisma.cancion.deleteMany({ where: { albumId: BigInt(albumId) } });
         return this.prisma.album.delete({ where: { id_album: BigInt(albumId) } });
+    }
+    async subirPortada(file, artistaNombre, albumTitulo) {
+        const formData = new form_data_1.default();
+        formData.append('file', file.buffer, file.originalname);
+        formData.append('artista_nombre', artistaNombre);
+        formData.append('album_titulo', albumTitulo);
+        try {
+            const response = await axios_2.default.post(`${this.PYTHON_SERVER}/upload_cover`, formData, {
+                headers: formData.getHeaders(),
+            });
+            return response.data.url;
+        }
+        catch (error) {
+            console.error("Error enviando portada a Python:", error.message);
+            throw new Error("Fallo al subir la portada al Búnker");
+        }
     }
 };
 exports.MusicManagerService = MusicManagerService;
