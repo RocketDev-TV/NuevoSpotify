@@ -347,7 +347,7 @@ export class MusicManagerService {
       orderBy: { nombre_genero: 'asc' },
     });
   }
-  
+
   async getArtistasByGenero(generoId: string) {
     // 1. Validamos que no llegue vacío o texto puro
     if (!generoId || isNaN(Number(generoId))) {
@@ -368,6 +368,32 @@ export class MusicManagerService {
     return await this.prisma.album.findMany({
       where: { artista_id: BigInt(artistaId) },
       orderBy: { titulo_album: 'asc' },
+    });
+  }
+
+  async createGenero(data: any) {
+    return await this.prisma.genero.create({
+      data: { ...data, decada: new Date(data.decada) }
+    });
+  }
+
+  async createArtista(data: any) {
+    return await this.prisma.artista.create({
+      data: {
+        nombre: data.nombre,
+        genero_id: BigInt(data.genero_id)
+      }
+    });
+  }
+
+  async createAlbum(data: any) {
+    return await this.prisma.album.create({
+      data: {
+        titulo_album: data.titulo_album,
+        fecha_lanzamiento: new Date(`${data.year}-01-01`),
+        artista_id: BigInt(data.artista_id),
+        num_canciones: 0
+      }
     });
   }
 }

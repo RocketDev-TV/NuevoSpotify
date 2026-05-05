@@ -5,7 +5,7 @@ import 'multer';
 
 @Controller('music-manager')
 export class MusicManagerController {
-  constructor(private readonly musicService: MusicManagerService) {}
+  constructor(private readonly musicService: MusicManagerService) { }
 
   @Get('generos')
   async getGeneros() {
@@ -22,13 +22,28 @@ export class MusicManagerController {
     return await this.musicService.getAlbumsByArtista(artistaId);
   }
 
+  @Post('generos')
+  async createGenero(@Body() data: { nombre_genero: string, decada: string }) {
+    return await this.musicService.createGenero(data);
+  }
+
+  @Post('artistas')
+  async createArtista(@Body() data: { nombre: string, genero_id: string }) {
+    return await this.musicService.createArtista(data);
+  }
+
+  @Post('albums')
+  async createAlbum(@Body() data: { titulo_album: string, artista_id: string, year: string }) {
+    return await this.musicService.createAlbum(data);
+  }
+
   @Post('upload-album')
   @UseInterceptors(FilesInterceptor('files'))
   async uploadAlbum(
     @UploadedFiles() files: Express.Multer.File[],
     @Body('albumId') albumIdStr: string,
     @Body('artistaId') artistaIdStr: string,
-    @Body('metadata') metadataStr: string 
+    @Body('metadata') metadataStr: string
   ) {
     if (!files || files.length === 0) {
       throw new HttpException('No se enviaron archivos', HttpStatus.BAD_REQUEST);
@@ -37,7 +52,7 @@ export class MusicManagerController {
     // Convertimos a BigInt porque así lo exige tu Prisma Schema
     const albumId = BigInt(albumIdStr);
     const artistaId = BigInt(artistaIdStr);
-    
+
     // Parseamos la metadata que viene de React
     const metadata = JSON.parse(metadataStr);
 
@@ -64,7 +79,7 @@ export class MusicManagerController {
     try {
       // Mandamos a llamar al servicio que acabamos de crear
       const metadata = await this.musicService.obtenerMetadataYoutube(url);
-      return metadata; 
+      return metadata;
     } catch (error) {
       throw new HttpException('Fallo al explorar YouTube', HttpStatus.INTERNAL_SERVER_ERROR);
     }

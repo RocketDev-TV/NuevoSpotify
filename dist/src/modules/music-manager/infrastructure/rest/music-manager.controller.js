@@ -31,6 +31,15 @@ let MusicManagerController = class MusicManagerController {
     async getAlbums(artistaId) {
         return await this.musicService.getAlbumsByArtista(artistaId);
     }
+    async createGenero(data) {
+        return await this.musicService.createGenero(data);
+    }
+    async createArtista(data) {
+        return await this.musicService.createArtista(data);
+    }
+    async createAlbum(data) {
+        return await this.musicService.createAlbum(data);
+    }
     async uploadAlbum(files, albumIdStr, artistaIdStr, metadataStr) {
         if (!files || files.length === 0) {
             throw new common_1.HttpException('No se enviaron archivos', common_1.HttpStatus.BAD_REQUEST);
@@ -86,6 +95,27 @@ __decorate([
     __metadata("design:paramtypes", [String]),
     __metadata("design:returntype", Promise)
 ], MusicManagerController.prototype, "getAlbums", null);
+__decorate([
+    (0, common_1.Post)('generos'),
+    __param(0, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object]),
+    __metadata("design:returntype", Promise)
+], MusicManagerController.prototype, "createGenero", null);
+__decorate([
+    (0, common_1.Post)('artistas'),
+    __param(0, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object]),
+    __metadata("design:returntype", Promise)
+], MusicManagerController.prototype, "createArtista", null);
+__decorate([
+    (0, common_1.Post)('albums'),
+    __param(0, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object]),
+    __metadata("design:returntype", Promise)
+], MusicManagerController.prototype, "createAlbum", null);
 __decorate([
     (0, common_1.Post)('upload-album'),
     (0, common_1.UseInterceptors)((0, platform_express_1.FilesInterceptor)('files')),

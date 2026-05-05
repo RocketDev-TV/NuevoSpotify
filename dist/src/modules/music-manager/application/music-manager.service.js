@@ -296,6 +296,29 @@ let MusicManagerService = MusicManagerService_1 = class MusicManagerService {
             orderBy: { titulo_album: 'asc' },
         });
     }
+    async createGenero(data) {
+        return await this.prisma.genero.create({
+            data: { ...data, decada: new Date(data.decada) }
+        });
+    }
+    async createArtista(data) {
+        return await this.prisma.artista.create({
+            data: {
+                nombre: data.nombre,
+                genero_id: BigInt(data.genero_id)
+            }
+        });
+    }
+    async createAlbum(data) {
+        return await this.prisma.album.create({
+            data: {
+                titulo_album: data.titulo_album,
+                fecha_lanzamiento: new Date(`${data.year}-01-01`),
+                artista_id: BigInt(data.artista_id),
+                num_canciones: 0
+            }
+        });
+    }
 };
 exports.MusicManagerService = MusicManagerService;
 exports.MusicManagerService = MusicManagerService = MusicManagerService_1 = __decorate([
