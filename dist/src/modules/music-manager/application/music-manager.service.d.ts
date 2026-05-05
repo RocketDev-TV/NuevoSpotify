@@ -118,4 +118,26 @@ export declare class MusicManagerService {
         success: boolean;
         album_id: any;
     }>;
+    getGeneros(): Promise<{
+        id_gener: bigint;
+        nombre_genero: string;
+        decada: Date;
+    }[]>;
+    getArtistasByGenero(generoId: string): Promise<{
+        id_artista: bigint;
+        nombre: string;
+        genero_id: bigint;
+        descripcion: string | null;
+        url_imagen_art: string | null;
+    }[]>;
+    getAlbumsByArtista(artistaId: string): Promise<{
+        id_album: bigint;
+        titulo_album: string;
+        artista_id: bigint;
+        fecha_lanzamiento: Date | null;
+        duracion_album: number | null;
+        num_canciones: number;
+        imagen_url: string | null;
+        tipo_lanzamiento: string | null;
+    }[]>;
 }

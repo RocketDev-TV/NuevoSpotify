@@ -9,15 +9,15 @@ import axios from 'axios';
 @Injectable()
 export class MusicManagerService {
   private readonly logger = new Logger(MusicManagerService.name);
-  
+
   // La ruta del bunker
   // Ahora lee la variable del .env, y si por algún error no la encuentra, usa localhost como plan B
-    private readonly PYTHON_SERVER = process.env.PYTHON_SERVER_URL || 'http://localhost:3000';
+  private readonly PYTHON_SERVER = process.env.PYTHON_SERVER_URL || 'http://localhost:3000';
 
   constructor(
     private prisma: PrismaService,
     private httpService: HttpService,
-  ) {}
+  ) { }
 
   // Utilidad para limpiar los nombres y evitar errores de URLs
   private cleanString(str: string): string {
@@ -43,7 +43,7 @@ export class MusicManagerService {
     for (let i = 0; i < archivos.length; i++) {
       const file = archivos[i];
       // Buscamos la metadata que coincida con este archivo (título, duración, track)
-      const meta = metadata[i]; 
+      const meta = metadata[i];
 
       try {
         // A. Preparamos los nombres y la ruta para Python
@@ -90,11 +90,11 @@ export class MusicManagerService {
     // 3. Ya que se subieron todas, recalculamos la duración del disco completo
     await this.actualizarDuracionAlbum(albumId);
 
-    return { 
-      success: true, 
-      procesadas: exitosas, 
+    return {
+      success: true,
+      procesadas: exitosas,
       total: archivos.length,
-      message: 'Álbum procesado correctamente' 
+      message: 'Álbum procesado correctamente'
     };
   }
 
@@ -129,23 +129,23 @@ export class MusicManagerService {
   }
 
   async obtenerArtistas(generoId: string) {
-    return this.prisma.artista.findMany({ 
-      where: { genero_id: BigInt(generoId) }, 
-      orderBy: { nombre: 'asc' } 
+    return this.prisma.artista.findMany({
+      where: { genero_id: BigInt(generoId) },
+      orderBy: { nombre: 'asc' }
     });
   }
 
   async obtenerAlbums(artistaId: string) {
-    return this.prisma.album.findMany({ 
-      where: { artista_id: BigInt(artistaId) }, 
-      orderBy: { titulo_album: 'asc' } 
+    return this.prisma.album.findMany({
+      where: { artista_id: BigInt(artistaId) },
+      orderBy: { titulo_album: 'asc' }
     });
   }
 
   async obtenerCanciones(albumId: string) {
-    return this.prisma.cancion.findMany({ 
-      where: { albumId: BigInt(albumId) }, 
-      orderBy: { numeroTrack: 'asc' } 
+    return this.prisma.cancion.findMany({
+      where: { albumId: BigInt(albumId) },
+      orderBy: { numeroTrack: 'asc' }
     });
   }
 
@@ -219,17 +219,17 @@ export class MusicManagerService {
   }
 
   async borradoNuclearAlbum(albumId: string) {
-    const album = await this.prisma.album.findUnique({ 
+    const album = await this.prisma.album.findUnique({
       where: { id_album: BigInt(albumId) },
-      include: { artista: true } 
+      include: { artista: true }
     });
     if (!album) throw new HttpException('Álbum no encontrado', HttpStatus.NOT_FOUND);
 
     // 1. Borrado físico en Python (Toda la carpeta)
     try {
       await lastValueFrom(
-        this.httpService.post(`${this.PYTHON_SERVER}/api/delete_folder`, { 
-          ruta: `${this.cleanString(album.artista.nombre)}/${this.cleanString(album.titulo_album)}` 
+        this.httpService.post(`${this.PYTHON_SERVER}/api/delete_folder`, {
+          ruta: `${this.cleanString(album.artista.nombre)}/${this.cleanString(album.titulo_album)}`
         })
       );
     } catch (err) {
@@ -281,13 +281,18 @@ export class MusicManagerService {
     } catch (error) {
       // Le decimos a TypeScript "(error as any)" para evitar berrinches
       console.error("Error contactando al Búnker (Python):", (error as any).message);
-      
+
       // Lanzamos un error que NestJS pueda entender y mandar a React
       throw new Error("Fallo al obtener metadata de YouTube");
     }
   }
 
-  // --- YOUTUBE: Descargar e Insertar ---
+
+
+
+
+
+  // --- YOUTUBE: Descargar e Insertar --
   async descargarCancionYoutube(payload: any) {
     try {
       // 1. Mandamos al Minero (Python) a descargar
@@ -334,6 +339,36 @@ export class MusicManagerService {
       console.error("Error en tubería YouTube:", error);
       throw new Error("Fallo al procesar descarga");
     }
+  }
+
+  // A. Traer todos los géneros para el primer combo
+  async getGeneros() {
+    return await this.prisma.genero.findMany({
+      orderBy: { nombre_genero: 'asc' },
+    });
+  }
+  
+  async getArtistasByGenero(generoId: string) {
+    // 1. Validamos que no llegue vacío o texto puro
+    if (!generoId || isNaN(Number(generoId))) {
+      return [];
+    }
+
+    return await this.prisma.artista.findMany({
+      where: {
+        // 2. Convertimos el string a BigInt para que Prisma no llore
+        genero_id: BigInt(generoId)
+      },
+      orderBy: { nombre: 'asc' },
+    });
+  }
+
+  // C. Traer álbumes filtrados por el artista elegido
+  async getAlbumsByArtista(artistaId: string) {
+    return await this.prisma.album.findMany({
+      where: { artista_id: BigInt(artistaId) },
+      orderBy: { titulo_album: 'asc' },
+    });
   }
 }
 

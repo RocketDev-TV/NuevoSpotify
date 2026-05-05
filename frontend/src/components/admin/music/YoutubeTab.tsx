@@ -6,9 +6,10 @@ export default function YoutubeTab() {
     url, setUrl, isLoading, playlistName, setPlaylistName, albumYear, setAlbumYear,
     genreId, setGenreId, artistId, setArtistId, albumId, setAlbumId,
     tracks, isDownloading, progress, progressText,
-    fetchMetadata, toggleTrack, updateTrackTitle, downloadSelected, resetTab
+    fetchMetadata, toggleTrack, updateTrackTitle, downloadSelected, resetTab,
+    genres, albums, artists
   } = useYoutubeUpload();
-
+  
   return (
     <div className="music-tab active">
       <div className="glass-panel">
@@ -58,62 +59,65 @@ export default function YoutubeTab() {
           <div id="yt-preview-container" className="glass-panel animate__animated animate__fadeIn mt-4" style={{ padding: '25px' }}>
 
             {/* 🎵 COMBOS DE CONTEXTO (Estructura de 3 Niveles) */}
-            <div className="grid-2-cols" style={{ borderBottom: '1px solid rgba(255,255,255,0.1)', paddingBottom: '25px', marginBottom: '30px' }}>
+            {/* 🎵 FILA 1: GÉNERO Y ARTISTA */}
+            <div className="grid-2-cols" style={{ marginBottom: '20px' }}>
               <div>
                 <label>Género para la descarga</label>
                 <div className="input-group-row compact">
-                  <select value={genreId} onChange={(e) => setGenreId(e.target.value)} disabled={isDownloading}>
+                  <select value={genreId} onChange={(e) => setGenreId(e.target.value)}>
                     <option value="">Seleccionar Género</option>
-                    <option value="1">Rock en Español</option>
+                    {Array.isArray(genres) && genres.map((g: any, index: number) => (
+                      <option key={`gen-${g.id_genero || index}`} value={g.id_gener}>
+                        {g.nombre_genero}
+                      </option>
+                    ))}
                   </select>
-                  <button type="button" className="btn-icon" disabled={isDownloading}><i className="ph ph-plus"></i></button>
-                </div>
-
-                <label style={{ marginTop: '20px' }}>Álbum Existente (Opcional)</label>
-                <div className="input-group-row compact">
-                  <select value={albumId} onChange={(e) => setAlbumId(e.target.value)} disabled={!artistId || isDownloading}>
-                    <option value="">{artistId ? 'Seleccionar Álbum' : 'Selecciona Artista primero'}</option>
-                  </select>
-                  <button type="button" className="btn-icon" disabled={isDownloading}><i className="ph ph-plus"></i></button>
+                  <button type="button" className="btn-icon"><i className="ph ph-plus"></i></button>
                 </div>
               </div>
 
               <div>
                 <label>Artista (Seleccionar o crear nuevo)</label>
                 <div className="input-group-row compact">
-                  <select value={artistId} onChange={(e) => setArtistId(e.target.value)} disabled={!genreId || isDownloading}>
-                    <option value="">{genreId ? 'Selecciona Artista' : 'Selecciona un género primero'}</option>
-                    <option value="10">Zoé</option>
+                  <select
+                    value={artistId}
+                    onChange={(e) => setArtistId(e.target.value)}
+                    disabled={!genreId} // ✅ Solo se activa si hay Género
+                  >
+                    <option value="">{genreId ? 'Selecciona Artista' : 'Selecciona artista primero'}</option>
+                    {Array.isArray(artists) && artists.map((a: any, index: number) => (
+                      <option key={`art-${a.id_artista || index}`} value={a.id_artista}>
+                        {a.nombre}
+                      </option>
+                    ))}
                   </select>
-                  <button type="button" className="btn-icon" disabled={isDownloading}><i className="ph ph-plus"></i></button>
+                  <button type="button" className="btn-icon"><i className="ph ph-plus"></i></button>
                 </div>
               </div>
             </div>
 
-            {/* INFO DEL DISCO (Sigue igual, ya estaba bien alineada) */}
-            <div className="grid-2-cols" style={{ marginBottom: '45px' }}>
-              <div className="album-edit-zone">
-                <label style={{ color: 'var(--accent)', fontWeight: 'bold', fontSize: '14px' }}>Nombre del Álbum / EP:</label>
-                <input
-                  type="text"
-                  className="edit-input-yt"
-                  style={{ fontSize: '1.1rem', color: 'var(--accent)', fontWeight: 'bold', borderBottom: '2px solid var(--accent)', width: '100%' }}
-                  value={playlistName}
-                  onChange={(e) => setPlaylistName(e.target.value)}
-                  disabled={isDownloading}
-                />
-              </div>
+            {/* 🎵 FILA 2: ÁLBUM EXISTENTE */}
+            <div className="grid-2-cols" style={{ borderBottom: '1px solid rgba(255,255,255,0.1)', paddingBottom: '25px', marginBottom: '30px' }}>
               <div>
-                <label>Año de Lanzamiento:</label>
-                <input
-                  type="number"
-                  className="edit-input-yt"
-                  style={{ width: '100%' }}
-                  value={albumYear}
-                  onChange={(e) => setAlbumYear(e.target.value)}
-                  disabled={isDownloading}
-                />
+                <label>Álbum Existente (Opcional)</label>
+                <div className="input-group-row compact">
+                  <select
+                    value={albumId}
+                    onChange={(e) => setAlbumId(e.target.value)}
+                    disabled={!artistId} // ✅ Solo se activa si hay Artista
+                  >
+                    <option value="">{artistId ? 'Nuevo Álbum (o seleccionar)' : 'Selecciona artista primero'}</option>
+                    {Array.isArray(albums) && albums.map((al: any, index: number) => (
+                      <option key={`alb-${al.id_album || index}`} value={al.id_album}>
+                        {al.titulo_album}
+                      </option>
+                    ))}
+                  </select>
+                  <button type="button" className="btn-icon"><i className="ph ph-plus"></i></button>
+                </div>
               </div>
+              {/* Espacio vacío para mantener el grid parejo */}
+              <div></div>
             </div>
 
             {/* TABLA CON ALINEACIÓN MILIMÉTRICA */}

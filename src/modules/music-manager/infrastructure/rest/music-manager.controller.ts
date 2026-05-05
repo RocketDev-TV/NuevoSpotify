@@ -1,4 +1,4 @@
-import { Controller, Post, UseInterceptors, UploadedFiles, UploadedFile, Body, HttpException, HttpStatus } from '@nestjs/common';
+import { Controller, Get, Param, Post, Body, UseInterceptors, UploadedFiles, UploadedFile, HttpException, HttpStatus } from '@nestjs/common';
 import { FilesInterceptor, FileInterceptor } from '@nestjs/platform-express';
 import { MusicManagerService } from '../../application/music-manager.service';
 import 'multer';
@@ -6,6 +6,21 @@ import 'multer';
 @Controller('music-manager')
 export class MusicManagerController {
   constructor(private readonly musicService: MusicManagerService) {}
+
+  @Get('generos')
+  async getGeneros() {
+    return await this.musicService.getGeneros();
+  }
+
+  @Get('artistas/:generoId')
+  async getArtistas(@Param('generoId') generoId: string) {
+    return await this.musicService.getArtistasByGenero(generoId);
+  }
+
+  @Get('albums/:artistaId')
+  async getAlbums(@Param('artistaId') artistaId: string) {
+    return await this.musicService.getAlbumsByArtista(artistaId);
+  }
 
   @Post('upload-album')
   @UseInterceptors(FilesInterceptor('files'))

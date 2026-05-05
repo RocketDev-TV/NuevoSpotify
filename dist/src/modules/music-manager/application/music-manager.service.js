@@ -274,6 +274,28 @@ let MusicManagerService = MusicManagerService_1 = class MusicManagerService {
             throw new Error("Fallo al procesar descarga");
         }
     }
+    async getGeneros() {
+        return await this.prisma.genero.findMany({
+            orderBy: { nombre_genero: 'asc' },
+        });
+    }
+    async getArtistasByGenero(generoId) {
+        if (!generoId || isNaN(Number(generoId))) {
+            return [];
+        }
+        return await this.prisma.artista.findMany({
+            where: {
+                genero_id: BigInt(generoId)
+            },
+            orderBy: { nombre: 'asc' },
+        });
+    }
+    async getAlbumsByArtista(artistaId) {
+        return await this.prisma.album.findMany({
+            where: { artista_id: BigInt(artistaId) },
+            orderBy: { titulo_album: 'asc' },
+        });
+    }
 };
 exports.MusicManagerService = MusicManagerService;
 exports.MusicManagerService = MusicManagerService = MusicManagerService_1 = __decorate([
