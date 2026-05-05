@@ -113,4 +113,9 @@ export declare class MusicManagerService {
         tipo_lanzamiento: string | null;
     }>;
     subirPortada(file: Express.Multer.File, artistaNombre: string, albumTitulo: string): Promise<any>;
+    obtenerMetadataYoutube(url: string): Promise<any>;
+    descargarCancionYoutube(payload: any): Promise<{
+        success: boolean;
+        album_id: any;
+    }>;
 }

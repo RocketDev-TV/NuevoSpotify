@@ -12,4 +12,9 @@ export declare class MusicManagerController {
     uploadCover(file: Express.Multer.File, artistaNombre: string, albumTitulo: string): Promise<{
         url: any;
     }>;
+    getYoutubeMetadata(url: string): Promise<any>;
+    downloadYoutubeTrack(payload: any): Promise<{
+        success: boolean;
+        album_id: any;
+    }>;
 }

@@ -259,5 +259,81 @@ export class MusicManagerService {
       throw new Error("Fallo al subir la portada al Búnker");
     }
   }
+
+  // --- YOUTUBE: Mandar a Python a explorar el link ---
+  async obtenerMetadataYoutube(url: string) {
+    try {
+      // NestJS (4000) le pide la info a Python (3000)
+      const response = await fetch('http://localhost:3000/api/metadata', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ url })
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || 'El Búnker rechazó la petición');
+      }
+
+      // Le regresamos la data limpiecita al Controlador
+      return data;
+    } catch (error) {
+      // Le decimos a TypeScript "(error as any)" para evitar berrinches
+      console.error("Error contactando al Búnker (Python):", (error as any).message);
+      
+      // Lanzamos un error que NestJS pueda entender y mandar a React
+      throw new Error("Fallo al obtener metadata de YouTube");
+    }
+  }
+
+  // --- YOUTUBE: Descargar e Insertar ---
+  async descargarCancionYoutube(payload: any) {
+    try {
+      // 1. Mandamos al Minero (Python) a descargar
+      const response = await fetch('http://localhost:3000/api/download_single', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error);
+
+      // 2. Lógica de Prisma: Si es el track 1, creamos el Álbum
+      let albumId = payload.new_album_id;
+      if (!albumId) {
+        const nuevoAlbum = await this.prisma.album.create({
+          data: {
+            titulo_album: payload.album_titulo,
+            artista_id: BigInt(payload.artista_id),
+            fecha_lanzamiento: new Date(`${payload.album_year}-01-01`),
+            imagen_url: payload.imagen_url,
+            num_canciones: payload.total,
+            tipo_lanzamiento: "ALBUM"
+          }
+        });
+        albumId = nuevoAlbum.id_album.toString();
+      }
+
+      // 3. Insertamos la canción usando los datos masticados por Python
+      await this.prisma.cancion.create({
+        data: {
+          tituloCancion: payload.track.titulo,
+          artistaId: BigInt(payload.artista_id),
+          albumId: BigInt(albumId),
+          audioPath: data.audio_url,
+          duracionCancion: data.duracion_decimal,
+          numeroTrack: payload.index,
+          imagenUrl: payload.imagen_url,
+          reproducciones: 0
+        }
+      });
+
+      return { success: true, album_id: albumId };
+    } catch (error) {
+      console.error("Error en tubería YouTube:", error);
+      throw new Error("Fallo al procesar descarga");
+    }
+  }
 }
 

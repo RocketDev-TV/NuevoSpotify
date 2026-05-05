@@ -39,4 +39,28 @@ export class MusicManagerController {
     const url = await this.musicService.subirPortada(file, artistaNombre, albumTitulo);
     return { url }; // Le regresamos a React un JSON con la URL lista
   }
+
+  @Post('youtube-metadata')
+  async getYoutubeMetadata(@Body('url') url: string) {
+    if (!url) {
+      throw new HttpException('No enviaste ninguna URL de YouTube', HttpStatus.BAD_REQUEST);
+    }
+
+    try {
+      // Mandamos a llamar al servicio que acabamos de crear
+      const metadata = await this.musicService.obtenerMetadataYoutube(url);
+      return metadata; 
+    } catch (error) {
+      throw new HttpException('Fallo al explorar YouTube', HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+  }
+
+  @Post('youtube-download')
+  async downloadYoutubeTrack(@Body() payload: any) {
+    try {
+      return await this.musicService.descargarCancionYoutube(payload);
+    } catch (error) {
+      throw new HttpException('Fallo al descargar pista', HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+  }
 }

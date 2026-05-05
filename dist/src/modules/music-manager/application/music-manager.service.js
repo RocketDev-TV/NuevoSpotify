@@ -213,6 +213,67 @@ let MusicManagerService = MusicManagerService_1 = class MusicManagerService {
             throw new Error("Fallo al subir la portada al Búnker");
         }
     }
+    async obtenerMetadataYoutube(url) {
+        try {
+            const response = await fetch('http://localhost:3000/api/metadata', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ url })
+            });
+            const data = await response.json();
+            if (!response.ok) {
+                throw new Error(data.error || 'El Búnker rechazó la petición');
+            }
+            return data;
+        }
+        catch (error) {
+            console.error("Error contactando al Búnker (Python):", error.message);
+            throw new Error("Fallo al obtener metadata de YouTube");
+        }
+    }
+    async descargarCancionYoutube(payload) {
+        try {
+            const response = await fetch('http://localhost:3000/api/download_single', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+            const data = await response.json();
+            if (!response.ok)
+                throw new Error(data.error);
+            let albumId = payload.new_album_id;
+            if (!albumId) {
+                const nuevoAlbum = await this.prisma.album.create({
+                    data: {
+                        titulo_album: payload.album_titulo,
+                        artista_id: BigInt(payload.artista_id),
+                        fecha_lanzamiento: new Date(`${payload.album_year}-01-01`),
+                        imagen_url: payload.imagen_url,
+                        num_canciones: payload.total,
+                        tipo_lanzamiento: "ALBUM"
+                    }
+                });
+                albumId = nuevoAlbum.id_album.toString();
+            }
+            await this.prisma.cancion.create({
+                data: {
+                    tituloCancion: payload.track.titulo,
+                    artistaId: BigInt(payload.artista_id),
+                    albumId: BigInt(albumId),
+                    audioPath: data.audio_url,
+                    duracionCancion: data.duracion_decimal,
+                    numeroTrack: payload.index,
+                    imagenUrl: payload.imagen_url,
+                    reproducciones: 0
+                }
+            });
+            return { success: true, album_id: albumId };
+        }
+        catch (error) {
+            console.error("Error en tubería YouTube:", error);
+            throw new Error("Fallo al procesar descarga");
+        }
+    }
 };
 exports.MusicManagerService = MusicManagerService;
 exports.MusicManagerService = MusicManagerService = MusicManagerService_1 = __decorate([

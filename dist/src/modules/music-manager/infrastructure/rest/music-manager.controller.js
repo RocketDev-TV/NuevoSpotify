@@ -35,6 +35,26 @@ let MusicManagerController = class MusicManagerController {
         const url = await this.musicService.subirPortada(file, artistaNombre, albumTitulo);
         return { url };
     }
+    async getYoutubeMetadata(url) {
+        if (!url) {
+            throw new common_1.HttpException('No enviaste ninguna URL de YouTube', common_1.HttpStatus.BAD_REQUEST);
+        }
+        try {
+            const metadata = await this.musicService.obtenerMetadataYoutube(url);
+            return metadata;
+        }
+        catch (error) {
+            throw new common_1.HttpException('Fallo al explorar YouTube', common_1.HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+    async downloadYoutubeTrack(payload) {
+        try {
+            return await this.musicService.descargarCancionYoutube(payload);
+        }
+        catch (error) {
+            throw new common_1.HttpException('Fallo al descargar pista', common_1.HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
 };
 exports.MusicManagerController = MusicManagerController;
 __decorate([
@@ -58,6 +78,20 @@ __decorate([
     __metadata("design:paramtypes", [Object, String, String]),
     __metadata("design:returntype", Promise)
 ], MusicManagerController.prototype, "uploadCover", null);
+__decorate([
+    (0, common_1.Post)('youtube-metadata'),
+    __param(0, (0, common_1.Body)('url')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String]),
+    __metadata("design:returntype", Promise)
+], MusicManagerController.prototype, "getYoutubeMetadata", null);
+__decorate([
+    (0, common_1.Post)('youtube-download'),
+    __param(0, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object]),
+    __metadata("design:returntype", Promise)
+], MusicManagerController.prototype, "downloadYoutubeTrack", null);
 exports.MusicManagerController = MusicManagerController = __decorate([
     (0, common_1.Controller)('music-manager'),
     __metadata("design:paramtypes", [music_manager_service_1.MusicManagerService])
