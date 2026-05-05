@@ -21,8 +21,8 @@ export declare class MusicManagerService {
         decada: Date;
     }[]>;
     obtenerArtistas(generoId: string): Promise<{
-        nombre: string;
         id_artista: bigint;
+        nombre: string;
         genero_id: bigint;
         descripcion: string | null;
         url_imagen_art: string | null;
@@ -40,13 +40,13 @@ export declare class MusicManagerService {
     obtenerCanciones(albumId: string): Promise<{
         idCancion: bigint;
         tituloCancion: string;
+        artistaId: bigint;
+        albumId: bigint | null;
         imagenUrl: string | null;
         duracionCancion: number | null;
         reproducciones: number;
         audioPath: string | null;
         numeroTrack: number | null;
-        artistaId: bigint;
-        albumId: bigint | null;
     }[]>;
     crearGenero(nombre: string, decada: string): Promise<{
         id_gener: bigint;
@@ -54,8 +54,8 @@ export declare class MusicManagerService {
         decada: Date;
     }>;
     crearArtista(nombre: string, descripcion: string, generoId: string): Promise<{
-        nombre: string;
         id_artista: bigint;
+        nombre: string;
         genero_id: bigint;
         descripcion: string | null;
         url_imagen_art: string | null;
@@ -83,24 +83,24 @@ export declare class MusicManagerService {
     actualizarTituloCancion(cancionId: string, nuevoTitulo: string): Promise<{
         idCancion: bigint;
         tituloCancion: string;
+        artistaId: bigint;
+        albumId: bigint | null;
         imagenUrl: string | null;
         duracionCancion: number | null;
         reproducciones: number;
         audioPath: string | null;
         numeroTrack: number | null;
-        artistaId: bigint;
-        albumId: bigint | null;
     }>;
     borrarCancion(cancionId: string): Promise<{
         idCancion: bigint;
         tituloCancion: string;
+        artistaId: bigint;
+        albumId: bigint | null;
         imagenUrl: string | null;
         duracionCancion: number | null;
         reproducciones: number;
         audioPath: string | null;
         numeroTrack: number | null;
-        artistaId: bigint;
-        albumId: bigint | null;
     }>;
     borradoNuclearAlbum(albumId: string): Promise<{
         id_album: bigint;
@@ -114,6 +114,32 @@ export declare class MusicManagerService {
     }>;
     subirPortada(file: Express.Multer.File, artistaNombre: string, albumTitulo: string): Promise<any>;
     obtenerMetadataYoutube(url: string): Promise<any>;
+    processYoutubeDownload(data: any): Promise<{
+        success: boolean;
+        procesadas: any;
+    }>;
+    createGenero(data: any): Promise<{
+        id_gener: bigint;
+        nombre_genero: string;
+        decada: Date;
+    }>;
+    createArtista(data: any): Promise<{
+        id_artista: bigint;
+        nombre: string;
+        genero_id: bigint;
+        descripcion: string | null;
+        url_imagen_art: string | null;
+    }>;
+    createAlbum(data: any, file?: Express.Multer.File): Promise<{
+        id_album: bigint;
+        titulo_album: string;
+        artista_id: bigint;
+        fecha_lanzamiento: Date | null;
+        duracion_album: number | null;
+        num_canciones: number;
+        imagen_url: string | null;
+        tipo_lanzamiento: string | null;
+    }>;
     descargarCancionYoutube(payload: any): Promise<{
         success: boolean;
         album_id: any;
@@ -124,8 +150,8 @@ export declare class MusicManagerService {
         decada: Date;
     }[]>;
     getArtistasByGenero(generoId: string): Promise<{
-        nombre: string;
         id_artista: bigint;
+        nombre: string;
         genero_id: bigint;
         descripcion: string | null;
         url_imagen_art: string | null;
@@ -140,26 +166,4 @@ export declare class MusicManagerService {
         imagen_url: string | null;
         tipo_lanzamiento: string | null;
     }[]>;
-    createGenero(data: any): Promise<{
-        id_gener: bigint;
-        nombre_genero: string;
-        decada: Date;
-    }>;
-    createArtista(data: any): Promise<{
-        nombre: string;
-        id_artista: bigint;
-        genero_id: bigint;
-        descripcion: string | null;
-        url_imagen_art: string | null;
-    }>;
-    createAlbum(data: any): Promise<{
-        id_album: bigint;
-        titulo_album: string;
-        artista_id: bigint;
-        fecha_lanzamiento: Date | null;
-        duracion_album: number | null;
-        num_canciones: number;
-        imagen_url: string | null;
-        tipo_lanzamiento: string | null;
-    }>;
 }

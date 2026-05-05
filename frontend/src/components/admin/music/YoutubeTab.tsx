@@ -10,7 +10,8 @@ export default function YoutubeTab() {
     // Modales & Formularios
     activeModal, setActiveModal, formG, setFormG, formArt, setFormArt, formAlb, setFormAlb,
     coverPreview, setCoverPreview, saveGenero, saveArtista, saveAlbum, openAlbumModal,
-    updateTrackTitle, toggleTrack
+    updateTrackTitle, toggleTrack,
+    downloadSelected, isDownloading, progress, progressText
   } = useYoutubeUpload();
 
   return (
@@ -168,8 +169,48 @@ export default function YoutubeTab() {
               </table>
             </div>
 
-            <button className="btn-primary full-width mt-4" style={{ height: '50px', fontSize: '1rem', fontWeight: 'bold' }}>
-              <i className="ph ph-rocket-launch fs-4"></i> Iniciar Descarga e Inserción
+            {/* 📊 BARRA DE PROGRESO DINÁMICA */}
+            {isDownloading && (
+              <div className="progress-wrapper mt-5 animate__animated animate__fadeIn"
+                style={{ marginBottom: '35px' }}>
+
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '12px' }}>
+                  <span style={{ color: '#1db954', fontSize: '0.9rem', fontWeight: '600', letterSpacing: '0.5px' }}>
+                    <i className="ph ph-activity ph-spin mr-2"></i> {progressText}
+                  </span>
+                  <span style={{ color: '#bbb', fontSize: '0.9rem', fontWeight: 'bold' }}>{progress}%</span>
+                </div>
+                <div style={{ width: '100%', height: '10px', background: 'rgba(255,255,255,0.08)', borderRadius: '20px', overflow: 'hidden', border: '1px solid rgba(255,255,255,0.05)' }}>
+                  <div
+                    style={{
+                      width: `${progress}%`,
+                      height: '100%',
+                      background: 'linear-gradient(90deg, #1db954 0%, #1ed760 100%)',
+                      transition: 'width 0.8s cubic-bezier(0.4, 0, 0.2, 1)', // Animación más fluida[cite: 4]
+                      boxShadow: '0 0 15px rgba(29, 185, 84, 0.4)'
+                    }}
+                  />
+                </div>
+              </div>
+            )}
+
+            <button
+              className="btn-primary full-width mt-4"
+              style={{ height: '50px', fontSize: '1rem', fontWeight: 'bold' }}
+              // CONECTAMOS LA FUNCIÓN
+              onClick={downloadSelected}
+              // Prevenimos doble clic
+              disabled={isDownloading || isConsulting}
+            >
+              {isDownloading ? (
+                <>
+                  <i className="ph ph-spinner ph-spin fs-4"></i> Procesando...
+                </    >
+              ) : (
+                <>
+                  <i className="ph ph-rocket-launch fs-4"></i> Iniciar Descarga e Inserción
+                </>
+              )}
             </button>
           </div>
         )}
@@ -183,7 +224,7 @@ export default function YoutubeTab() {
 
             {activeModal === 'genero' && (
               <>
-                <input type="text" placeholder="Ej. Rock" value={formG.nombre} onChange={e => setFormG({ ...formG, nombre: e.target.value })} />
+                <input type="text" placeholder="Ej. Rock" value={formG.nombre || ''} onChange={e => setFormG({ ...formG, nombre: e.target.value })} />
                 <select value={formG.decada} onChange={e => setFormG({ ...formG, decada: e.target.value })}><option value="2020-01-01">2020s</option><option value="2010-01-01">2010s</option></select>
                 <div className="modal-actions"><button className="btn-cancel" onClick={() => setActiveModal(null)}>Cancelar</button><button className="btn-confirm" onClick={saveGenero}>Guardar</button></div>
               </>
@@ -191,7 +232,7 @@ export default function YoutubeTab() {
 
             {activeModal === 'artista' && (
               <>
-                <input type="text" placeholder="Nombre Artista" value={formArt.nombre} onChange={e => setFormArt({ ...formArt, nombre: e.target.value })} />
+                <input type="text" placeholder="Nombre Artista" value={formArt.nombre || ''} onChange={e => setFormArt({ ...formArt, nombre: e.target.value })} />
                 <textarea placeholder="Descripción" value={formArt.desc} onChange={e => setFormArt({ ...formArt, desc: e.target.value })} />
                 <div className="modal-actions"><button className="btn-cancel" onClick={() => setActiveModal(null)}>Cancelar</button><button className="btn-confirm" onClick={saveArtista}>Guardar</button></div>
               </>
@@ -199,7 +240,7 @@ export default function YoutubeTab() {
 
             {activeModal === 'album' && (
               <>
-                <input type="text" placeholder="Título Álbum" value={formAlb.titulo} onChange={e => setFormAlb({ ...formAlb, titulo: e.target.value })} />
+                <input type="text" placeholder="Título Álbum" value={formAlb.titulo || ''} onChange={e => setFormAlb({ ...formAlb, titulo: e.target.value })} />
                 <div style={{ marginBottom: '15px' }}>
                   <label style={{ color: '#bbb', fontSize: '13px', display: 'block', marginBottom: '5px' }}>Portada del Disco</label>
                   <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
@@ -216,8 +257,8 @@ export default function YoutubeTab() {
                   </div>
                 </div>
                 <div className="row-dates">
-                  <input type="date" value={formAlb.fecha} onChange={e => setFormAlb({ ...formAlb, fecha: e.target.value })} />
-                  <input type="number" value={formAlb.num} onChange={e => setFormAlb({ ...formAlb, num: parseInt(e.target.value) || 0 })} />
+                  <input type="date" value={formAlb.fecha || ''} onChange={e => setFormAlb({ ...formAlb, fecha: e.target.value })} />
+                  <input type="number" value={formAlb.num || 0} onChange={e => setFormAlb({ ...formAlb, num: parseInt(e.target.value) || 0 })} />
                 </div>
                 <select value={formAlb.tipo} onChange={e => setFormAlb({ ...formAlb, tipo: e.target.value })}><option value="ALBUM">Álbum (LP)</option><option value="EP">EP</option></select>
                 <div className="modal-actions"><button className="btn-cancel" onClick={() => setActiveModal(null)}>Cancelar</button><button className="btn-confirm" onClick={saveAlbum}>Crear</button></div>

@@ -37,8 +37,8 @@ let MusicManagerController = class MusicManagerController {
     async createArtista(data) {
         return await this.musicService.createArtista(data);
     }
-    async createAlbum(data) {
-        return await this.musicService.createAlbum(data);
+    async createAlbum(data, file) {
+        return await this.musicService.createAlbum(data, file);
     }
     async uploadAlbum(files, albumIdStr, artistaIdStr, metadataStr) {
         if (!files || files.length === 0) {
@@ -65,13 +65,8 @@ let MusicManagerController = class MusicManagerController {
             throw new common_1.HttpException('Fallo al explorar YouTube', common_1.HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
-    async downloadYoutubeTrack(payload) {
-        try {
-            return await this.musicService.descargarCancionYoutube(payload);
-        }
-        catch (error) {
-            throw new common_1.HttpException('Fallo al descargar pista', common_1.HttpStatus.INTERNAL_SERVER_ERROR);
-        }
+    async downloadYoutube(data) {
+        return await this.musicService.processYoutubeDownload(data);
     }
 };
 exports.MusicManagerController = MusicManagerController;
@@ -111,9 +106,11 @@ __decorate([
 ], MusicManagerController.prototype, "createArtista", null);
 __decorate([
     (0, common_1.Post)('albums'),
+    (0, common_1.UseInterceptors)((0, platform_express_1.FileInterceptor)('portada')),
     __param(0, (0, common_1.Body)()),
+    __param(1, (0, common_1.UploadedFile)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Object]),
+    __metadata("design:paramtypes", [Object, Object]),
     __metadata("design:returntype", Promise)
 ], MusicManagerController.prototype, "createAlbum", null);
 __decorate([
@@ -150,7 +147,7 @@ __decorate([
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [Object]),
     __metadata("design:returntype", Promise)
-], MusicManagerController.prototype, "downloadYoutubeTrack", null);
+], MusicManagerController.prototype, "downloadYoutube", null);
 exports.MusicManagerController = MusicManagerController = __decorate([
     (0, common_1.Controller)('music-manager'),
     __metadata("design:paramtypes", [music_manager_service_1.MusicManagerService])

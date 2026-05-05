@@ -33,8 +33,13 @@ export class MusicManagerController {
   }
 
   @Post('albums')
-  async createAlbum(@Body() data: { titulo_album: string, artista_id: string, year: string }) {
-    return await this.musicService.createAlbum(data);
+  @UseInterceptors(FileInterceptor('portada'))
+  async createAlbum(
+    @Body() data: { titulo_album: string, artista_id: string, year: string, num_canciones: string, tipo_lanzamiento: string },
+    @UploadedFile() file: Express.Multer.File
+  ) {
+    // Le pasamos el archivo y los datos al service[cite: 5, 6]
+    return await this.musicService.createAlbum(data, file);
   }
 
   @Post('upload-album')
@@ -86,11 +91,8 @@ export class MusicManagerController {
   }
 
   @Post('youtube-download')
-  async downloadYoutubeTrack(@Body() payload: any) {
-    try {
-      return await this.musicService.descargarCancionYoutube(payload);
-    } catch (error) {
-      throw new HttpException('Fallo al descargar pista', HttpStatus.INTERNAL_SERVER_ERROR);
-    }
+  async downloadYoutube(@Body() data: any) {
+    // data trae: url, tracks (los editados), genreId, artistId, albumId
+    return await this.musicService.processYoutubeDownload(data);
   }
 }

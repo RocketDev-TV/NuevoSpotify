@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import Swal from 'sweetalert2';
 
-const BACKEND_URL = 'http://localhost:4000'; // Ajusta a tu puerto de NestJS
+const BACKEND_URL = 'http://localhost:4000';
 
 export const useYoutubeUpload = () => {
   // --- ESTADOS DE YOUTUBE ---
@@ -10,17 +10,19 @@ export const useYoutubeUpload = () => {
   const [tracks, setTracks] = useState<any[]>([]);
   const [playlistName, setPlaylistName] = useState('');
   const [albumYear, setAlbumYear] = useState('2024');
+  const [isDownloading, setIsDownloading] = useState(false);
+  const [progress, setProgress] = useState(0);
+  const [progressText, setProgressText] = useState('');
 
-  // --- ESTADOS DE CONTEXTO (CASCADA) ---
+  // --- ESTADOS DE CONTEXTO ---
   const [genres, setGenres] = useState<any[]>([]);
   const [artists, setArtistas] = useState<any[]>([]);
   const [albums, setAlbums] = useState<any[]>([]);
-
   const [genreId, setGenreId] = useState('');
   const [artistId, setArtistId] = useState('');
   const [albumId, setAlbumId] = useState('');
 
-  // --- ESTADOS DE MODALES (REUTILIZADOS DEL MANUAL) ---
+  // --- ESTADOS DE MODALES ---
   const [activeModal, setActiveModal] = useState<'genero' | 'artista' | 'album' | null>(null);
   const [coverPreview, setCoverPreview] = useState('');
   const [formG, setFormG] = useState({ nombre: '', decada: '2020-01-01' });
@@ -29,11 +31,7 @@ export const useYoutubeUpload = () => {
     titulo: '', fecha: '', tipo: 'ALBUM', num: 0, coverFile: null as File | null
   });
 
-  // ==========================================
-  // 1. CARGA DE DATOS (CASCADA)
-  // ==========================================
-
-  // Carga inicial de géneros
+  // 1. CARGA DE DATOS
   const loadGeneros = async () => {
     try {
       const res = await fetch(`${BACKEND_URL}/music-manager/generos`);
@@ -44,110 +42,103 @@ export const useYoutubeUpload = () => {
 
   useEffect(() => { loadGeneros(); }, []);
 
-  // Cargar artistas cuando cambie el género
   useEffect(() => {
     setArtistId(''); setAlbumId(''); setArtistas([]); setAlbums([]);
     if (!genreId) return;
-    const loadArtistas = async () => {
-      const res = await fetch(`${BACKEND_URL}/music-manager/artistas/${genreId}`);
-      const data = await res.json();
-      setArtistas(Array.isArray(data) ? data : []);
-    };
-    loadArtistas();
+    fetch(`${BACKEND_URL}/music-manager/artistas/${genreId}`)
+      .then(res => res.json()).then(data => setArtistas(Array.isArray(data) ? data : []));
   }, [genreId]);
 
-  // Cargar álbumes cuando cambie el artista
   useEffect(() => {
     setAlbumId(''); setAlbums([]);
     if (!artistId) return;
-    const loadAlbums = async () => {
-      const res = await fetch(`${BACKEND_URL}/music-manager/albums/${artistId}`);
-      const data = await res.json();
-      setAlbums(Array.isArray(data) ? data : []);
-    };
-    loadAlbums();
+    fetch(`${BACKEND_URL}/music-manager/albums/${artistId}`)
+      .then(res => res.json()).then(data => setAlbums(Array.isArray(data) ? data : []));
   }, [artistId]);
 
-  // ==========================================
-  // 2. FUNCIONES DE GUARDADO (MODALES)
-  // ==========================================
-
+  // 2. MODALES (GUARDADO)
   const saveGenero = async () => {
-    try {
-      const res = await fetch(`${BACKEND_URL}/music-manager/generos`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ nombre_genero: formG.nombre, decada: formG.decada })
-      });
-      const newGen = await res.json();
-      setGenres(prev => [...prev, newGen]);
-      setGenreId(newGen.id_gener); // Seleccionar automáticamente
-      setActiveModal(null);
-      Swal.fire('¡Listo!', 'Género creado.', 'success');
-    } catch (e) { Swal.fire('Error', 'No se pudo crear el género', 'error'); }
+    const res = await fetch(`${BACKEND_URL}/music-manager/generos`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ nombre_genero: formG.nombre, decada: formG.decada })
+    });
+    const newGen = await res.json();
+    setGenres(prev => [...prev, newGen]);
+    setGenreId(newGen.id_gener);
+    setActiveModal(null);
   };
 
   const saveArtista = async () => {
-    try {
-      const res = await fetch(`${BACKEND_URL}/music-manager/artistas`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ nombre: formArt.nombre, genero_id: genreId })
-      });
-      const newArt = await res.json();
-      setArtistas(prev => [...prev, newArt]);
-      setArtistId(newArt.id_artista);
-      setActiveModal(null);
-    } catch (e) { Swal.fire('Error', 'No se pudo crear el artista', 'error'); }
+    const res = await fetch(`${BACKEND_URL}/music-manager/artistas`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ nombre: formArt.nombre, genero_id: genreId })
+    });
+    const newArt = await res.json();
+    setArtistas(prev => [...prev, newArt]);
+    setArtistId(newArt.id_artista);
+    setActiveModal(null);
   };
 
+  // useYoutubeUpload.ts
+
   const saveAlbum = async () => {
+    if (!artistId) return Swal.fire('Error', 'Falta Artista', 'error');
+
+    // BUSCAMOS EL NOMBRE REAL DEL ARTISTA
+    const artistaSeleccionado = artists.find(a => a.id_artista.toString() === artistId.toString());
+    const nombreArtista = artistaSeleccionado ? artistaSeleccionado.nombre : 'Desconocido';
+
+    Swal.fire({ title: 'Creando álbum y subiendo portada...', didOpen: () => Swal.showLoading() });
+
     try {
-      Swal.fire({ title: 'Guardando álbum...', didOpen: () => Swal.showLoading() });
+      // EMPACAMOS TODO EN FORMDATA (Igual que en el manual)[cite: 3]
       const formData = new FormData();
       formData.append('titulo_album', formAlb.titulo);
-      formData.append('fecha_lanzamiento', formAlb.fecha);
-      formData.append('tipo_lanzamiento', formAlb.tipo);
-      formData.append('num_canciones', formAlb.num.toString());
+      formData.append('year', formAlb.fecha.substring(0, 4));
       formData.append('artista_id', artistId);
-      if (formAlb.coverFile) formData.append('portada', formAlb.coverFile);
+      formData.append('num_canciones', formAlb.num.toString());
+      formData.append('tipo_lanzamiento', formAlb.tipo);
+
+      // MANDAMOS EL NOMBRE PARA LA CARPETA
+      formData.append('artista_nombre', nombreArtista)
+
+      // Si el usuario seleccionó una portada en el modal[cite: 1, 4]
+      if (formAlb.coverFile) {
+        formData.append('portada', formAlb.coverFile);
+      }
 
       const res = await fetch(`${BACKEND_URL}/music-manager/albums`, {
         method: 'POST',
-        body: formData // El navegador pone el Content-Type automáticamente
+        // IMPORTANTE: No ponemos headers, el navegador lo hace solo con FormData[cite: 3]
+        body: formData
       });
+
       const newAlb = await res.json();
+
+      // Si la DB nos rebotó por el check constraint, newAlb traerá el error
+      if (res.status !== 201) throw new Error(newAlb.message || 'Error en DB');
 
       setAlbums(prev => [...prev, newAlb]);
       setAlbumId(newAlb.id_album);
-
-      // Sincronizar la UI de YouTube con el nuevo álbum
       setPlaylistName(newAlb.titulo_album);
-      setAlbumYear(newAlb.fecha_lanzamiento.substring(0, 4));
-
       setActiveModal(null);
-      setCoverPreview('');
-      Swal.fire('¡Éxito!', 'Álbum creado con su portada.', 'success');
-    } catch (e) { Swal.fire('Error', 'Fallo al guardar álbum', 'error'); }
+      setCoverPreview(''); // Limpiar preview
+
+      Swal.fire('¡Chulada!', 'Álbum creado con su portada en el catálogo.', 'success');
+    } catch (e: any) {
+      Swal.fire('Error', `No se pudo crear el álbum: ${e.message}`, 'error');
+    }
   };
 
-  // Pre-llenar el modal de álbum con los datos que nos dio YouTube
   const openAlbumModal = () => {
     if (!artistId) return Swal.fire('Aviso', 'Elige un artista primero', 'info');
-    setFormAlb({
-      titulo: playlistName,
-      fecha: `${albumYear}-01-01`,
-      tipo: 'ALBUM',
-      num: tracks.length,
-      coverFile: null
-    });
+    setFormAlb({ titulo: playlistName, fecha: `${albumYear}-01-01`, tipo: 'ALBUM', num: tracks.length, coverFile: null });
     setActiveModal('album');
   };
 
-  // ==========================================
-  // 3. LÓGICA DE YOUTUBE (CONSULTA Y LIMPIEZA)
-  // ==========================================
-
+  // 3. YOUTUBE ACTIONS[cite: 4]
   const handleConsultar = async () => {
     if (!url) return;
     setIsConsulting(true);
@@ -158,50 +149,84 @@ export const useYoutubeUpload = () => {
         body: JSON.stringify({ url })
       });
       const data = await res.json();
-
-      const tracksWithSelection = data.tracks.map((t: any) => ({
-        ...t,
-        selected: true
-      }));
-
-      setTracks(tracksWithSelection);
+      setTracks(data.tracks.map((t: any) => ({ ...t, selected: true })));
       setPlaylistName(data.playlistName);
       setAlbumYear(data.year);
-    } catch (e) {
-      Swal.fire('Error', 'No se pudo conectar con el Búnker Python', 'error');
     } finally { setIsConsulting(false); }
   };
 
-  const updateTrackTitle = (index: number, newTitle: string) => {
-    setTracks(prev => {
-      const next = [...prev];
-      next[index].titulo = newTitle; // Actualizamos el título en la posición exacta
-      return next;
-    });
+  const downloadSelected = async () => {
+    const toDownload = tracks.filter(t => t.selected);
+    if (toDownload.length === 0) return Swal.fire('Aviso', 'Selecciona rolas', 'info');
+
+    setIsDownloading(true);
+    setProgress(15);
+    setProgressText('Conectando con el Búnker...');
+
+    try {
+      const progressInterval = setInterval(() => {
+        setProgress(prev => (prev < 85 ? prev + 5 : prev));
+      }, 1500);
+
+      // FETCH CORREGIDO CON BODY COMPLETO[cite: 6]
+      const res = await fetch(`${BACKEND_URL}/music-manager/youtube-download`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          url,
+          tracks: toDownload,
+          albumId,
+          artistId
+        })
+      });
+
+      clearInterval(progressInterval);
+
+      if (res.ok) {
+        setProgress(100);
+        setProgressText('¡Sincronización completa!');
+
+        setTimeout(() => {
+          Swal.fire('¡Éxito!', 'Catálogo actualizado.', 'success');
+          handleLimpiar();
+          setProgress(0);
+          setIsDownloading(false);
+        }, 1000);
+      }
+    } catch (e) {
+      setIsDownloading(false);
+      setProgress(0);
+    }
   };
 
-  const toggleTrack = (index: number) => {
-    setTracks(prev => {
-      const next = [...prev];
-      next[index].selected = !next[index].selected; // Permitir deseleccionar si no quieren una rola
-      return next;
-    });
+  const updateTrackTitle = (i: number, val: string) => {
+    setTracks(prev => prev.map((t, idx) => idx === i ? { ...t, titulo: val } : t));
+  };
+
+  const toggleTrack = (i: number) => {
+    setTracks(prev => prev.map((t, idx) => idx === i ? { ...t, selected: !t.selected } : t));
   };
 
   const handleLimpiar = () => {
     setUrl('');
     setTracks([]);
     setPlaylistName('');
+    setAlbumId('');
+    setArtistId(''); // Opcional: limpiar también el contexto
+    setProgress(0);
+    setProgressText('');
   };
 
   return {
     // YouTube
-    url, setUrl, isConsulting, tracks, playlistName, setPlaylistName, albumYear, setAlbumYear, handleConsultar, handleLimpiar,
+    url, setUrl, isConsulting, tracks, playlistName, setPlaylistName, albumYear, setAlbumYear,
+    isDownloading, progress, progressText,
+    handleConsultar, handleLimpiar: () => { setUrl(''); setTracks([]); }, downloadSelected,
+    updateTrackTitle, toggleTrack,
     // Contexto
     genres, artists, albums, genreId, setGenreId, artistId, setArtistId, albumId, setAlbumId,
     // Modales
     activeModal, setActiveModal, formG, setFormG, formArt, setFormArt, formAlb, setFormAlb,
     coverPreview, setCoverPreview, saveGenero, saveArtista, saveAlbum, openAlbumModal,
-    updateTrackTitle, toggleTrack
   };
 };

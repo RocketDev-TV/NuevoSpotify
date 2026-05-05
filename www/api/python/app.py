@@ -163,6 +163,39 @@ def download_single_track():
         return jsonify({"error": str(e)}), 500
 
 # ---------------------------------------------------------
+# 4.5 YOUTUBE: DESCARGA MASIVA (NUEVO)
+# ---------------------------------------------------------
+@app.route('/api/download_batch', methods=['POST'])
+def download_batch():
+    try:
+        data = request.json
+        tracks = data.get('tracks', [])
+        artista_nom = data.get('artista_nombre', 'Desconocido')
+        album_tit = data.get('album_titulo', 'Desconocido')
+        
+        exitosas = 0
+        for track in tracks:
+            titulo = track.get('titulo')
+            url_video = track.get('url_video') # Asegúrate de que NestJS mande la URL
+            
+            ydl_opts = {
+                'format': 'bestaudio/best',
+                'outtmpl': os.path.join(app.config['UPLOAD_FOLDER'], f'{artista_nom}/{album_tit}/{titulo}.%(ext)s'),
+                'postprocessors': [{'key': 'FFmpegExtractAudio', 'preferredcodec': 'mp3', 'preferredquality': '320'}],
+                'quiet': True
+            }
+
+            with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+                ydl.download([url_video])
+            exitosas += 1
+
+        return jsonify({"success": True, "procesadas": exitosas}), 200
+
+    except Exception as e:
+        print(f"❌ Error en descarga masiva: {e}")
+        return jsonify({"error": str(e)}), 500
+
+# ---------------------------------------------------------
 # 5. ENDPOINT DE PORTADAS (Upload Cover) 🖼️
 # ---------------------------------------------------------
 @app.route('/upload_cover', methods=['POST'])

@@ -231,6 +231,79 @@ let MusicManagerService = MusicManagerService_1 = class MusicManagerService {
             throw new Error("Fallo al obtener metadata de YouTube");
         }
     }
+    async processYoutubeDownload(data) {
+        const { url, tracks, albumId, artistId } = data;
+        const selectedTracks = tracks.filter((t) => t.selected === true);
+        const artista = await this.prisma.artista.findUnique({ where: { id_artista: BigInt(artistId) } });
+        const album = await this.prisma.album.findUnique({ where: { id_album: BigInt(albumId) } });
+        if (!artista || !album) {
+            throw new common_1.HttpException('Artista o Álbum no encontrado', common_1.HttpStatus.NOT_FOUND);
+        }
+        try {
+            await (0, rxjs_1.lastValueFrom)(this.httpService.post(`${this.PYTHON_SERVER}/api/download_batch`, {
+                url,
+                tracks: selectedTracks.map((t) => ({ titulo: t.titulo, url_video: t.url_video })),
+                artista_nombre: artista.nombre,
+                album_titulo: album.titulo_album
+            }));
+            const lastTrack = await this.prisma.cancion.findFirst({
+                where: { albumId: BigInt(albumId) },
+                orderBy: { numeroTrack: 'desc' },
+                select: { numeroTrack: true }
+            });
+            let startingTrackNumber = lastTrack?.numeroTrack || 0;
+            for (const track of selectedTracks) {
+                startingTrackNumber++;
+                await this.prisma.cancion.create({
+                    data: {
+                        tituloCancion: track.titulo,
+                        duracionCancion: parseFloat(track.duracion_decimal || "0"),
+                        numeroTrack: startingTrackNumber,
+                        albumId: BigInt(albumId),
+                        artistaId: BigInt(artistId),
+                        audioPath: `${this.PYTHON_SERVER}/musica/${artista.nombre}/${album.titulo_album}/${track.titulo}.mp3`,
+                        reproducciones: 0,
+                        imagenUrl: album.imagen_url
+                    }
+                });
+            }
+            return { success: true, procesadas: selectedTracks.length };
+        }
+        catch (error) {
+            throw new common_1.HttpException(error.message, common_1.HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+    async createGenero(data) {
+        return await this.prisma.genero.create({
+            data: { nombre_genero: data.nombre_genero, decada: new Date(data.decada) }
+        });
+    }
+    async createArtista(data) {
+        return await this.prisma.artista.create({
+            data: { nombre: data.nombre, genero_id: BigInt(data.genero_id) }
+        });
+    }
+    async createAlbum(data, file) {
+        let finalImageUrl = null;
+        if (file) {
+            try {
+                finalImageUrl = await this.subirPortada(file, data.artista_nombre, data.titulo_album);
+            }
+            catch (e) {
+                this.logger.error('Fallo al subir la portada del álbum');
+            }
+        }
+        return await this.prisma.album.create({
+            data: {
+                titulo_album: data.titulo_album,
+                fecha_lanzamiento: data.year ? new Date(`${data.year}-01-01`) : null,
+                artista_id: BigInt(data.artista_id),
+                num_canciones: data.num_canciones ? parseInt(data.num_canciones) : 1,
+                tipo_lanzamiento: data.tipo_lanzamiento || "ALBUM",
+                imagen_url: finalImageUrl
+            }
+        });
+    }
     async descargarCancionYoutube(payload) {
         try {
             const response = await fetch('http://localhost:3000/api/download_single', {
@@ -294,29 +367,6 @@ let MusicManagerService = MusicManagerService_1 = class MusicManagerService {
         return await this.prisma.album.findMany({
             where: { artista_id: BigInt(artistaId) },
             orderBy: { titulo_album: 'asc' },
-        });
-    }
-    async createGenero(data) {
-        return await this.prisma.genero.create({
-            data: { ...data, decada: new Date(data.decada) }
-        });
-    }
-    async createArtista(data) {
-        return await this.prisma.artista.create({
-            data: {
-                nombre: data.nombre,
-                genero_id: BigInt(data.genero_id)
-            }
-        });
-    }
-    async createAlbum(data) {
-        return await this.prisma.album.create({
-            data: {
-                titulo_album: data.titulo_album,
-                fecha_lanzamiento: new Date(`${data.year}-01-01`),
-                artista_id: BigInt(data.artista_id),
-                num_canciones: 0
-            }
         });
     }
 };

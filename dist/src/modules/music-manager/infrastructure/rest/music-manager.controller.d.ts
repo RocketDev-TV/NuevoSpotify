@@ -9,8 +9,8 @@ export declare class MusicManagerController {
         decada: Date;
     }[]>;
     getArtistas(generoId: string): Promise<{
-        nombre: string;
         id_artista: bigint;
+        nombre: string;
         genero_id: bigint;
         descripcion: string | null;
         url_imagen_art: string | null;
@@ -37,8 +37,8 @@ export declare class MusicManagerController {
         nombre: string;
         genero_id: string;
     }): Promise<{
-        nombre: string;
         id_artista: bigint;
+        nombre: string;
         genero_id: bigint;
         descripcion: string | null;
         url_imagen_art: string | null;
@@ -47,7 +47,9 @@ export declare class MusicManagerController {
         titulo_album: string;
         artista_id: string;
         year: string;
-    }): Promise<{
+        num_canciones: string;
+        tipo_lanzamiento: string;
+    }, file: Express.Multer.File): Promise<{
         id_album: bigint;
         titulo_album: string;
         artista_id: bigint;
@@ -67,8 +69,8 @@ export declare class MusicManagerController {
         url: any;
     }>;
     getYoutubeMetadata(url: string): Promise<any>;
-    downloadYoutubeTrack(payload: any): Promise<{
+    downloadYoutube(data: any): Promise<{
         success: boolean;
-        album_id: any;
+        procesadas: any;
     }>;
 }
