@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import Swal from 'sweetalert2';
 import Sortable from 'sortablejs';
 
-const BACKEND_URL = 'http://localhost:4000'; // Ajusta si tu NestJS usa otro puerto
+const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:4000';
 
 // 🛠️ Mini-Cliente GraphQL Nativo (Sin librerías extra)
 const fetchGQL = async (query: string, variables = {}) => {

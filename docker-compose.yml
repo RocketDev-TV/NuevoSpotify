@@ -1,0 +1,79 @@
+services:
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  api:
+    build:
+      context: ./api
+    restart: unless-stopped
+    environment:
+      # URL alcanzable desde el NAVEGADOR (Nest sirve /musica) - NUNCA http://api:3000
+      PUBLIC_BASE_URL: ${NEXT_PUBLIC_BACKEND_URL:-http://localhost:4000}
+    volumes:
+      - storage_musica:/api/storage_musica
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/health"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    # Sin `ports:` a propósito - solo se alcanza dentro de la red de compose (http://api:3000)
+
+  backend:
+    build:
+      context: ./backend
+    restart: unless-stopped
+    env_file:
+      - ./backend/.env   # DATABASE_URL, DIRECT_URL, SUPABASE_URL, SUPABASE_KEY, SUPABASE_JWT_SECRET
+    environment:
+      PORT: 4000
+      # Nombre de servicio de Compose - llamada servidor-a-servidor, nunca la ve el navegador
+      PYTHON_SERVER_URL: http://api:3000
+      STORAGE_ROOT: /app/storage_musica
+      # URL alcanzable desde el NAVEGADOR para lo que Nest sirve en /musica - NUNCA http://backend:4000
+      PUBLIC_BACKEND_URL: ${NEXT_PUBLIC_BACKEND_URL:-http://localhost:4000}
+    ports:
+      - "4000:4000"
+    volumes:
+      - storage_musica:/app/storage_musica
+    depends_on:
+      redis:
+        condition: service_healthy
+      api:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:4000/health"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 15s
+
+  frontend:
+    build:
+      context: ./frontend
+      args:
+        # NEXT_PUBLIC_* se inyectan en build-time (quedan dentro del bundle del navegador)
+        NEXT_PUBLIC_SUPABASE_URL: ${NEXT_PUBLIC_SUPABASE_URL}
+        NEXT_PUBLIC_SUPABASE_ANON_KEY: ${NEXT_PUBLIC_SUPABASE_ANON_KEY}
+        NEXT_PUBLIC_BACKEND_URL: ${NEXT_PUBLIC_BACKEND_URL:-http://localhost:4000}
+    restart: unless-stopped
+    ports:
+      - "3001:3001"
+    depends_on:
+      backend:
+        condition: service_started
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3001"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 15s
+
+volumes:
+  storage_musica:

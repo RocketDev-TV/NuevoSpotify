@@ -1,8 +1,17 @@
 node_modules
 
-/src/generated/prisma
+/backend/src/generated/prisma
 
 # Entornos y variables secretas
 .env
 .env.production
 .env.local
+
+# Build de Nest (se regenera con `npm run build`)
+/backend/dist
+
+# Python
+__pycache__/
+*.pyc
+venv/
+.venv/

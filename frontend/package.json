@@ -10,14 +10,19 @@
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.104.1",
+    "chart.js": "^4.5.1",
     "next": "16.2.4",
     "react": "19.2.4",
-    "react-dom": "19.2.4"
+    "react-chartjs-2": "^5.3.1",
+    "react-dom": "19.2.4",
+    "sortablejs": "^1.15.7",
+    "sweetalert2": "^11.26.25"
   },
   "devDependencies": {
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "@types/sortablejs": "^1.15.9",
     "eslint": "^9",
     "eslint-config-next": "16.2.4",
     "typescript": "^5"
