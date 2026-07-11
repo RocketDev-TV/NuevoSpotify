@@ -15,3 +15,7 @@ __pycache__/
 *.pyc
 venv/
 .venv/
+
+# Contenido descargado (mp3 y portadas) - se mantiene la carpeta, no su contenido
+/api/storage_musica/*
+!/api/storage_musica/.gitkeep

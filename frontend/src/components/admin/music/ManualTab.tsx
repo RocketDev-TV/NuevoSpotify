@@ -11,7 +11,8 @@ export default function ManualTab() {
     activeModal, setActiveModal, isEditing, setIsEditing, formG, setFormG, formArt, setFormArt, formAlb, setFormAlb,
     tbodyRef, tbodyStagingRef,
     procesarArchivosSeleccionados, quitarDeStaging, editarNombreStaging, handleDragOver, handleDrop,
-    handleProcesarSubida, handleReset, handleBorradoNuclear, handleBorrarCancion, saveGenero, saveArtista, saveAlbum, handleEditarTitulo, coverPreview, setCoverPreview
+    handleProcesarSubida, handleReset, handleBorradoNuclear, handleBorrarCancion, saveGenero, saveArtista, saveAlbum, handleEditarTitulo, coverPreview, setCoverPreview, 
+    loadingArtistas, loadingAlbums
   } = useManualUpload();
 
   return (
@@ -40,20 +41,20 @@ export default function ManualTab() {
 
             <label>Artista</label>
             <div className="input-group-row compact">
-              <select value={artistId} onChange={(e) => setArtistId(e.target.value)} disabled={!genreId || isLocked}>
-                <option value="">{genreId ? 'Selecciona Artista' : 'Elige género primero'}</option>
+              <select value={artistId} onChange={(e) => setArtistId(e.target.value)} disabled={!genreId || isLocked || loadingArtistas}>
+                <option value="">{loadingArtistas ? 'Cargando artistas...' : genreId ? 'Selecciona Artista' : 'Elige género primero'}</option>
                 {artistas.map(a => <option key={a.id_artista} value={a.id_artista}>{a.nombre}</option>)}
               </select>
-              <button type="button" className="btn-icon" onClick={() => setActiveModal('artista')} disabled={!genreId || isLocked}><i className="bi bi-plus"></i></button>
+              <button type="button" className="btn-icon" onClick={() => setActiveModal('artista')} disabled={!genreId || isLocked || loadingArtistas}><i className="bi bi-plus"></i></button>
             </div>
 
             <label>Álbum / EP</label>
             <div className="input-group-row compact">
-              <select value={albumId} onChange={(e) => setAlbumId(e.target.value)} disabled={!artistId || isLocked}>
-                <option value="">{artistId ? 'Selecciona Álbum' : 'Elige artista primero'}</option>
+              <select value={albumId} onChange={(e) => setAlbumId(e.target.value)} disabled={!artistId || isLocked || loadingAlbums}>
+                <option value="">{loadingAlbums ? 'Cargando álbumes...' : artistId ? 'Selecciona Álbum' : 'Elige artista primero'}</option>
                 {albums.map(al => <option key={al.id_album} value={al.id_album}>{al.titulo_album}</option>)}
               </select>
-              <button type="button" className="btn-icon" onClick={() => { setFormAlb({ titulo: '', fecha: '', tipo: 'ALBUM', num: 0, coverFile: null }); setIsEditing(false); setActiveModal('album'); }} disabled={!artistId || isLocked}><i className="bi bi-plus"></i></button>
+              <button type="button" className="btn-icon" onClick={() => { setFormAlb({ titulo: '', fecha: '', tipo: 'ALBUM', num: 0, coverFile: null }); setIsEditing(false); setActiveModal('album'); }} disabled={!artistId || isLocked || loadingAlbums}><i className="bi bi-plus"></i></button>
             </div>
             
             {albumActual && (
@@ -91,7 +92,7 @@ export default function ManualTab() {
                     <span style={{ color: '#888', fontFamily: 'monospace', fontSize: '0.8rem', background: 'rgba(255,255,255,0.05)', padding: '3px 8px', borderRadius: '6px' }}>{albumActual.fecha_lanzamiento?.substring(0, 4) || '----'}</span>
                   </div>
                   <div style={{ display: 'flex', gap: '10px' }}>
-                    <button onClick={() => { setFormAlb({ titulo: albumActual.titulo_album, fecha: albumActual.fecha_lanzamiento, tipo: albumActual.tipo_lanzamiento, num: albumActual.num_canciones, coverFile: null }); setIsEditing(true); setActiveModal('album'); }} style={{ background: 'transparent', color: '#B3B3B3', border: '1px solid #444', padding: '6px 14px', borderRadius: '8px', fontSize: '12px', fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px', transition: 'all 0.2s' }} onMouseOver={(e) => { e.currentTarget.style.color = '#fff'; e.currentTarget.style.borderColor = '#2CC295'; e.currentTarget.style.background = 'rgba(44, 194, 149, 0.1)'; }} onMouseOut={(e) => { e.currentTarget.style.color = '#B3B3B3'; e.currentTarget.style.borderColor = '#444'; e.currentTarget.style.background = 'transparent'; }}>
+                    <button onClick={() => { setFormAlb({ titulo: albumActual.titulo_album, fecha: albumActual.fecha_lanzamiento ? albumActual.fecha_lanzamiento.split('T')[0] : '', tipo: albumActual.tipo_lanzamiento, num: albumActual.num_canciones, coverFile: null }); setIsEditing(true); setActiveModal('album'); }} style={{ background: 'transparent', color: '#B3B3B3', border: '1px solid #444', padding: '6px 14px', borderRadius: '8px', fontSize: '12px', fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px', transition: 'all 0.2s' }} onMouseOver={(e) => { e.currentTarget.style.color = '#fff'; e.currentTarget.style.borderColor = '#2CC295'; e.currentTarget.style.background = 'rgba(44, 194, 149, 0.1)'; }} onMouseOut={(e) => { e.currentTarget.style.color = '#B3B3B3'; e.currentTarget.style.borderColor = '#444'; e.currentTarget.style.background = 'transparent'; }}>
                       <i className="bi bi-pencil-square"></i> Editar
                     </button>
                     <button onClick={handleBorradoNuclear} style={{ background: 'transparent', color: '#ff4d4d', border: '1px solid rgba(255, 77, 77, 0.3)', padding: '6px 14px', borderRadius: '8px', fontSize: '12px', fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px', transition: 'all 0.2s' }} onMouseOver={(e) => { e.currentTarget.style.background = '#ff4d4d'; e.currentTarget.style.color = '#fff'; }} onMouseOut={(e) => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = '#ff4d4d'; }}>

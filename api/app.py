@@ -1,4 +1,5 @@
 import os
+import requests
 import yt_dlp
 from flask import Flask, jsonify, request
 from flask_cors import CORS
@@ -30,6 +31,29 @@ PUBLIC_BASE_URL = os.environ.get('PUBLIC_BASE_URL', 'http://localhost:4000')
 # Esa responsabilidad (almacenamiento simple + servido estático) ahora vive en NestJS
 # (backend/src/modules/music-manager). Este servicio queda enfocado solo en lo que
 # necesita yt-dlp/ffmpeg/mutagen.
+
+def descargar_portada(thumbnail_url, artista_nom, album_tit):
+    """Descarga el thumbnail de YouTube y lo guarda como cover.jpg en la carpeta del álbum.
+    Si ya existe una portada local, no la vuelve a descargar (se llama una vez por track)."""
+    if not thumbnail_url:
+        return None
+
+    carpeta = os.path.join(app.config['UPLOAD_FOLDER'], artista_nom, album_tit)
+    cover_path = os.path.join(carpeta, 'cover.jpg')
+
+    if os.path.exists(cover_path):
+        return f"{PUBLIC_BASE_URL}/musica/{artista_nom}/{album_tit}/cover.jpg"
+
+    try:
+        os.makedirs(carpeta, exist_ok=True)
+        resp = requests.get(thumbnail_url, timeout=15)
+        resp.raise_for_status()
+        with open(cover_path, 'wb') as f:
+            f.write(resp.content)
+        return f"{PUBLIC_BASE_URL}/musica/{artista_nom}/{album_tit}/cover.jpg"
+    except Exception as e:
+        print(f"⚠️ No se pudo descargar la portada: {e}")
+        return None
 
 # ---------------------------------------------------------
 # 1. YOUTUBE: EXTRAER METADATA (El Explorador) 🔍
@@ -78,6 +102,7 @@ def download_single_track():
 
         titulo = track.get('titulo')
         url_video = track.get('url_video')
+        thumbnail_url = data.get('thumbnail') or track.get('thumbnail')
 
         ydl_opts = {
             'format': 'bestaudio/best',
@@ -99,11 +124,15 @@ def download_single_track():
         # 3. Generamos la URL final (Nest sirve /musica, no este servicio)
         public_url = f"{PUBLIC_BASE_URL}/musica/{artista_nom}/{album_tit}/{titulo}.mp3"
 
+        # 4. Bajamos la portada local desde el thumbnail de YouTube (si vino uno)
+        cover_url = descargar_portada(thumbnail_url, artista_nom, album_tit)
+
         # 🛑 ¡CERO BASE DE DATOS AQUÍ! Solo le pasamos los datos masticados a NestJS
         return jsonify({
             "success": True,
             "audio_url": public_url,
-            "duracion_decimal": duracion_decimal
+            "duracion_decimal": duracion_decimal,
+            "cover_url": cover_url
         })
 
     except Exception as e:
@@ -120,6 +149,10 @@ def download_batch():
         tracks = data.get('tracks', [])
         artista_nom = data.get('artista_nombre', 'Desconocido')
         album_tit = data.get('album_titulo', 'Desconocido')
+        thumbnail_url = data.get('thumbnail')
+
+        # Portada local del álbum a partir del thumbnail de YouTube (idempotente: si ya existe, no vuelve a bajarla)
+        cover_url = descargar_portada(thumbnail_url, artista_nom, album_tit)
 
         exitosas = 0
         for track in tracks:
@@ -137,7 +170,7 @@ def download_batch():
                 ydl.download([url_video])
             exitosas += 1
 
-        return jsonify({"success": True, "procesadas": exitosas}), 200
+        return jsonify({"success": True, "procesadas": exitosas, "cover_url": cover_url}), 200
 
     except Exception as e:
         print(f"❌ Error en descarga masiva: {e}")

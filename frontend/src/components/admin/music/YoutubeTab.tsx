@@ -7,6 +7,7 @@ export default function YoutubeTab() {
     url, setUrl, isConsulting, tracks, playlistName, setPlaylistName, albumYear, setAlbumYear, handleConsultar, handleLimpiar,
     // Contexto & Combos
     genres, artists, albums, genreId, setGenreId, artistId, setArtistId, albumId, setAlbumId,
+    loadingArtists, loadingAlbums,
     // Modales & Formularios
     activeModal, setActiveModal, formG, setFormG, formArt, setFormArt, formAlb, setFormAlb,
     coverPreview, setCoverPreview, saveGenero, saveArtista, saveAlbum, openAlbumModal,
@@ -72,8 +73,10 @@ export default function YoutubeTab() {
               <div>
                 <label>Artista (Seleccionar o crear nuevo)</label>
                 <div className="input-group-row compact">
-                  <select value={artistId} onChange={(e) => setArtistId(e.target.value)} disabled={!genreId}>
-                    <option value="">{genreId ? 'Selecciona Artista' : 'Elige género primero'}</option>
+                  <select value={artistId} onChange={(e) => setArtistId(e.target.value)} disabled={!genreId || loadingArtists}>
+                    <option value="">
+                      {loadingArtists ? 'Cargando artistas...' : genreId ? 'Selecciona Artista' : 'Elige género primero'}
+                    </option>
                     {artists.map((a: any) => (
                       <option key={`art-${a.id_artista}`} value={a.id_artista}>{a.nombre}</option>
                     ))}
@@ -85,13 +88,15 @@ export default function YoutubeTab() {
               </div>
             </div>
 
-            {/* FILA 2: ÁLBUM EXISTENTE */}
+            {/* FILA 2: ÁLBUM DESTINO */}
             <div className="grid-2-cols" style={{ borderBottom: '1px solid rgba(255,255,255,0.1)', paddingBottom: '25px', marginBottom: '30px' }}>
               <div>
-                <label>Álbum Existente (Opcional)</label>
+                <label>Álbum Destino (Requerido)</label>
                 <div className="input-group-row compact">
-                  <select value={albumId} onChange={(e) => setAlbumId(e.target.value)} disabled={!artistId}>
-                    <option value="">{artistId ? 'Nuevo Álbum (o seleccionar)' : 'Elige artista primero'}</option>
+                  <select value={albumId} onChange={(e) => setAlbumId(e.target.value)} disabled={!artistId || loadingAlbums}>
+                    <option value="">
+                      {loadingAlbums ? 'Cargando álbumes...' : artistId ? 'Selecciona un álbum' : 'Elige artista primero'}
+                    </option>
                     {albums.map((al: any) => (
                       <option key={`alb-${al.id_album}`} value={al.id_album}>{al.titulo_album}</option>
                     ))}
@@ -199,8 +204,8 @@ export default function YoutubeTab() {
               style={{ height: '50px', fontSize: '1rem', fontWeight: 'bold' }}
               // CONECTAMOS LA FUNCIÓN
               onClick={downloadSelected}
-              // Prevenimos doble clic
-              disabled={isDownloading || isConsulting}
+              // Prevenimos doble clic y descargas sin álbum destino
+              disabled={isDownloading || isConsulting || !albumId}
             >
               {isDownloading ? (
                 <>

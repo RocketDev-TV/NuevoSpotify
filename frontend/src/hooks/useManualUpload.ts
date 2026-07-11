@@ -43,13 +43,27 @@ export const useManualUpload = () => {
   const [cancionesBD, setCancionesBD] = useState<any[]>([]);
   const [isLocked, setIsLocked] = useState(false);
   const [stagedFiles, setStagedFiles] = useState<any[]>([]);
+  const [loadingArtistas, setLoadingArtistas] = useState(false);
+  const [loadingAlbums, setLoadingAlbums] = useState(false);
 
   const [activeModal, setActiveModal] = useState<'genero' | 'artista' | 'album' | null>(null);
   const [coverPreview, setCoverPreview] = useState('');
   const [isEditing, setIsEditing] = useState(false);
   const [formG, setFormG] = useState({ nombre: '', decada: '2020-01-01' });
   const [formArt, setFormArt] = useState({ nombre: '', desc: '' });
-  const [formAlb, setFormAlb] = useState<{titulo: string, fecha: string, tipo: string, num: number, coverFile: File | null}>({ titulo: '', fecha: '', tipo: 'ALBUM', num: 0, coverFile: null });
+  type FormAlbState = { titulo: string, fecha: string, tipo: string, num: number, coverFile: File | null };
+  const [formAlbRaw, setFormAlbRaw] = useState<FormAlbState>({ titulo: '', fecha: '', tipo: 'ALBUM', num: 0, coverFile: null });
+
+  // Blindaje: la BD devuelve fecha_lanzamiento en ISO completo (2023-01-01T00:00:00.000Z),
+  // que <input type="date"> rechaza. Sin importar quién llame a setFormAlb, la normalizamos.
+  const normalizarFecha = (fecha: string) => (fecha ? fecha.split('T')[0] : '');
+  const setFormAlb = (value: FormAlbState | ((prev: FormAlbState) => FormAlbState)) => {
+    setFormAlbRaw(prev => {
+      const next = typeof value === 'function' ? (value as (p: FormAlbState) => FormAlbState)(prev) : value;
+      return { ...next, fecha: normalizarFecha(next.fecha) };
+    });
+  };
+  const formAlb = formAlbRaw;
 
   const tbodyRef = useRef<HTMLTableSectionElement>(null);
   const tbodyStagingRef = useRef<HTMLTableSectionElement>(null);
@@ -68,21 +82,46 @@ export const useManualUpload = () => {
   useEffect(() => {
     setArtistId(''); setAlbumId(''); setArtistas([]); setAlbums([]); setAlbumActual(null);
     if (!genreId) return;
+
+    let cancelado = false;
+    setLoadingArtistas(true);
     const loadArtistas = async () => {
-      const data = await fetchGQL(`query { getArtistas(generoId: "${genreId}") }`);
-      setArtistas(JSON.parse(data.getArtistas));
+      try {
+        const data = await fetchGQL(`query { getArtistas(generoId: "${genreId}") }`);
+        if (!cancelado) setArtistas(JSON.parse(data.getArtistas));
+      } catch (e) {
+        console.error("Error cargando artistas", e);
+        if (!cancelado) setArtistas([]);
+      } finally {
+        if (!cancelado) setLoadingArtistas(false);
+      }
     };
     loadArtistas();
+
+    // Evita que una respuesta vieja (de un género previo) sobreescriba la selección actual
+    return () => { cancelado = true; };
   }, [genreId]);
 
   useEffect(() => {
     setAlbumId(''); setAlbums([]); setAlbumActual(null);
     if (!artistId) return;
+
+    let cancelado = false;
+    setLoadingAlbums(true);
     const loadAlbums = async () => {
-      const data = await fetchGQL(`query { getAlbums(artistaId: "${artistId}") }`);
-      setAlbums(JSON.parse(data.getAlbums));
+      try {
+        const data = await fetchGQL(`query { getAlbums(artistaId: "${artistId}") }`);
+        if (!cancelado) setAlbums(JSON.parse(data.getAlbums));
+      } catch (e) {
+        console.error("Error cargando álbumes", e);
+        if (!cancelado) setAlbums([]);
+      } finally {
+        if (!cancelado) setLoadingAlbums(false);
+      }
     };
     loadAlbums();
+
+    return () => { cancelado = true; };
   }, [artistId]);
 
   const loadCanciones = async () => {
@@ -313,6 +352,7 @@ export const useManualUpload = () => {
 
   return {
     generos, artistas, albums, genreId, setGenreId, artistId, setArtistId, albumId, setAlbumId,
+    loadingArtistas, loadingAlbums,
     albumActual, cancionesBD, isLocked, setIsLocked, stagedFiles,
     activeModal, setActiveModal, isEditing, setIsEditing, formG, setFormG, formArt, setFormArt, formAlb, setFormAlb,
     tbodyRef, tbodyStagingRef,

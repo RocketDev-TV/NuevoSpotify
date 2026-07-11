@@ -21,15 +21,30 @@ export const useYoutubeUpload = () => {
   const [genreId, setGenreId] = useState('');
   const [artistId, setArtistId] = useState('');
   const [albumId, setAlbumId] = useState('');
+  const [loadingArtists, setLoadingArtists] = useState(false);
+  const [loadingAlbums, setLoadingAlbums] = useState(false);
 
   // --- ESTADOS DE MODALES ---
   const [activeModal, setActiveModal] = useState<'genero' | 'artista' | 'album' | null>(null);
   const [coverPreview, setCoverPreview] = useState('');
   const [formG, setFormG] = useState({ nombre: '', decada: '2020-01-01' });
   const [formArt, setFormArt] = useState({ nombre: '', desc: '' });
-  const [formAlb, setFormAlb] = useState({
+  const [formAlbRaw, setFormAlbRaw] = useState({
     titulo: '', fecha: '', tipo: 'ALBUM', num: 0, coverFile: null as File | null
   });
+  type FormAlbState = typeof formAlbRaw;
+
+  // Blindaje: sin importar quién llame a setFormAlb (el hook o el componente), la fecha
+  // siempre queda en formato yyyy-MM-dd. Evita el "undefined-01-01" / ISO completo que
+  // truena en <input type="date">.
+  const normalizarFecha = (fecha: string) => (fecha ? fecha.split('T')[0] : '');
+  const setFormAlb = (value: FormAlbState | ((prev: FormAlbState) => FormAlbState)) => {
+    setFormAlbRaw(prev => {
+      const next = typeof value === 'function' ? (value as (p: FormAlbState) => FormAlbState)(prev) : value;
+      return { ...next, fecha: normalizarFecha(next.fecha) };
+    });
+  };
+  const formAlb = formAlbRaw;
 
   // 1. CARGA DE DATOS
   const loadGeneros = async () => {
@@ -45,15 +60,32 @@ export const useYoutubeUpload = () => {
   useEffect(() => {
     setArtistId(''); setAlbumId(''); setArtistas([]); setAlbums([]);
     if (!genreId) return;
+
+    let cancelado = false;
+    setLoadingArtists(true);
     fetch(`${BACKEND_URL}/music-manager/artistas/${genreId}`)
-      .then(res => res.json()).then(data => setArtistas(Array.isArray(data) ? data : []));
+      .then(res => res.json())
+      .then(data => { if (!cancelado) setArtistas(Array.isArray(data) ? data : []); })
+      .catch(() => { if (!cancelado) setArtistas([]); })
+      .finally(() => { if (!cancelado) setLoadingArtists(false); });
+
+    // Evita que una respuesta vieja (de un género previo) sobreescriba la selección actual
+    return () => { cancelado = true; };
   }, [genreId]);
 
   useEffect(() => {
     setAlbumId(''); setAlbums([]);
     if (!artistId) return;
+
+    let cancelado = false;
+    setLoadingAlbums(true);
     fetch(`${BACKEND_URL}/music-manager/albums/${artistId}`)
-      .then(res => res.json()).then(data => setAlbums(Array.isArray(data) ? data : []));
+      .then(res => res.json())
+      .then(data => { if (!cancelado) setAlbums(Array.isArray(data) ? data : []); })
+      .catch(() => { if (!cancelado) setAlbums([]); })
+      .finally(() => { if (!cancelado) setLoadingAlbums(false); });
+
+    return () => { cancelado = true; };
   }, [artistId]);
 
   // 2. MODALES (GUARDADO)
@@ -134,7 +166,16 @@ export const useYoutubeUpload = () => {
 
   const openAlbumModal = () => {
     if (!artistId) return Swal.fire('Aviso', 'Elige un artista primero', 'info');
-    setFormAlb({ titulo: playlistName, fecha: `${albumYear}-01-01`, tipo: 'ALBUM', num: tracks.length, coverFile: null });
+    
+    let year = new Date().getFullYear().toString();
+    if (albumYear && String(albumYear) !== "undefined") {
+        const parsed = parseInt(String(albumYear), 10);
+        if (!isNaN(parsed) && parsed > 1900) {
+            year = parsed.toString();
+        }
+    }
+    
+    setFormAlb({ titulo: playlistName, fecha: `${year}-01-01`, tipo: 'ALBUM', num: tracks.length, coverFile: null });
     setActiveModal('album');
   };
 
@@ -150,50 +191,59 @@ export const useYoutubeUpload = () => {
       });
       const data = await res.json();
       setTracks(data.tracks.map((t: any) => ({ ...t, selected: true })));
-      setPlaylistName(data.playlistName);
-      setAlbumYear(data.year);
+      // Python responde en snake_case (playlist_name) y no manda 'year' (YouTube no
+      // expone un año real para playlists), así que armamos un fallback sano aquí.
+      setPlaylistName(data.playlistName || data.playlist_name || '');
+      setAlbumYear(data.year || new Date().getFullYear().toString());
     } finally { setIsConsulting(false); }
   };
 
   const downloadSelected = async () => {
-    const toDownload = tracks.filter(t => t.selected);
+    // .trim() para evitar espacios fantasma que corrompen el nombre del archivo en disco
+    const toDownload = tracks
+      .filter(t => t.selected)
+      .map(t => ({ ...t, titulo: (t.titulo || '').trim() }));
     if (toDownload.length === 0) return Swal.fire('Aviso', 'Selecciona rolas', 'info');
+    if (!albumId) return Swal.fire('Error', 'Debes seleccionar o crear un álbum primero', 'warning');
 
     setIsDownloading(true);
-    setProgress(15);
-    setProgressText('Conectando con el Búnker...');
+    setProgress(0);
+    setProgressText(`Descargando (1/${toDownload.length}): ${toDownload[0].titulo}`);
 
     try {
-      const progressInterval = setInterval(() => {
-        setProgress(prev => (prev < 85 ? prev + 5 : prev));
-      }, 1500);
+      // Enviamos las canciones una por una para poder reportar progreso real
+      for (let i = 0; i < toDownload.length; i++) {
+        const track = toDownload[i];
+        setProgressText(`Descargando (${i + 1}/${toDownload.length}): ${track.titulo}`);
 
-      // FETCH CORREGIDO CON BODY COMPLETO[cite: 6]
-      const res = await fetch(`${BACKEND_URL}/music-manager/youtube-download`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          url,
-          tracks: toDownload,
-          albumId,
-          artistId
-        })
-      });
+        const res = await fetch(`${BACKEND_URL}/music-manager/youtube-download`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            url,
+            tracks: [track],
+            albumId,
+            artistId
+          })
+        });
 
-      clearInterval(progressInterval);
+        if (!res.ok) {
+          const errData = await res.json().catch(() => ({}));
+          throw new Error(errData.message || `Fallo al descargar "${track.titulo}"`);
+        }
 
-      if (res.ok) {
-        setProgress(100);
-        setProgressText('¡Sincronización completa!');
-
-        setTimeout(() => {
-          Swal.fire('¡Éxito!', 'Catálogo actualizado.', 'success');
-          handleLimpiar();
-          setProgress(0);
-          setIsDownloading(false);
-        }, 1000);
+        setProgress(Math.round(((i + 1) / toDownload.length) * 100));
       }
-    } catch (e) {
+
+      setProgressText('¡Sincronización completa!');
+      setTimeout(() => {
+        Swal.fire('¡Éxito!', 'Catálogo actualizado.', 'success');
+        handleLimpiar();
+        setProgress(0);
+        setIsDownloading(false);
+      }, 800);
+    } catch (e: any) {
+      Swal.fire('Error', e.message || 'Falló la descarga', 'error');
       setIsDownloading(false);
       setProgress(0);
     }
@@ -225,6 +275,7 @@ export const useYoutubeUpload = () => {
     updateTrackTitle, toggleTrack,
     // Contexto
     genres, artists, albums, genreId, setGenreId, artistId, setArtistId, albumId, setAlbumId,
+    loadingArtists, loadingAlbums,
     // Modales
     activeModal, setActiveModal, formG, setFormG, formArt, setFormArt, formAlb, setFormAlb,
     coverPreview, setCoverPreview, saveGenero, saveArtista, saveAlbum, openAlbumModal,

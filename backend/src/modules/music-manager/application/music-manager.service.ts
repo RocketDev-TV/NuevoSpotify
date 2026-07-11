@@ -14,8 +14,12 @@ export class MusicManagerService {
   // Ahora lee la variable del .env, y si por algún error no la encuentra, usa localhost como plan B
   private readonly PYTHON_SERVER = process.env.PYTHON_SERVER_URL || 'http://localhost:3000';
 
-  // Carpeta compartida donde Nest escribe/sirve música (y donde Python descarga vía yt-dlp)
-  private readonly STORAGE_ROOT = process.env.STORAGE_ROOT || path.join(process.cwd(), 'storage_musica');
+  // Carpeta compartida donde Nest escribe/sirve música (y donde Python descarga vía yt-dlp).
+  // En Docker, STORAGE_ROOT viene seteado (/app/storage_musica) y ambos contenedores
+  // comparten el mismo volumen. En dev local SIN Docker, Nest corre con cwd=backend/
+  // pero Python corre con cwd=api/ y escribe en api/storage_musica (carpeta hermana) -
+  // por eso el default apunta ahí y no a un 'storage_musica' inexistente dentro de backend/.
+  private readonly STORAGE_ROOT = process.env.STORAGE_ROOT || path.join(process.cwd(), '..', 'api', 'storage_musica');
 
   // URL alcanzable desde el NAVEGADOR para lo que Nest sirve en /musica - distinta de PYTHON_SERVER
   private readonly PUBLIC_BACKEND_URL = process.env.PUBLIC_BACKEND_URL || 'http://localhost:4000';
@@ -25,9 +29,49 @@ export class MusicManagerService {
     private httpService: HttpService,
   ) { }
 
-  // Utilidad para limpiar los nombres y evitar errores de URLs
-  private cleanString(str: string): string {
+  // ÚNICA fuente de verdad para nombrar carpetas/archivos en disco.
+  // Todo lo que toque el filesystem (subir portada, carga masiva, borrado nuclear,
+  // descargas de YouTube, renombrado de álbum) debe pasar por aquí. Si esta función
+  // cambia, cambia la forma en que se llaman TODAS las carpetas nuevas.
+  private formatPath(str: string): string {
     return str.trim().replace(/\s+/g, '_').toLowerCase();
+  }
+
+  private parseDuracionFmt(fmt: string | undefined | null): number {
+    if (!fmt) return 0;
+    const partes = fmt.split(':').map((p) => parseInt(p, 10) || 0);
+
+    let minutos: number;
+    let segundos: number;
+
+    if (partes.length === 3) {
+      // h:mm:ss -> convertimos las horas a minutos
+      minutos = partes[0] * 60 + partes[1];
+      segundos = partes[2];
+    } else if (partes.length === 2) {
+      [minutos, segundos] = partes;
+    } else {
+      return 0;
+    }
+
+    return parseFloat(`${minutos}.${segundos.toString().padStart(2, '0')}`);
+  }
+
+  // Fallback matemático con prioridad: 1) duracion_seg (segundos crudos), si viene y es > 0;
+  // 2) duracion_fmt ("mm:ss" / "h:mm:ss"). Solo cae a 0 si de verdad no llegó ninguno de los dos.
+  private calcularDuracionDecimal(track: any): number {
+    const seg = Number(track?.duracion_seg);
+    if (!isNaN(seg) && seg > 0) {
+      const minutos = Math.floor(seg / 60);
+      const segundos = Math.floor(seg % 60);
+      return parseFloat(`${minutos}.${segundos.toString().padStart(2, '0')}`);
+    }
+
+    if (track?.duracion_fmt) {
+      return this.parseDuracionFmt(track.duracion_fmt);
+    }
+
+    return 0;
   }
 
   // Resuelve una ruta relativa dentro de STORAGE_ROOT, bloqueando path traversal
@@ -51,8 +95,8 @@ export class MusicManagerService {
       throw new HttpException('Artista o Álbum no encontrado', HttpStatus.NOT_FOUND);
     }
 
-    const artistName = this.cleanString(artista.nombre);
-    const albumName = this.cleanString(album.titulo_album);
+    const artistName = this.formatPath(artista.nombre);
+    const albumName = this.formatPath(album.titulo_album);
     let exitosas = 0;
 
     // 2. Procesar cada archivo individualmente
@@ -64,7 +108,7 @@ export class MusicManagerService {
       try {
         // A. Preparamos los nombres y la ruta
         const extension = file.originalname.split('.').pop();
-        const safeFileName = `${this.cleanString(meta.title)}.${extension}`;
+        const safeFileName = `${this.formatPath(meta.title)}.${extension}`;
         const relativePath = `${artistName}/${albumName}/${Date.now()}_${safeFileName}`;
 
         // B/C. Escribimos el archivo directo a disco (Nest ya tiene el buffer en memoria)
@@ -187,6 +231,55 @@ export class MusicManagerService {
   }
 
   async actualizarAlbum(albumId: string, titulo: string, fecha: string, tipo: string, num: number, imagenUrl?: string) {
+    const albumActual = await this.prisma.album.findUnique({
+      where: { id_album: BigInt(albumId) },
+      include: { artista: true }
+    });
+    if (!albumActual) throw new HttpException('Álbum no encontrado', HttpStatus.NOT_FOUND);
+
+    let finalImagenUrl = imagenUrl;
+
+    // Si el título cambió, la carpeta física ya no coincide con formatPath(nuevoTitulo).
+    // Sin esto, borradoNuclearAlbum y las próximas subidas apuntarían a una carpeta nueva
+    // y vacía, dejando huérfana la carpeta vieja con los archivos reales (el bug de las
+    // "carpetas duplicadas" tipo 'Morro prueba PL' vs 'morro_prueba_pl').
+    if (titulo && titulo !== albumActual.titulo_album) {
+      const artistFolder = this.formatPath(albumActual.artista.nombre);
+      const oldAlbumFolder = this.formatPath(albumActual.titulo_album);
+      const newAlbumFolder = this.formatPath(titulo);
+
+      if (oldAlbumFolder !== newAlbumFolder) {
+        const oldFolder = this.resolveStoragePath(`${artistFolder}/${oldAlbumFolder}`);
+        const newFolder = this.resolveStoragePath(`${artistFolder}/${newAlbumFolder}`);
+        const oldPrefix = `/musica/${artistFolder}/${oldAlbumFolder}/`;
+        const newPrefix = `/musica/${artistFolder}/${newAlbumFolder}/`;
+
+        try {
+          await fs.rename(oldFolder, newFolder);
+
+          // Las canciones ya subidas guardan la URL vieja en Prisma: la reescribimos
+          // para que sigan resolviendo al archivo que Nest ahora sirve en la carpeta nueva.
+          const canciones = await this.prisma.cancion.findMany({ where: { albumId: BigInt(albumId) } });
+          await Promise.all(canciones.map((c) => this.prisma.cancion.update({
+            where: { idCancion: c.idCancion },
+            data: {
+              audioPath: c.audioPath?.includes(oldPrefix) ? c.audioPath.replace(oldPrefix, newPrefix) : c.audioPath,
+              imagenUrl: c.imagenUrl?.includes(oldPrefix) ? c.imagenUrl.replace(oldPrefix, newPrefix) : c.imagenUrl,
+            }
+          })));
+
+          if (!finalImagenUrl && albumActual.imagen_url?.includes(oldPrefix)) {
+            finalImagenUrl = albumActual.imagen_url.replace(oldPrefix, newPrefix);
+          }
+        } catch (err: any) {
+          // Si la carpeta vieja nunca existió (álbum sin archivos aún) no es un error real.
+          if (err.code !== 'ENOENT') {
+            this.logger.error('Error moviendo la carpeta del álbum tras renombrar título:', err);
+          }
+        }
+      }
+    }
+
     return this.prisma.album.update({
       where: { id_album: BigInt(albumId) },
       data: {
@@ -194,15 +287,8 @@ export class MusicManagerService {
         fecha_lanzamiento: fecha ? new Date(fecha) : null,
         tipo_lanzamiento: tipo,
         num_canciones: num,
-        imagen_url: imagenUrl
+        imagen_url: finalImagenUrl
       }
-    });
-  }
-
-  async actualizarTituloCancion(cancionId: string, nuevoTitulo: string) {
-    return this.prisma.cancion.update({
-      where: { idCancion: BigInt(cancionId) }, // Prisma hace la magia aquí
-      data: { tituloCancion: nuevoTitulo }
     });
   }
 
@@ -234,15 +320,14 @@ export class MusicManagerService {
     });
     if (!album) throw new HttpException('Álbum no encontrado', HttpStatus.NOT_FOUND);
 
-    // 1. Borrado físico local (Toda la carpeta)
     try {
-      const carpeta = `${this.cleanString(album.artista.nombre)}/${this.cleanString(album.titulo_album)}`;
+      // 🌟 Usamos formatPath para que la ruta de borrado coincida con cómo se creó la carpeta
+      const carpeta = `${this.formatPath(album.artista.nombre)}/${this.formatPath(album.titulo_album)}`;
       await fs.rm(this.resolveStoragePath(carpeta), { recursive: true, force: true });
     } catch (err) {
       this.logger.error("Error borrando carpeta local:", err);
     }
 
-    // 2. Borrado en cascada en Prisma (Borra canciones y luego el álbum)
     await this.prisma.cancion.deleteMany({ where: { albumId: BigInt(albumId) } });
     return this.prisma.album.delete({ where: { id_album: BigInt(albumId) } });
   }
@@ -250,12 +335,12 @@ export class MusicManagerService {
   async subirPortada(file: Express.Multer.File, artistaNombre: string, albumTitulo: string) {
     try {
       const ext = path.extname(file.originalname);
-      const relativePath = `${artistaNombre}/${albumTitulo}/cover${ext}`;
+      // 🌟 Usamos formatPath para forzar las carpetas minúsculas en las portadas
+      const relativePath = `${this.formatPath(artistaNombre)}/${this.formatPath(albumTitulo)}/cover${ext}`;
       const fullPath = this.resolveStoragePath(relativePath);
       const folder = path.dirname(fullPath);
       await fs.mkdir(folder, { recursive: true });
 
-      // Limpieza de portadas viejas (cover.*) antes de guardar la nueva
       const existentes = await fs.readdir(folder).catch(() => [] as string[]);
       await Promise.all(
         existentes
@@ -269,6 +354,13 @@ export class MusicManagerService {
       console.error("Error guardando portada:", (error as any).message);
       throw new Error("Fallo al subir la portada al Búnker");
     }
+  }
+
+  async actualizarTituloCancion(cancionId: string, nuevoTitulo: string) {
+    return this.prisma.cancion.update({
+      where: { idCancion: BigInt(cancionId) },
+      data: { tituloCancion: nuevoTitulo.trim() }
+    });
   }
 
   // --- YOUTUBE: Mandar a Python a explorar el link ---
@@ -304,28 +396,21 @@ export class MusicManagerService {
 
   async processYoutubeDownload(data: any) {
     const { url, tracks, albumId, artistId } = data;
-    const selectedTracks = tracks.filter((t: any) => t.selected === true);
+    // Eliminamos los espacios en blanco al inicio/final del nombre visual
+    const selectedTracks = tracks
+      .filter((t: any) => t.selected === true)
+      .map((t: any) => ({ ...t, titulo: (t.titulo || '').trim() }));
 
-    // BUSCAMOS LOS OBJETOS COMPLETOS PARA SACAR LOS NOMBRES (Carpetas)
     const artista = await this.prisma.artista.findUnique({ where: { id_artista: BigInt(artistId) } });
     const album = await this.prisma.album.findUnique({ where: { id_album: BigInt(albumId) } });
 
-    if (!artista || !album) {
-      throw new HttpException('Artista o Álbum no encontrado', HttpStatus.NOT_FOUND);
-    }
+    if (!artista || !album) throw new HttpException('Artista o Álbum no encontrado', HttpStatus.NOT_FOUND);
 
     try {
-      // 1. Descarga física en el Búnker
-      await lastValueFrom(
-        this.httpService.post(`${this.PYTHON_SERVER}/api/download_batch`, {
-          url,
-          tracks: selectedTracks.map((t: any) => ({ titulo: t.titulo, url_video: t.url_video })),
-          artista_nombre: artista.nombre, // Ahora sí están definidos
-          album_titulo: album.titulo_album
-        })
-      );
+      // Forzamos que LAS CARPETAS Y ARCHIVOS SIEMPRE SEAN EN MINÚSCULAS Y GUIONES (formatPath)
+      const artistNameClean = this.formatPath(artista.nombre);
+      const albumNameClean = this.formatPath(album.titulo_album);
 
-      // 2. BUSCAR EL ÚLTIMO NÚMERO DE TRACK[cite: 5]
       const lastTrack = await this.prisma.cancion.findFirst({
         where: { albumId: BigInt(albumId) },
         orderBy: { numeroTrack: 'desc' },
@@ -333,31 +418,66 @@ export class MusicManagerService {
       });
 
       let startingTrackNumber = lastTrack?.numeroTrack || 0;
+      let imagenUrl = album.imagen_url;
 
-      // 3. INSERCIÓN EN PRISMA[cite: 5]
       for (const track of selectedTracks) {
         startingTrackNumber++;
+        const cleanTitle = this.formatPath(track.titulo); // El nombre limpio para el archivo mp3
+
+        const { data: singleResult } = await lastValueFrom(
+          this.httpService.post(`${this.PYTHON_SERVER}/api/download_single`, {
+            track: { titulo: cleanTitle, url_video: track.url_video },
+            artista_nombre: artistNameClean,
+            album_titulo: albumNameClean,
+            thumbnail: track.thumbnail
+          })
+        );
+
+        // Si es la primera rola y bajó la portada, la actualizamos en el disco
+        if (singleResult?.cover_url && !imagenUrl) {
+          imagenUrl = singleResult.cover_url;
+          await this.prisma.album.update({
+            where: { id_album: BigInt(albumId) },
+            data: { imagen_url: imagenUrl }
+          });
+        }
+
+        // Preferimos la duración REAL que Python midió con mutagen al bajar el MP3.
+        // Si por lo que sea no llegó (Python falló al medir, campo ausente, etc.),
+        // caemos al cálculo matemático a partir de duracion_seg/duracion_fmt del track
+        // original (los que trajo /api/metadata) en vez de perder la duración a 0.
+        const duracionMedida = Number(singleResult?.duracion_decimal);
+        const duracionDecimal = !isNaN(duracionMedida) && duracionMedida > 0
+          ? duracionMedida
+          : this.calcularDuracionDecimal(track);
+
+        this.logger.log(
+          `[YT] Duración a insertar en Prisma para "${track.titulo}": ${duracionDecimal} ` +
+          `(fuente: ${!isNaN(duracionMedida) && duracionMedida > 0 ? 'python(medida)' : 'fallback(calculada)'})`
+        );
+
         await this.prisma.cancion.create({
           data: {
-            tituloCancion: track.titulo,
-            duracionCancion: parseFloat(track.duracion_decimal || "0"),
+            tituloCancion: track.titulo, // Guardamos el título bonito con mayúsculas
+            duracionCancion: duracionDecimal,
             numeroTrack: startingTrackNumber,
             albumId: BigInt(albumId),
             artistaId: BigInt(artistId),
-            // Usamos los nombres de los objetos que buscamos arriba[cite: 5]
-            // URL para el NAVEGADOR (Nest sirve /musica) - no la interna de Python
-            audioPath: `${this.PUBLIC_BACKEND_URL}/musica/${artista.nombre}/${album.titulo_album}/${track.titulo}.mp3`,
+            audioPath: `${this.PUBLIC_BACKEND_URL}/musica/${artistNameClean}/${albumNameClean}/${cleanTitle}.mp3`,
             reproducciones: 0,
-            imagenUrl: album.imagen_url
+            imagenUrl: imagenUrl
           }
         });
       }
 
+      await this.actualizarDuracionAlbum(BigInt(albumId));
       return { success: true, procesadas: selectedTracks.length };
     } catch (error: any) {
       throw new HttpException(error.message, HttpStatus.INTERNAL_SERVER_ERROR);
     }
   }
+
+
   // Métodos de creación con corrección de BigInt y Fechas[cite: 5]
   async createGenero(data: any) {
     return await this.prisma.genero.create({
